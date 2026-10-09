@@ -20,11 +20,16 @@ import com.allstore.api.producto.repository.CategoriaRepository;
 import com.allstore.api.producto.repository.ColorRepository;
 import com.allstore.api.producto.repository.TallaRepository;
 import com.allstore.api.producto.service.ProductoService;
+import com.allstore.api.seguridad.entity.Rol;
+import com.allstore.api.seguridad.repository.UsuarioRepository;
+import com.allstore.api.seguridad.service.UsuarioService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.support.TransactionTemplate;
 
@@ -46,6 +51,7 @@ import java.util.stream.Collectors;
  */
 @Slf4j
 @Component
+@Order(10)
 @RequiredArgsConstructor
 @ConditionalOnProperty(name = "app.demo.cargar-datos", havingValue = "true")
 public class DatosDemoLoader implements ApplicationRunner {
@@ -53,7 +59,12 @@ public class DatosDemoLoader implements ApplicationRunner {
     /** RUC del entorno de pruebas de SUNAT. */
     private static final String RUC_DEMO = "20000000001";
 
+    @Value("${app.demo.password}")
+    private String passwordDemo;
+
     private final TransactionTemplate transactionTemplate;
+    private final UsuarioRepository usuarioRepository;
+    private final UsuarioService usuarioService;
     private final EmpresaRepository empresaRepository;
     private final EmpresaService empresaService;
     private final EstablecimientoService establecimientoService;
@@ -66,12 +77,23 @@ public class DatosDemoLoader implements ApplicationRunner {
 
     @Override
     public void run(ApplicationArguments args) {
+        if (usuarioRepository.count() == 0) {
+            transactionTemplate.executeWithoutResult(status -> cargarUsuarios());
+            log.info("Datos demo: usuarios admin, cajero y almacenero creados (contraseña en app.demo.password)");
+        }
         if (empresaRepository.count() > 0) {
-            log.info("Datos demo: la base ya tiene empresa registrada, no se carga nada");
+            log.info("Datos demo: la base ya tiene empresa registrada, no se cargan datos de negocio");
             return;
         }
         transactionTemplate.executeWithoutResult(status -> cargar());
         log.info("Datos demo cargados: empresa {}, establecimientos, series, productos y clientes", RUC_DEMO);
+    }
+
+    /** Un usuario por rol, sin obligación de cambiar la contraseña para agilizar las pruebas. */
+    private void cargarUsuarios() {
+        usuarioService.registrar("admin", "Administrador Demo", Rol.ADMIN, passwordDemo, false);
+        usuarioService.registrar("cajero", "Cajero Demo", Rol.CAJERO, passwordDemo, false);
+        usuarioService.registrar("almacenero", "Almacenero Demo", Rol.ALMACENERO, passwordDemo, false);
     }
 
     private void cargar() {

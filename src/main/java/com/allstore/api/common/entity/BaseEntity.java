@@ -8,16 +8,19 @@ import jakarta.persistence.Id;
 import jakarta.persistence.MappedSuperclass;
 import lombok.Getter;
 import lombok.Setter;
+import org.springframework.data.annotation.CreatedBy;
 import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedBy;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.OffsetDateTime;
 
 /**
- * Base de todas las entidades: id autoincremental y fechas de creación/modificación llenadas
- * automáticamente. Cada tabla debe declarar las columnas {@code id}, {@code created_at} y
- * {@code updated_at} en su migración de Flyway.
+ * Base de todas las entidades: id autoincremental, y fechas y usuario de creación/modificación
+ * llenados automáticamente. Cada tabla debe declarar las columnas {@code id},
+ * {@code created_at}, {@code updated_at}, {@code created_by} y {@code updated_by} en su
+ * migración de Flyway.
  */
 @Getter
 @Setter
@@ -36,4 +39,14 @@ public abstract class BaseEntity {
     @LastModifiedDate
     @Column(name = "updated_at", nullable = false)
     private OffsetDateTime updatedAt;
+
+    /** Usuario que creó el registro ("sistema" si fue un proceso automático). */
+    @CreatedBy
+    @Column(name = "created_by", length = 50, updatable = false)
+    private String createdBy;
+
+    /** Último usuario que lo modificó. */
+    @LastModifiedBy
+    @Column(name = "updated_by", length = 50)
+    private String updatedBy;
 }
