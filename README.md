@@ -17,9 +17,10 @@ producción (desde la recepción de materia prima hasta la venta final).
 | `venta` | Nota de venta, boleta, factura y nota de crédito con IGV, descuentos y pagos mixtos; conversión y anulación de nota de venta |
 | `caja` | Apertura con fondo, ingresos y egresos de efectivo, cierre con cuadre (esperado, contado, diferencia) |
 | `facturacion` | Facturación electrónica SUNAT: XML UBL 2.1, firma digital, envío con reintentos, CDR, hash y QR |
+| `impresion` | Representación impresa en PDF: ticket de 80 mm y A4, con QR, hash y leyenda de SUNAT |
 
-Pendiente: representación impresa (PDF/ticket), nota de débito, comunicación de baja, guía de
-remisión electrónica, compras, producción, contabilidad.
+Pendiente: nota de débito, comunicación de baja, guía de remisión electrónica, compras,
+producción, contabilidad. Frontend.
 
 ## Levantar en local
 
@@ -165,6 +166,19 @@ SUNAT_CERTIFICADO_CLAVE=...
 
 Verificado contra SUNAT beta: boletas (con DNI y a "Clientes varios"), facturas con varias líneas
 y descuentos, notas de crédito total y por ítem sobre boleta y factura, todas aceptadas.
+
+## Representación impresa
+
+`GET /api/ventas/{id}/pdf?formato=TICKET` (80 mm, impresora térmica) o `formato=A4`. Responde el
+PDF para mostrarlo en el navegador, imprimirlo o enviarlo por correo o WhatsApp. Lo genera el
+backend para que el comprobante sea idéntico desde cualquier caja o reimpresión.
+
+- Incluye emisor, cliente, detalle, totales, importe en letras, pagos y vuelto, y en los
+  electrónicos el **QR**, el **hash** y la leyenda "Representación impresa de la ...".
+- Nota de crédito: documento que modifica, motivo y sustento; el pago figura como devolución.
+- Nota de venta: leyenda "Documento interno. No es un comprobante de pago".
+- Marca de agua **ANULADO** en lo anulado y **PRUEBA - SIN VALIDEZ TRIBUTARIA** en el entorno beta.
+- El ticket mide exactamente lo que ocupa su contenido: la térmica corta sin papel en blanco.
 
 ## Pruebas
 

@@ -6,6 +6,8 @@ import com.allstore.api.empresa.service.EmpresaService;
 import com.allstore.api.facturacion.entity.EstadoSunat;
 import com.allstore.api.facturacion.service.EnvioSunatService;
 import com.allstore.api.facturacion.service.ServicioEnvioSunat;
+import com.allstore.api.impresion.FormatoImpresion;
+import com.allstore.api.impresion.ImpresionService;
 import com.allstore.api.venta.dto.VentaResponse;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -28,6 +30,7 @@ class FacturacionIntegrationTest extends TiendaDePrueba {
 
     @Autowired private EnvioSunatService envioSunatService;
     @Autowired private EmpresaService empresaService;
+    @Autowired private ImpresionService impresionService;
 
     @MockitoBean private ServicioEnvioSunat servicioEnvio;
 
@@ -88,6 +91,23 @@ class FacturacionIntegrationTest extends TiendaDePrueba {
         assertThat(envio.intentos()).isEqualTo(1);
         assertThat(envio.proximoIntento()).isNotNull();
         assertThat(envio.descripcionRespuesta()).contains("Sin comunicación");
+    }
+
+    @Test
+    void imprimeLaBoletaYMarcaComoAnuladaLaNotaDeVentaAnulada() throws Exception {
+        VentaResponse boleta = boleta();
+        byte[] ticket = impresionService.generar(boleta.id(), FormatoImpresion.TICKET).contenido();
+        assertThat(textoPdf(ticket)).contains(boleta.numero(), "Hash: " + boleta.sunat().hash(), "PRUEBA - SIN VALIDEZ");
+
+        VentaResponse nota = vender(TipoComprobante.NOTA_VENTA, serieNotaVenta, null,
+                List.of(item(jeanA, 1, null)), List.of(efectivo("89.90", null)));
+        ventaService.anular(nota.id(), new com.allstore.api.venta.dto.AnularVentaRequest("prueba"));
+        String a4 = textoPdf(impresionService.generar(nota.id(), FormatoImpresion.A4).contenido());
+        assertThat(a4).contains("NOTA DE VENTA", "ANULADO", "No es un comprobante de pago");
+    }
+
+    private static String textoPdf(byte[] pdf) throws Exception {
+        return new org.openpdf.text.pdf.parser.PdfTextExtractor(new org.openpdf.text.pdf.PdfReader(pdf)).getTextFromPage(1);
     }
 
     private VentaResponse boleta() {

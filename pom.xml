@@ -63,6 +63,17 @@
 			<groupId>org.flywaydb</groupId>
 			<artifactId>flyway-database-postgresql</artifactId>
 		</dependency>
+		<!-- Representación impresa: PDF (A4 y ticket) y código QR -->
+		<dependency>
+			<groupId>com.github.librepdf</groupId>
+			<artifactId>openpdf</artifactId>
+			<version>3.0.5</version>
+		</dependency>
+		<dependency>
+			<groupId>com.google.zxing</groupId>
+			<artifactId>core</artifactId>
+			<version>3.5.4</version>
+		</dependency>
 		<!-- Documentación y consola de pruebas de la API en /swagger-ui.html -->
 		<dependency>
 			<groupId>org.springdoc</groupId>

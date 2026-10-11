@@ -2,6 +2,8 @@ package com.allstore.api.venta.controller;
 
 import com.allstore.api.common.dto.PageResponse;
 import com.allstore.api.empresa.entity.TipoComprobante;
+import com.allstore.api.impresion.FormatoImpresion;
+import com.allstore.api.impresion.ImpresionService;
 import com.allstore.api.venta.dto.AnularVentaRequest;
 import com.allstore.api.venta.dto.ConvertirVentaRequest;
 import com.allstore.api.venta.dto.NotaCreditoRequest;
@@ -18,7 +20,11 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.ContentDisposition;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -37,6 +43,7 @@ public class VentaController {
 
     private final VentaService ventaService;
     private final NotaCreditoService notaCreditoService;
+    private final ImpresionService impresionService;
 
     /** Ej: GET /api/ventas?desde=2026-10-01&hasta=2026-10-31&tipoComprobante=BOLETA&busqueda=B001-15 */
     @GetMapping
@@ -54,6 +61,19 @@ public class VentaController {
     @GetMapping("/{id}")
     public VentaResponse obtener(@PathVariable Long id) {
         return ventaService.obtenerDetalle(id);
+    }
+
+    /**
+     * Representación impresa en PDF: formato TICKET (80 mm, impresora térmica) o A4. Se muestra en
+     * el navegador (inline) para imprimir o descargar. Ej: GET /api/ventas/15/pdf?formato=TICKET
+     */
+    @GetMapping("/{id}/pdf")
+    public ResponseEntity<byte[]> pdf(@PathVariable Long id, @RequestParam(defaultValue = "A4") FormatoImpresion formato) {
+        ImpresionService.Pdf pdf = impresionService.generar(id, formato);
+        return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_PDF)
+                .header(HttpHeaders.CONTENT_DISPOSITION, ContentDisposition.inline().filename(pdf.nombreArchivo()).build().toString())
+                .body(pdf.contenido());
     }
 
     @PostMapping
