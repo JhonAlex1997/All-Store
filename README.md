@@ -14,10 +14,10 @@ producción (desde la recepción de materia prima hasta la venta final).
 | `empresa` | Empresa emisora, establecimientos (código de anexo SUNAT) y series por tipo de comprobante |
 | `seguridad` | Usuarios, roles, login con JWT, bloqueo por intentos fallidos, auditoría de quién hizo cada cambio |
 | `inventario` | Stock por variante y establecimiento, kardex, inventario inicial, ajustes y traslados |
-| `venta` | Nota de venta, boleta y factura con IGV, descuentos y pagos mixtos; conversión de nota de venta y anulación |
+| `venta` | Nota de venta, boleta, factura y nota de crédito con IGV, descuentos y pagos mixtos; conversión y anulación de nota de venta |
+| `caja` | Apertura con fondo, ingresos y egresos de efectivo, cierre con cuadre (esperado, contado, diferencia) |
 
-Pendiente: notas de crédito/débito, envío a SUNAT, guía de remisión, compras, producción,
-contabilidad.
+Pendiente: nota de débito, envío a SUNAT, guía de remisión, compras, producción, contabilidad.
 
 ## Levantar en local
 
@@ -67,7 +67,7 @@ Toda la API exige sesión, salvo `POST /api/auth/login` y `/actuator/health`.
 | Rol | Puede |
 | --- | --- |
 | `ADMIN` | Todo, incluido anular ventas y administrar usuarios, empresa y series |
-| `CAJERO` | Vender (nota de venta, boleta, factura) y registrar clientes; consultar catálogo y stock |
+| `CAJERO` | Abrir y cerrar su caja, vender, emitir notas de crédito, registrar clientes; consultar catálogo y stock |
 | `ALMACENERO` | Catálogo de productos, ajustes e inventario, traslados; consultar lo demás (no ve ventas) |
 
 La matriz completa está en `SecurityConfig`. Lo que no está permitido ahí, se niega.
@@ -101,6 +101,27 @@ ella el sistema no arranca), `DB_PASSWORD`, `CORS_ORIGENES`.
   **anular** (solo ADMIN; devuelve el stock). Las boletas y facturas no se anulan: se corrigen
   con nota de crédito (próximo módulo).
 - El kardex no se edita: cada entrada o salida queda con su motivo, documento, usuario y saldo.
+
+## Notas de crédito
+
+- Sobre una boleta o factura vigente, con serie que empieza con su misma letra (BC01 para
+  boletas, FC01 para facturas). Motivos del Catálogo 09: 01 anulación de la operación, 02 error
+  en el RUC, 06 devolución total, 07 devolución por ítem.
+- Devuelven la mercadería al stock del local donde se emiten y el dinero desde la caja abierta.
+- Nunca se devuelve más de lo vendido, sumando las notas anteriores. El descuento de la línea se
+  prorratea según la cantidad devuelta.
+- Cambio de talla = nota de crédito por la prenda devuelta + venta nueva por la que se lleva.
+
+## Caja
+
+- Cada cajero abre su caja con un fondo de sencillo (una sola abierta a la vez). Sin caja abierta
+  no se vende ni se devuelve dinero, y la caja debe ser del local de la serie.
+- `efectivo esperado = fondo + ventas en efectivo - devoluciones en efectivo + ingresos - egresos`
+  (el vuelto no cuenta: entra y sale en el momento). El resumen trae también lo cobrado con
+  tarjeta, Yape, Plin y transferencia para cuadrar vouchers y capturas.
+- Al cerrar se guarda una foto del cuadre (esperado, contado, diferencia) que ya no cambia: una
+  nota de venta de una caja cerrada no se puede anular; se convierte en boleta y se emite nota
+  de crédito.
 
 ## Pruebas
 

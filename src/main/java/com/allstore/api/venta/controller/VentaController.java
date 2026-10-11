@@ -4,10 +4,12 @@ import com.allstore.api.common.dto.PageResponse;
 import com.allstore.api.empresa.entity.TipoComprobante;
 import com.allstore.api.venta.dto.AnularVentaRequest;
 import com.allstore.api.venta.dto.ConvertirVentaRequest;
+import com.allstore.api.venta.dto.NotaCreditoRequest;
 import com.allstore.api.venta.dto.VentaRequest;
 import com.allstore.api.venta.dto.VentaResponse;
 import com.allstore.api.venta.dto.VentaResumenResponse;
 import com.allstore.api.venta.entity.EstadoComprobante;
+import com.allstore.api.venta.service.NotaCreditoService;
 import com.allstore.api.venta.service.VentaService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -34,6 +36,7 @@ import java.time.LocalDate;
 public class VentaController {
 
     private final VentaService ventaService;
+    private final NotaCreditoService notaCreditoService;
 
     /** Ej: GET /api/ventas?desde=2026-10-01&hasta=2026-10-31&tipoComprobante=BOLETA&busqueda=B001-15 */
     @GetMapping
@@ -64,6 +67,16 @@ public class VentaController {
     @ResponseStatus(HttpStatus.CREATED)
     public VentaResponse convertir(@PathVariable Long id, @Valid @RequestBody ConvertirVentaRequest request) {
         return ventaService.convertir(id, request);
+    }
+
+    /**
+     * Devolución o anulación de una boleta o factura. Ej. cambio de talla: nota de crédito por
+     * la prenda devuelta (DEVOLUCION_POR_ITEM) y una venta nueva por la prenda que se lleva.
+     */
+    @PostMapping("/{id}/notas-credito")
+    @ResponseStatus(HttpStatus.CREATED)
+    public VentaResponse emitirNotaCredito(@PathVariable Long id, @Valid @RequestBody NotaCreditoRequest request) {
+        return notaCreditoService.emitir(id, request);
     }
 
     /** Solo notas de venta, solo ADMIN (ver SecurityConfig). Devuelve la mercadería al stock. */

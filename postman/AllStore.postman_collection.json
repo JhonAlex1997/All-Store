@@ -114,6 +114,14 @@
     {
       "key": "hoy",
       "value": ""
+    },
+    {
+      "key": "serieNcBoletaId",
+      "value": ""
+    },
+    {
+      "key": "efectivoEsperado",
+      "value": ""
     }
   ],
   "item": [
@@ -1015,12 +1023,46 @@
       "name": "07 Ventas",
       "item": [
         {
+          "name": "Preparar: abrir mi caja en la tienda",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/caja/abrir",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"establecimientoId\": {{tiendaId}},\n  \"montoApertura\": 100.00\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Sin caja abierta no se puede vender. Si ya estaba abierta responde 400 y se sigue igual."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Caja abierta\", () => pm.expect(pm.response.code === 201 || pm.response.json().message.includes(\"Ya tienes una caja abierta\")).to.eql(true));"
+                ]
+              }
+            }
+          ]
+        },
+        {
           "name": "Preparar: series de venta",
           "request": {
             "method": "GET",
             "header": [],
             "url": "{{baseUrl}}/api/series",
-            "description": "Guarda los ids de las primeras series activas de nota de venta, boleta y factura."
+            "description": "Guarda los ids de las primeras series activas de nota de venta, boleta, factura y nota de crédito para boletas."
           },
           "event": [
             {
@@ -1033,7 +1075,9 @@
                   "const id = t => (series.find(s => s.tipoComprobante === t) || {}).id;",
                   "pm.collectionVariables.set(\"serieNotaVentaId\", id(\"NOTA_VENTA\"));",
                   "pm.collectionVariables.set(\"serieBoletaId\", id(\"BOLETA\"));",
-                  "pm.collectionVariables.set(\"serieFacturaId\", id(\"FACTURA\"));"
+                  "pm.collectionVariables.set(\"serieFacturaId\", id(\"FACTURA\"));",
+                  "const nc = series.find(s => s.tipoComprobante === \"NOTA_CREDITO\" && s.codigo.startsWith(\"B\"));",
+                  "pm.collectionVariables.set(\"serieNcBoletaId\", nc ? nc.id : \"\");"
                 ]
               }
             }
@@ -1120,6 +1164,76 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Nota de crédito: devuelve 1 prenda (cambio de talla)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/ventas/{{ventaId}}/notas-credito",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"serieId\": {{serieNcBoletaId}},\n  \"motivo\": \"DEVOLUCION_POR_ITEM\",\n  \"sustento\": \"Cambio de talla\",\n  \"metodoReembolso\": \"EFECTIVO\",\n  \"items\": [{ \"varianteId\": {{varianteVentaId}}, \"cantidad\": 1 }]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "La prenda vuelve al stock y el dinero sale de la caja. Motivos: ANULACION_OPERACION, ANULACION_ERROR_RUC, DEVOLUCION_TOTAL (sin items) o DEVOLUCION_POR_ITEM (con items)."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 201\", () => pm.response.to.have.status(201));",
+                  "const nc = pm.response.json();",
+                  "pm.test(\"Referencia a la boleta\", () => pm.expect(nc.comprobanteOrigen).to.include(\"-\"));",
+                  "console.log(nc.numero + \" devuelve S/ \" + nc.total);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Devolver más de lo vendido (debe dar 400)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/ventas/{{ventaId}}/notas-credito",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"serieId\": {{serieNcBoletaId}},\n  \"motivo\": \"DEVOLUCION_POR_ITEM\",\n  \"sustento\": \"Prueba\",\n  \"metodoReembolso\": \"EFECTIVO\",\n  \"items\": [{ \"varianteId\": {{varianteVentaId}}, \"cantidad\": 5 }]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 400\", () => pm.response.to.have.status(400));"
                 ]
               }
             }
@@ -1328,7 +1442,123 @@
       ]
     },
     {
-      "name": "08 Pruebas de seguridad",
+      "name": "08 Caja",
+      "item": [
+        {
+          "name": "Mi caja y su cuadre al momento",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/caja/actual",
+            "description": "Ventas, devoluciones y movimientos de la caja abierta, y el efectivo que debería haber."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "const c = pm.response.json();",
+                  "pm.collectionVariables.set(\"efectivoEsperado\", c.resumen.efectivoEsperado);",
+                  "console.log(\"Efectivo esperado S/ \" + c.resumen.efectivoEsperado);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Egreso de efectivo (pago de taxi)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/caja/movimientos",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tipo\": \"EGRESO\",\n  \"monto\": 10.0,\n  \"concepto\": \"Taxi para llevar mercadería\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 201\", () => pm.response.to.have.status(201));",
+                  "pm.collectionVariables.set(\"efectivoEsperado\", pm.response.json().resumen.efectivoEsperado);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Cerrar caja (contado = esperado)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/caja/cerrar",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"montoContado\": {{efectivoEsperado}},\n  \"observacion\": \"Cierre de prueba\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "En la vida real se escribe lo que se contó físicamente; la respuesta muestra la diferencia."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Cuadra al céntimo\", () => pm.expect(Number(pm.response.json().diferencia)).to.eql(0));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Historial de cajas (solo admin)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/caja/sesiones"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "09 Pruebas de seguridad",
       "item": [
         {
           "name": "Sin token (debe dar 401)",

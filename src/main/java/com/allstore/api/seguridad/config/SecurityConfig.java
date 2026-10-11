@@ -96,9 +96,13 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/inventario/**").authenticated()
                         .requestMatchers("/api/inventario/**").hasAnyRole(ADMIN, ALMACENERO)
 
-                        // Ventas: caja y administrador; anular solo administrador
+                        // Ventas y notas de crédito: caja y administrador; anular solo administrador
                         .requestMatchers(HttpMethod.POST, "/api/ventas/*/anular").hasRole(ADMIN)
                         .requestMatchers("/api/ventas/**").hasAnyRole(ADMIN, CAJERO)
+
+                        // Caja: cada cajero abre, mueve y cierra la suya; el historial solo administrador
+                        .requestMatchers(HttpMethod.GET, "/api/caja/sesiones/**").hasRole(ADMIN)
+                        .requestMatchers("/api/caja/**").hasAnyRole(ADMIN, CAJERO)
 
                         // Todo lo demás, cerrado
                         .anyRequest().denyAll())

@@ -1,16 +1,15 @@
 package com.allstore.api.venta.service;
 
+import com.allstore.api.caja.entity.CajaSesion;
+import com.allstore.api.caja.service.CajaService;
 import com.allstore.api.cliente.entity.Cliente;
 import com.allstore.api.cliente.entity.TipoDocumentoIdentidad;
 import com.allstore.api.cliente.service.ClienteService;
 import com.allstore.api.common.dto.PageResponse;
 import com.allstore.api.common.exception.BusinessException;
-import com.allstore.api.common.exception.ResourceNotFoundException;
 import com.allstore.api.config.JpaAuditingConfig;
-import com.allstore.api.empresa.dto.NumeroComprobante;
 import com.allstore.api.empresa.entity.Serie;
 import com.allstore.api.empresa.entity.TipoComprobante;
-import com.allstore.api.empresa.service.SerieService;
 import com.allstore.api.inventario.entity.MotivoMovimiento;
 import com.allstore.api.inventario.entity.MovimientoInventario;
 import com.allstore.api.inventario.service.InventarioService;
@@ -51,8 +50,6 @@ import java.util.regex.Pattern;
 @RequiredArgsConstructor
 public class VentaService {
 
-    public static final String REFERENCIA_COMPROBANTE = "COMPROBANTE";
-
     /**
      * Por encima de este monto la boleta debe identificar al comprador (DNI u otro documento).
      * Es el límite vigente de SUNAT; si cambia, se cambia aquí.
@@ -64,10 +61,11 @@ public class VentaService {
     private static final Pattern NUMERO = Pattern.compile("^([A-Z0-9]{4})-(\\d{1,8})$");
 
     private final ComprobanteRepository comprobanteRepository;
-    private final SerieService serieService;
+    private final EmisionComprobante emision;
     private final ClienteService clienteService;
     private final ProductoService productoService;
     private final InventarioService inventarioService;
+    private final CajaService cajaService;
 
     // ---------- Emitir ----------
 
@@ -75,6 +73,9 @@ public class VentaService {
      * Registra la venta en una sola transacción: valida, calcula IGV, descuenta stock, toma el
      * número de la serie y guarda. Si cualquier paso falla, no queda nada (ni stock descontado
      * ni número consumido).
+     *
+     * <p>Orden de bloqueo, igual en ventas y notas de crédito: caja, stock y por último la serie
+     * (la fila más disputada, que así queda bloqueada el menor tiempo).
      */
     @Transactional
     public VentaResponse crear(VentaRequest request) {
@@ -82,13 +83,15 @@ public class VentaService {
         if (!TIPOS_VENTA.contains(tipo)) {
             throw new BusinessException("Una venta se emite como NOTA_VENTA, BOLETA o FACTURA");
         }
-        Serie serie = serieParaEmitir(request.serieId(), tipo);
+        Serie serie = emision.serieParaEmitir(request.serieId(), tipo);
         Cliente cliente = clienteParaVenta(request.clienteId());
+        CajaSesion caja = cajaService.bloquearCajaPara(serie.getEstablecimiento().getId());
 
         Comprobante comprobante = new Comprobante();
         comprobante.setTipoComprobante(tipo);
         comprobante.setSerieRef(serie);
         comprobante.setEstablecimiento(serie.getEstablecimiento());
+        comprobante.setCajaSesion(caja);
         comprobante.asignarCliente(cliente);
         comprobante.setObservacion(limpiar(request.observacion()));
         agregarDetalles(comprobante, request.items());
@@ -99,24 +102,23 @@ public class VentaService {
         validarCliente(tipo, cliente, comprobante.getTotal());
         agregarPagos(comprobante, request.pagos());
 
-        // Primero el stock y después el número: así la fila de la serie (por la que pasan todas
-        // las ventas del local) queda bloqueada el menor tiempo posible.
         List<MovimientoInventario> movimientos = inventarioService.registrar(
                 serie.getEstablecimiento().getId(), MotivoMovimiento.VENTA,
                 request.items().stream().map(i -> new InventarioService.Linea(i.varianteId(), i.cantidad())).toList(),
                 null);
-        emitir(comprobante, serie);
-        referenciar(movimientos, comprobante);
-        return VentaResponse.from(comprobante, null);
+        emision.emitir(comprobante, serie);
+        emision.referenciar(movimientos, comprobante);
+        return VentaResponse.from(comprobante, null, List.of());
     }
 
     /**
      * Formaliza una nota de venta en boleta o factura: mismas líneas, precios y pagos. No mueve
-     * stock (la mercadería ya salió con la nota de venta).
+     * stock (la mercadería ya salió con la nota de venta) ni pertenece a una caja (no hay un cobro
+     * nuevo: el dinero ya entró con la nota de venta).
      */
     @Transactional
     public VentaResponse convertir(Long notaVentaId, ConvertirVentaRequest request) {
-        Comprobante nota = obtener(notaVentaId);
+        Comprobante nota = emision.obtener(notaVentaId);
         if (nota.getTipoComprobante() != TipoComprobante.NOTA_VENTA) {
             throw new BusinessException("Solo una nota de venta se puede convertir en boleta o factura");
         }
@@ -125,7 +127,7 @@ public class VentaService {
         if (tipo != TipoComprobante.BOLETA && tipo != TipoComprobante.FACTURA) {
             throw new BusinessException("La nota de venta se convierte en BOLETA o FACTURA");
         }
-        Serie serie = serieParaEmitir(request.serieId(), tipo);
+        Serie serie = emision.serieParaEmitir(request.serieId(), tipo);
         if (!serie.getEstablecimiento().getId().equals(nota.getEstablecimiento().getId())) {
             throw new BusinessException("La serie " + serie.getCodigo() + " es de otro establecimiento; usa una de "
                     + nota.getEstablecimiento().getNombre() + ", donde se hizo la venta");
@@ -143,43 +145,60 @@ public class VentaService {
         nota.getDetalles().forEach(d -> nuevo.agregarDetalle(d.copiar()));
         nota.getPagos().forEach(p -> nuevo.agregarPago(p.copiar()));
         nuevo.recalcularTotales();
-        emitir(nuevo, serie);
+        emision.emitir(nuevo, serie);
         nota.setEstado(EstadoComprobante.CONVERTIDO);
-        return VentaResponse.from(nuevo, null);
+        return VentaResponse.from(nuevo, null, List.of());
     }
 
     /**
      * Anula una nota de venta y devuelve la mercadería al stock. Las boletas y facturas no se
      * anulan así: ante SUNAT se corrigen con una nota de crédito.
+     *
+     * <p>La caja en que se cobró debe seguir abierta (el dinero se devuelve de ella): una caja
+     * cerrada no se modifica nunca, su cuadre ya se entregó.
      */
     @Transactional
     public VentaResponse anular(Long id, AnularVentaRequest request) {
-        Comprobante comprobante = obtener(id);
+        Comprobante comprobante = emision.obtener(id);
         if (comprobante.getTipoComprobante() != TipoComprobante.NOTA_VENTA) {
             throw new BusinessException("Una " + comprobante.getTipoComprobante().getDescripcion().toLowerCase()
                     + " no se anula directamente: se corrige con una nota de crédito");
         }
         exigirEmitido(comprobante);
+        if (comprobante.getCajaSesion() != null && !comprobante.getCajaSesion().isAbierta()) {
+            throw new BusinessException("No se puede anular: la caja en que se cobró " + comprobante.getNumeroImpreso()
+                    + " ya se cerró. Conviértela en boleta y emite una nota de crédito");
+        }
         List<MovimientoInventario> movimientos = inventarioService.registrar(
                 comprobante.getEstablecimiento().getId(), MotivoMovimiento.ANULACION_VENTA,
                 comprobante.getDetalles().stream()
                         .map(d -> new InventarioService.Linea(d.getVariante().getId(), d.getCantidad())).toList(),
                 limpiar(request.motivo()));
-        referenciar(movimientos, comprobante);
+        emision.referenciar(movimientos, comprobante);
         comprobante.setEstado(EstadoComprobante.ANULADO);
         comprobante.setMotivoAnulacion(request.motivo().trim());
         comprobante.setFechaAnulacion(OffsetDateTime.now(JpaAuditingConfig.ZONA_LIMA));
-        return VentaResponse.from(comprobante, null);
+        return VentaResponse.from(comprobante, null, List.of());
     }
 
     // ---------- Consultar ----------
 
+    /**
+     * Incluye los documentos relacionados: la boleta o factura en que se convirtió una nota de
+     * venta, o las notas de crédito emitidas sobre una boleta o factura.
+     */
     @Transactional(readOnly = true)
     public VentaResponse obtenerDetalle(Long id) {
-        Comprobante comprobante = obtener(id);
-        String convertidoEn = comprobanteRepository.findFirstByComprobanteOrigenIdOrderByIdDesc(id)
-                .map(Comprobante::getNumeroImpreso).orElse(null);
-        return VentaResponse.from(comprobante, convertidoEn);
+        Comprobante comprobante = emision.obtener(id);
+        String convertidoEn = null;
+        List<String> notasCredito = List.of();
+        if (comprobante.getTipoComprobante() == TipoComprobante.NOTA_VENTA) {
+            convertidoEn = comprobanteRepository.findFirstByComprobanteOrigenIdOrderByIdDesc(id)
+                    .map(Comprobante::getNumeroImpreso).orElse(null);
+        } else if (comprobante.getTipoComprobante() != TipoComprobante.NOTA_CREDITO) {
+            notasCredito = comprobanteRepository.notasCreditoDe(id).stream().map(Comprobante::getNumeroImpreso).toList();
+        }
+        return VentaResponse.from(comprobante, convertidoEn, notasCredito);
     }
 
     /** La búsqueda acepta un número (B001-15 o B001-00000015), un documento o parte del nombre del cliente. */
@@ -306,42 +325,12 @@ public class VentaService {
         }
     }
 
-    private Serie serieParaEmitir(Long serieId, TipoComprobante tipo) {
-        Serie serie = serieService.obtener(serieId);
-        if (serie.getTipoComprobante() != tipo) {
-            throw new BusinessException("La serie " + serie.getCodigo() + " es de "
-                    + serie.getTipoComprobante().getDescripcion().toLowerCase() + ", no de "
-                    + tipo.getDescripcion().toLowerCase());
-        }
-        if (!serie.isActivo()) {
-            throw new BusinessException("La serie " + serie.getCodigo() + " está inactiva");
-        }
-        if (!serie.getEstablecimiento().isActivo()) {
-            throw new BusinessException("El establecimiento de la serie " + serie.getCodigo() + " está inactivo");
-        }
-        return serie;
-    }
-
     private Cliente clienteParaVenta(Long clienteId) {
         Cliente cliente = clienteId == null ? clienteService.obtenerGenericoEntidad() : clienteService.obtenerEntidad(clienteId);
         if (!cliente.isActivo()) {
             throw new BusinessException("El cliente " + cliente.getNombre() + " está inactivo");
         }
         return cliente;
-    }
-
-    /** Toma el número de la serie (bloqueándola) y guarda el comprobante. */
-    private void emitir(Comprobante comprobante, Serie serie) {
-        NumeroComprobante numero = serieService.asignarSiguienteNumero(serie.getId(), comprobante.getTipoComprobante());
-        comprobante.setSerie(numero.serie());
-        comprobante.setCorrelativo(numero.correlativo());
-        comprobante.setFechaEmision(OffsetDateTime.now(JpaAuditingConfig.ZONA_LIMA));
-        comprobanteRepository.save(comprobante);
-    }
-
-    private void referenciar(List<MovimientoInventario> movimientos, Comprobante comprobante) {
-        String documento = comprobante.getTipoComprobante().getDescripcion() + " " + comprobante.getNumeroImpreso();
-        movimientos.forEach(m -> m.referenciar(REFERENCIA_COMPROBANTE, comprobante.getId(), documento));
     }
 
     private static void exigirEmitido(Comprobante comprobante) {
@@ -352,10 +341,6 @@ public class VentaService {
             case EMITIDO -> {
             }
         }
-    }
-
-    private Comprobante obtener(Long id) {
-        return comprobanteRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Comprobante", id));
     }
 
     private static String limpiar(String texto) {

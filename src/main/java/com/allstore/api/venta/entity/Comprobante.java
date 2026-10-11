@@ -1,5 +1,6 @@
 package com.allstore.api.venta.entity;
 
+import com.allstore.api.caja.entity.CajaSesion;
 import com.allstore.api.cliente.entity.Cliente;
 import com.allstore.api.common.entity.BaseEntity;
 import com.allstore.api.empresa.dto.NumeroComprobante;
@@ -28,8 +29,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Documento de venta: nota de venta, boleta o factura (y luego notas de crédito y débito). El
- * vendedor es created_by (BaseEntity).
+ * Documento de venta: nota de venta, boleta, factura o nota de crédito. El usuario que lo emitió
+ * es created_by (BaseEntity).
  */
 @Getter
 @Setter
@@ -113,6 +114,19 @@ public class Comprobante extends BaseEntity {
     @Column(length = 500)
     private String observacion;
 
+    /** Solo notas de crédito: motivo del Catálogo 09 y su sustento. */
+    @Convert(converter = MotivoNotaCreditoConverter.class)
+    @Column(name = "motivo_nota", length = 2, updatable = false)
+    private MotivoNotaCredito motivoNota;
+
+    @Column(length = 250, updatable = false)
+    private String sustento;
+
+    /** Caja en la que se cobró (venta) o se devolvió el dinero (nota de crédito). */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "caja_sesion_id", updatable = false)
+    private CajaSesion cajaSesion;
+
     @OneToMany(mappedBy = "comprobante", cascade = CascadeType.ALL)
     @OrderBy("item")
     private List<ComprobanteDetalle> detalles = new ArrayList<>();
@@ -139,6 +153,18 @@ public class Comprobante extends BaseEntity {
         this.clienteNumeroDocumento = c.getNumeroDocumento();
         this.clienteNombre = c.getNombre();
         this.clienteDireccion = c.getDireccion();
+    }
+
+    /**
+     * Copia el cliente tal como figura en otro comprobante: una nota de crédito debe ir al mismo
+     * cliente que el comprobante que modifica, aunque luego se haya editado su ficha.
+     */
+    public void copiarClienteDe(Comprobante origen) {
+        this.cliente = origen.cliente;
+        this.clienteTipoDocumento = origen.clienteTipoDocumento;
+        this.clienteNumeroDocumento = origen.clienteNumeroDocumento;
+        this.clienteNombre = origen.clienteNombre;
+        this.clienteDireccion = origen.clienteDireccion;
     }
 
     /** Totales del comprobante = suma de sus líneas, separando la base por tipo de afectación. */

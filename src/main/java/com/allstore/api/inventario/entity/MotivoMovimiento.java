@@ -12,7 +12,8 @@ public enum MotivoMovimiento {
     TRASLADO_ENTRADA(TipoMovimiento.ENTRADA, false, "Ingreso por traslado"),
     TRASLADO_SALIDA(TipoMovimiento.SALIDA, false, "Salida por traslado"),
     VENTA(TipoMovimiento.SALIDA, false, "Venta"),
-    ANULACION_VENTA(TipoMovimiento.ENTRADA, false, "Anulación de venta");
+    ANULACION_VENTA(TipoMovimiento.ENTRADA, false, "Anulación de venta"),
+    DEVOLUCION_VENTA(TipoMovimiento.ENTRADA, false, "Devolución por nota de crédito");
 
     private final TipoMovimiento tipo;
     private final boolean manual;

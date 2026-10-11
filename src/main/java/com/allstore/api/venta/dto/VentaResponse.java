@@ -6,6 +6,7 @@ import com.allstore.api.venta.entity.ComprobanteDetalle;
 import com.allstore.api.venta.entity.ComprobantePago;
 import com.allstore.api.venta.entity.EstadoComprobante;
 import com.allstore.api.venta.entity.MetodoPago;
+import com.allstore.api.venta.entity.MotivoNotaCredito;
 
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
@@ -14,9 +15,12 @@ import java.util.List;
 /**
  * Comprobante completo, con lo necesario para imprimirlo.
  *
- * @param comprobanteOrigen número del documento del que proviene (ej. la nota de venta)
+ * @param comprobanteOrigen número del documento del que proviene (la nota de venta convertida, o
+ *                          el comprobante que modifica una nota de crédito)
  * @param convertidoEn      si es una nota de venta convertida, el número de la boleta o factura
- * @param vendedor          usuario que registró la venta
+ * @param notasCredito      si es una boleta o factura, las notas de crédito emitidas sobre ella
+ * @param motivoNota        solo notas de crédito: motivo del Catálogo 09
+ * @param vendedor          usuario que registró el comprobante
  */
 public record VentaResponse(
         Long id,
@@ -39,6 +43,10 @@ public record VentaResponse(
         String vendedor,
         String comprobanteOrigen,
         String convertidoEn,
+        List<String> notasCredito,
+        MotivoNotaCredito motivoNota,
+        String sustento,
+        Long cajaSesionId,
         String motivoAnulacion,
         OffsetDateTime fechaAnulacion,
         String observacion,
@@ -66,7 +74,7 @@ public record VentaResponse(
         }
     }
 
-    public static VentaResponse from(Comprobante c, String convertidoEn) {
+    public static VentaResponse from(Comprobante c, String convertidoEn, List<String> notasCredito) {
         return new VentaResponse(
                 c.getId(),
                 c.getTipoComprobante(),
@@ -89,6 +97,10 @@ public record VentaResponse(
                 c.getCreatedBy(),
                 c.getComprobanteOrigen() == null ? null : c.getComprobanteOrigen().getNumeroImpreso(),
                 convertidoEn,
+                notasCredito,
+                c.getMotivoNota(),
+                c.getSustento(),
+                c.getCajaSesion() == null ? null : c.getCajaSesion().getId(),
                 c.getMotivoAnulacion(),
                 c.getFechaAnulacion(),
                 c.getObservacion(),
