@@ -161,6 +161,8 @@ class SeguridadIntegrationTest {
                 .andExpect(status().isForbidden());
         mockMvc.perform(get("/api/caja/sesiones").header("Authorization", "Bearer " + login("t_admin", PASSWORD)))
                 .andExpect(status().isOk());
+        mockMvc.perform(get("/api/sunat/envios").header("Authorization", "Bearer " + cajero))
+                .andExpect(status().isForbidden());
     }
 
     @Test

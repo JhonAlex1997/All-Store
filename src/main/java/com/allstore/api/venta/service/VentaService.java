@@ -108,7 +108,7 @@ public class VentaService {
                 null);
         emision.emitir(comprobante, serie);
         emision.referenciar(movimientos, comprobante);
-        return VentaResponse.from(comprobante, null, List.of());
+        return emision.respuesta(comprobante, null, List.of());
     }
 
     /**
@@ -147,7 +147,7 @@ public class VentaService {
         nuevo.recalcularTotales();
         emision.emitir(nuevo, serie);
         nota.setEstado(EstadoComprobante.CONVERTIDO);
-        return VentaResponse.from(nuevo, null, List.of());
+        return emision.respuesta(nuevo, null, List.of());
     }
 
     /**
@@ -178,7 +178,7 @@ public class VentaService {
         comprobante.setEstado(EstadoComprobante.ANULADO);
         comprobante.setMotivoAnulacion(request.motivo().trim());
         comprobante.setFechaAnulacion(OffsetDateTime.now(JpaAuditingConfig.ZONA_LIMA));
-        return VentaResponse.from(comprobante, null, List.of());
+        return emision.respuesta(comprobante, null, List.of());
     }
 
     // ---------- Consultar ----------
@@ -198,7 +198,7 @@ public class VentaService {
         } else if (comprobante.getTipoComprobante() != TipoComprobante.NOTA_CREDITO) {
             notasCredito = comprobanteRepository.notasCreditoDe(id).stream().map(Comprobante::getNumeroImpreso).toList();
         }
-        return VentaResponse.from(comprobante, convertidoEn, notasCredito);
+        return emision.respuesta(comprobante, convertidoEn, notasCredito);
     }
 
     /** La búsqueda acepta un número (B001-15 o B001-00000015), un documento o parte del nombre del cliente. */

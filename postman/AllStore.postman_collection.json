@@ -1144,7 +1144,8 @@
                   "pm.test(\"Responde 201\", () => pm.response.to.have.status(201));",
                   "const v = pm.response.json();",
                   "pm.collectionVariables.set(\"ventaId\", v.id);",
-                  "console.log(v.numero + \" total S/ \" + v.total + \" IGV S/ \" + v.totalIgv + \" vuelto S/ \" + v.vuelto);"
+                  "console.log(v.numero + \" total S/ \" + v.total + \" IGV S/ \" + v.totalIgv + \" vuelto S/ \" + v.vuelto);",
+                  "pm.test(\"Va a SUNAT con hash y QR\", () => pm.expect(!!(v.sunat && v.sunat.codigoQr)).to.eql(true));"
                 ]
               }
             }
@@ -1558,7 +1559,109 @@
       ]
     },
     {
-      "name": "09 Pruebas de seguridad",
+      "name": "09 SUNAT (solo admin)",
+      "item": [
+        {
+          "name": "Envío de la boleta a SUNAT",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/sunat/comprobantes/{{ventaId}}",
+            "description": "Estado ante SUNAT (PENDIENTE, ACEPTADO, OBSERVADO, RECHAZADO, ERROR), hash y respuesta. En el perfil dev se envía solo a SUNAT beta cada 30 segundos."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Enviar ahora a SUNAT",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": "{{baseUrl}}/api/sunat/comprobantes/{{ventaId}}/enviar",
+            "description": "Sin esperar al proceso automático. Si ya fue aceptado responde 400 (es lo esperado)."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Enviado o ya aceptado\", () => pm.expect(pm.response.code === 200 || pm.response.json().message.includes(\"ya aceptó\")).to.eql(true));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Descargar XML firmado",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/sunat/comprobantes/{{ventaId}}/xml"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Envíos pendientes",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/sunat/envios?estado=PENDIENTE"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Todos los envíos",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/sunat/envios"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "10 Pruebas de seguridad",
       "item": [
         {
           "name": "Sin token (debe dar 401)",

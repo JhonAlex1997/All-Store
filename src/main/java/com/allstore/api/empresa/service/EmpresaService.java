@@ -12,6 +12,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
+import java.util.Optional;
+
 @Service
 @RequiredArgsConstructor
 public class EmpresaService {
@@ -47,6 +49,16 @@ public class EmpresaService {
         return empresaRepository.findById(Empresa.ID_UNICO)
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Aún no se registraron los datos de la empresa (RUC, razón social, dirección fiscal)"));
+    }
+
+    /**
+     * Igual que obtenerEntidad pero sin lanzar excepción si no existe. La usa la facturación
+     * dentro de la transacción de una venta: una excepción, aunque se capture, dejaría esa
+     * transacción marcada para deshacerse.
+     */
+    @Transactional(readOnly = true)
+    public Optional<Empresa> buscarEntidad() {
+        return empresaRepository.findById(Empresa.ID_UNICO);
     }
 
     private static String limpiar(String texto) {

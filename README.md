@@ -16,8 +16,10 @@ producción (desde la recepción de materia prima hasta la venta final).
 | `inventario` | Stock por variante y establecimiento, kardex, inventario inicial, ajustes y traslados |
 | `venta` | Nota de venta, boleta, factura y nota de crédito con IGV, descuentos y pagos mixtos; conversión y anulación de nota de venta |
 | `caja` | Apertura con fondo, ingresos y egresos de efectivo, cierre con cuadre (esperado, contado, diferencia) |
+| `facturacion` | Facturación electrónica SUNAT: XML UBL 2.1, firma digital, envío con reintentos, CDR, hash y QR |
 
-Pendiente: nota de débito, envío a SUNAT, guía de remisión, compras, producción, contabilidad.
+Pendiente: representación impresa (PDF/ticket), nota de débito, comunicación de baja, guía de
+remisión electrónica, compras, producción, contabilidad.
 
 ## Levantar en local
 
@@ -122,6 +124,47 @@ ella el sistema no arranca), `DB_PASSWORD`, `CORS_ORIGENES`.
 - Al cerrar se guarda una foto del cuadre (esperado, contado, diferencia) que ya no cambia: una
   nota de venta de una caja cerrada no se puede anular; se convierte en boleta y se emite nota
   de crédito.
+
+## Facturación electrónica (SUNAT)
+
+Boletas, facturas y notas de crédito se envían **directo a SUNAT** (servicio SOAP `billService`).
+El envío está detrás de la interfaz `ServicioEnvioSunat`: para usar un OSE basta con otra
+implementación.
+
+1. Al emitir, el sistema genera el XML UBL 2.1 y lo firma con el certificado digital (solo CPU, sin
+   red). El hash y el texto del código QR quedan listos para imprimir el comprobante al instante.
+2. Un proceso en segundo plano envía los pendientes cada 30 segundos. Sin internet o con SUNAT
+   caído, reintenta con espera creciente (1, 2, 4... hasta 60 minutos). **La venta nunca espera
+   ni falla por SUNAT.**
+3. Con la respuesta queda `ACEPTADO`, `OBSERVADO` (aceptado con observaciones), `RECHAZADO` o, tras
+   8 intentos fallidos, `ERROR`. La constancia (CDR) y el XML se guardan y se pueden descargar.
+
+| Endpoint (solo ADMIN) | Para qué |
+| --- | --- |
+| `GET /api/sunat/envios?estado=PENDIENTE` | Envíos por estado |
+| `GET /api/sunat/comprobantes/{id}` | Estado, respuesta y observaciones de un comprobante |
+| `POST /api/sunat/comprobantes/{id}/enviar` | Enviar ahora (`?regenerarXml=true` si SUNAT no pudo leer el anterior) |
+| `GET /api/sunat/comprobantes/{id}/xml` · `/cdr` | Descargar XML firmado y constancia |
+
+**Entorno beta (pruebas).** En el perfil `dev` se envía a SUNAT beta con las credenciales públicas
+de pruebas (`MODDATOS`) y un certificado autofirmado (`config/sunat/certificado-beta-prueba.p12`).
+Los comprobantes de beta **no tienen validez tributaria**.
+
+**Para producción** hace falta: estar inscrito como emisor electrónico, un usuario secundario SOL
+con permiso de envío y un certificado digital emitido por una entidad acreditada. Se configuran
+con variables de entorno:
+
+```
+SUNAT_HABILITADO=true
+SUNAT_ENTORNO=PRODUCCION
+SUNAT_USUARIO_SOL=...          (sin el RUC delante)
+SUNAT_CLAVE_SOL=...
+SUNAT_CERTIFICADO_RUTA=/ruta/certificado.pfx
+SUNAT_CERTIFICADO_CLAVE=...
+```
+
+Verificado contra SUNAT beta: boletas (con DNI y a "Clientes varios"), facturas con varias líneas
+y descuentos, notas de crédito total y por ítem sobre boleta y factura, todas aceptadas.
 
 ## Pruebas
 

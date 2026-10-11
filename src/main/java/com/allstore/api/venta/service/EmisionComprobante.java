@@ -7,7 +7,9 @@ import com.allstore.api.empresa.dto.NumeroComprobante;
 import com.allstore.api.empresa.entity.Serie;
 import com.allstore.api.empresa.entity.TipoComprobante;
 import com.allstore.api.empresa.service.SerieService;
+import com.allstore.api.facturacion.service.EnvioSunatService;
 import com.allstore.api.inventario.entity.MovimientoInventario;
+import com.allstore.api.venta.dto.VentaResponse;
 import com.allstore.api.venta.entity.Comprobante;
 import com.allstore.api.venta.repository.ComprobanteRepository;
 import lombok.RequiredArgsConstructor;
@@ -28,6 +30,7 @@ public class EmisionComprobante {
 
     private final ComprobanteRepository comprobanteRepository;
     private final SerieService serieService;
+    private final EnvioSunatService envioSunatService;
 
     /** La serie debe ser del tipo pedido y estar activa, igual que su establecimiento. */
     public Serie serieParaEmitir(Long serieId, TipoComprobante tipo) {
@@ -46,13 +49,22 @@ public class EmisionComprobante {
         return serie;
     }
 
-    /** Toma el número de la serie (bloqueándola) y guarda el comprobante. Va al final de la transacción. */
+    /**
+     * Toma el número de la serie (bloqueándola), guarda el comprobante y, si es electrónico,
+     * registra su envío a SUNAT (con el XML ya firmado). Va al final de la transacción.
+     */
     public void emitir(Comprobante comprobante, Serie serie) {
         NumeroComprobante numero = serieService.asignarSiguienteNumero(serie.getId(), comprobante.getTipoComprobante());
         comprobante.setSerie(numero.serie());
         comprobante.setCorrelativo(numero.correlativo());
         comprobante.setFechaEmision(OffsetDateTime.now(JpaAuditingConfig.ZONA_LIMA));
         comprobanteRepository.save(comprobante);
+        envioSunatService.registrar(comprobante);
+    }
+
+    /** Respuesta completa del comprobante, con su estado ante SUNAT. */
+    public VentaResponse respuesta(Comprobante comprobante, String convertidoEn, List<String> notasCredito) {
+        return VentaResponse.from(comprobante, convertidoEn, notasCredito, envioSunatService.info(comprobante));
     }
 
     public void referenciar(List<MovimientoInventario> movimientos, Comprobante comprobante) {

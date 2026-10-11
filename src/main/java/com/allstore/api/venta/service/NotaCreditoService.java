@@ -86,7 +86,7 @@ public class NotaCreditoService {
                 nota.getSustento());
         emision.emitir(nota, serie);
         emision.referenciar(movimientos, nota);
-        return VentaResponse.from(nota, null, List.of());
+        return emision.respuesta(nota, null, List.of());
     }
 
     private static void validarOrigen(Comprobante origen) {
