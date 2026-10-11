@@ -15,7 +15,7 @@ public record NumeroComprobante(TipoComprobante tipo, String serie, long correla
         return formatoImpreso(serie, correlativo);
     }
 
-    static String formatoImpreso(String serie, long correlativo) {
+    public static String formatoImpreso(String serie, long correlativo) {
         return serie + "-" + String.format("%08d", correlativo);
     }
 }

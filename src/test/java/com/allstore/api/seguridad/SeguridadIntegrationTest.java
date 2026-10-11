@@ -135,6 +135,36 @@ class SeguridadIntegrationTest {
     }
 
     @Test
+    void ventasSoloParaCajaYAnularSoloAdmin() throws Exception {
+        String almacenero = login("t_almacen", PASSWORD);
+        String cajero = login("t_cajero", PASSWORD);
+        // 400 = pasó la seguridad y llegó a la validación del cuerpo
+        mockMvc.perform(post("/api/ventas").header("Authorization", "Bearer " + almacenero)
+                        .contentType(MediaType.APPLICATION_JSON).content("{}"))
+                .andExpect(status().isForbidden());
+        mockMvc.perform(post("/api/ventas").header("Authorization", "Bearer " + cajero)
+                        .contentType(MediaType.APPLICATION_JSON).content("{}"))
+                .andExpect(status().isBadRequest());
+        mockMvc.perform(post("/api/ventas/1/anular").header("Authorization", "Bearer " + cajero)
+                        .contentType(MediaType.APPLICATION_JSON).content("{\"motivo\":\"x\"}"))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void movimientosDeInventarioSoloParaAlmacenYAdmin() throws Exception {
+        String cajero = login("t_cajero", PASSWORD);
+        String almacenero = login("t_almacen", PASSWORD);
+        mockMvc.perform(get("/api/inventario/stock").header("Authorization", "Bearer " + cajero))
+                .andExpect(status().isOk());
+        mockMvc.perform(post("/api/inventario/movimientos").header("Authorization", "Bearer " + cajero)
+                        .contentType(MediaType.APPLICATION_JSON).content("{}"))
+                .andExpect(status().isForbidden());
+        mockMvc.perform(post("/api/inventario/movimientos").header("Authorization", "Bearer " + almacenero)
+                        .contentType(MediaType.APPLICATION_JSON).content("{}"))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
     void usuarioNuevoDebeCambiarSuPasswordAntesDeTrabajar() throws Exception {
         usuarioService.registrar("t_nuevo", "Usuario Nuevo", Rol.CAJERO, PASSWORD, true);
         String temporal = login("t_nuevo", PASSWORD);

@@ -9,6 +9,11 @@ import com.allstore.api.empresa.dto.SerieCreateRequest;
 import com.allstore.api.empresa.entity.TipoComprobante;
 import com.allstore.api.empresa.entity.TipoEstablecimiento;
 import com.allstore.api.empresa.repository.EmpresaRepository;
+import com.allstore.api.empresa.repository.EstablecimientoRepository;
+import com.allstore.api.inventario.entity.MotivoMovimiento;
+import com.allstore.api.inventario.repository.MovimientoInventarioRepository;
+import com.allstore.api.inventario.service.InventarioService;
+import com.allstore.api.producto.repository.ProductoVarianteRepository;
 import com.allstore.api.empresa.service.EmpresaService;
 import com.allstore.api.empresa.service.EstablecimientoService;
 import com.allstore.api.empresa.service.SerieService;
@@ -63,6 +68,10 @@ public class DatosDemoLoader implements ApplicationRunner {
     private String passwordDemo;
 
     private final TransactionTemplate transactionTemplate;
+    private final MovimientoInventarioRepository movimientoRepository;
+    private final ProductoVarianteRepository varianteRepository;
+    private final EstablecimientoRepository establecimientoRepository;
+    private final InventarioService inventarioService;
     private final UsuarioRepository usuarioRepository;
     private final UsuarioService usuarioService;
     private final EmpresaRepository empresaRepository;
@@ -83,10 +92,32 @@ public class DatosDemoLoader implements ApplicationRunner {
         }
         if (empresaRepository.count() > 0) {
             log.info("Datos demo: la base ya tiene empresa registrada, no se cargan datos de negocio");
+        } else {
+            transactionTemplate.executeWithoutResult(status -> cargar());
+            log.info("Datos demo cargados: empresa {}, establecimientos, series, productos y clientes", RUC_DEMO);
+        }
+        if (movimientoRepository.count() == 0) {
+            transactionTemplate.executeWithoutResult(status -> cargarStockInicial());
+        }
+    }
+
+    /**
+     * Inventario inicial demo: 10 unidades de cada prenda en la tienda (0000) y 20 en el almacén
+     * (0001), registradas como movimientos de INVENTARIO_INICIAL para que el kardex las explique.
+     */
+    private void cargarStockInicial() {
+        List<InventarioService.Linea> tienda = varianteRepository.findAll().stream()
+                .map(v -> new InventarioService.Linea(v.getId(), 10)).toList();
+        if (tienda.isEmpty()) {
             return;
         }
-        transactionTemplate.executeWithoutResult(status -> cargar());
-        log.info("Datos demo cargados: empresa {}, establecimientos, series, productos y clientes", RUC_DEMO);
+        List<InventarioService.Linea> almacen = tienda.stream()
+                .map(l -> new InventarioService.Linea(l.varianteId(), 20)).toList();
+        establecimientoRepository.findByCodigo("0000").ifPresent(e ->
+                inventarioService.registrar(e.getId(), MotivoMovimiento.INVENTARIO_INICIAL, tienda, "Inventario inicial demo"));
+        establecimientoRepository.findByCodigo("0001").ifPresent(e ->
+                inventarioService.registrar(e.getId(), MotivoMovimiento.INVENTARIO_INICIAL, almacen, "Inventario inicial demo"));
+        log.info("Datos demo: stock inicial cargado ({} prendas en tienda y almacén)", tienda.size());
     }
 
     /** Un usuario por rol, sin obligación de cambiar la contraseña para agilizar las pruebas. */

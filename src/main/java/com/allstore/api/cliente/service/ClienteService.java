@@ -116,6 +116,19 @@ public class ClienteService {
         cliente.setEmail(limpiar(request.email()) == null ? null : request.email().trim().toLowerCase());
     }
 
+    /** Para ventas: la entidad del cliente. */
+    @Transactional(readOnly = true)
+    public Cliente obtenerEntidad(Long id) {
+        return obtener(id);
+    }
+
+    /** Para ventas sin cliente identificado. */
+    @Transactional(readOnly = true)
+    public Cliente obtenerGenericoEntidad() {
+        return clienteRepository.findByGenericoTrue()
+                .orElseThrow(() -> new ResourceNotFoundException("No está configurado el cliente genérico"));
+    }
+
     private Cliente obtener(Long id) {
         return clienteRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Cliente", id));

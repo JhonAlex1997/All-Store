@@ -91,6 +91,15 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/clientes/**").authenticated()
                         .requestMatchers("/api/clientes/**").hasAnyRole(ADMIN, CAJERO)
 
+                        // Inventario: consulta para todos (la caja ve si hay stock), movimientos y
+                        // traslados para administrador y almacenero
+                        .requestMatchers(HttpMethod.GET, "/api/inventario/**").authenticated()
+                        .requestMatchers("/api/inventario/**").hasAnyRole(ADMIN, ALMACENERO)
+
+                        // Ventas: caja y administrador; anular solo administrador
+                        .requestMatchers(HttpMethod.POST, "/api/ventas/*/anular").hasRole(ADMIN)
+                        .requestMatchers("/api/ventas/**").hasAnyRole(ADMIN, CAJERO)
+
                         // Todo lo demás, cerrado
                         .anyRequest().denyAll())
                 .oauth2ResourceServer(oauth -> oauth

@@ -50,7 +50,8 @@ public class EstablecimientoService {
         return EstablecimientoResponse.from(establecimiento);
     }
 
-    Establecimiento obtener(Long id) {
+    /** Para otros módulos (inventario, ventas): la entidad del establecimiento. */
+    public Establecimiento obtener(Long id) {
         return establecimientoRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Establecimiento", id));
     }

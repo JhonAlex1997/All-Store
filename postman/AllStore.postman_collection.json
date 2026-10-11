@@ -62,6 +62,58 @@
     {
       "key": "usuarioId",
       "value": ""
+    },
+    {
+      "key": "tiendaId",
+      "value": ""
+    },
+    {
+      "key": "almacenId",
+      "value": ""
+    },
+    {
+      "key": "varianteVentaId",
+      "value": ""
+    },
+    {
+      "key": "precioVenta",
+      "value": ""
+    },
+    {
+      "key": "montoDos",
+      "value": ""
+    },
+    {
+      "key": "serieNotaVentaId",
+      "value": ""
+    },
+    {
+      "key": "serieBoletaId",
+      "value": ""
+    },
+    {
+      "key": "serieFacturaId",
+      "value": ""
+    },
+    {
+      "key": "clienteRucId",
+      "value": ""
+    },
+    {
+      "key": "ventaId",
+      "value": ""
+    },
+    {
+      "key": "notaVentaId",
+      "value": ""
+    },
+    {
+      "key": "notaAnularId",
+      "value": ""
+    },
+    {
+      "key": "hoy",
+      "value": ""
     }
   ],
   "item": [
@@ -781,7 +833,502 @@
       ]
     },
     {
-      "name": "06 Pruebas de seguridad",
+      "name": "06 Inventario",
+      "item": [
+        {
+          "name": "Preparar: ids de tienda y almacén",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/establecimientos",
+            "description": "Guarda tiendaId (código 0000) y almacenId (código 0001) para las siguientes peticiones."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "const locales = pm.response.json();",
+                  "const tienda = locales.find(e => e.codigo === \"0000\");",
+                  "const almacen = locales.find(e => e.codigo === \"0001\");",
+                  "pm.test(\"Existen tienda 0000 y almacén 0001\", () => pm.expect(!!(tienda && almacen)).to.eql(true));",
+                  "pm.collectionVariables.set(\"tiendaId\", tienda.id);",
+                  "pm.collectionVariables.set(\"almacenId\", almacen.id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Preparar: prenda MOM01-AZU-28",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/productos/variantes/codigo/MOM01-AZU-28",
+            "description": "Guarda varianteVentaId y su precio para inventario y ventas."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "const v = pm.response.json();",
+                  "pm.collectionVariables.set(\"varianteVentaId\", v.id);",
+                  "pm.collectionVariables.set(\"precioVenta\", v.precioEfectivo);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Stock de la tienda",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/inventario/stock?establecimientoId={{tiendaId}}&soloConStock=true"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Stock de la prenda en cada local",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/inventario/stock/variante/{{varianteVentaId}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Kardex de la prenda",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/inventario/kardex?varianteId={{varianteVentaId}}&size=20"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Ajuste por sobrante (+2 en tienda)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/inventario/movimientos",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"establecimientoId\": {{tiendaId}},\n  \"motivo\": \"AJUSTE_ENTRADA\",\n  \"observacion\": \"Conteo físico\",\n  \"items\": [{ \"varianteId\": {{varianteVentaId}}, \"cantidad\": 2 }]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Motivos manuales: INVENTARIO_INICIAL, AJUSTE_ENTRADA, AJUSTE_SALIDA."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 201\", () => pm.response.to.have.status(201));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Traslado almacén -> tienda (3 unidades)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/inventario/traslados",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"origenId\": {{almacenId}},\n  \"destinoId\": {{tiendaId}},\n  \"observacion\": \"Reposición de tienda\",\n  \"items\": [{ \"varianteId\": {{varianteVentaId}}, \"cantidad\": 3 }]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 201\", () => pm.response.to.have.status(201));",
+                  "pm.test(\"Una salida y una entrada\", () => pm.expect(pm.response.json().length).to.eql(2));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "07 Ventas",
+      "item": [
+        {
+          "name": "Preparar: series de venta",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/series",
+            "description": "Guarda los ids de las primeras series activas de nota de venta, boleta y factura."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "const series = pm.response.json().filter(s => s.activo);",
+                  "const id = t => (series.find(s => s.tipoComprobante === t) || {}).id;",
+                  "pm.collectionVariables.set(\"serieNotaVentaId\", id(\"NOTA_VENTA\"));",
+                  "pm.collectionVariables.set(\"serieBoletaId\", id(\"BOLETA\"));",
+                  "pm.collectionVariables.set(\"serieFacturaId\", id(\"FACTURA\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Preparar: cliente con RUC (demo)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/clientes/documento/RUC/20123456786"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "pm.collectionVariables.set(\"clienteRucId\", pm.response.json().id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Boleta en efectivo con vuelto",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/ventas",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tipoComprobante\": \"BOLETA\",\n  \"serieId\": {{serieBoletaId}},\n  \"items\": [{ \"varianteId\": {{varianteVentaId}}, \"cantidad\": 2 }],\n  \"pagos\": [{ \"metodo\": \"EFECTIVO\", \"monto\": {{montoDos}}, \"montoRecibido\": 200 }]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Sin clienteId = Clientes varios. El precio lo pone el servidor; los pagos deben sumar el total."
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const precio = Number(pm.collectionVariables.get(\"precioVenta\"));",
+                  "pm.collectionVariables.set(\"montoDos\", (precio * 2).toFixed(2));"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 201\", () => pm.response.to.have.status(201));",
+                  "const v = pm.response.json();",
+                  "pm.collectionVariables.set(\"ventaId\", v.id);",
+                  "console.log(v.numero + \" total S/ \" + v.total + \" IGV S/ \" + v.totalIgv + \" vuelto S/ \" + v.vuelto);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Ver la venta",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/ventas/{{ventaId}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Nota de venta con Yape",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/ventas",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tipoComprobante\": \"NOTA_VENTA\",\n  \"serieId\": {{serieNotaVentaId}},\n  \"items\": [{ \"varianteId\": {{varianteVentaId}}, \"cantidad\": 1 }],\n  \"pagos\": [{ \"metodo\": \"YAPE\", \"monto\": {{precioVenta}}, \"referencia\": \"987654\" }]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 201\", () => pm.response.to.have.status(201));",
+                  "pm.collectionVariables.set(\"notaVentaId\", pm.response.json().id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Convertir la nota de venta en factura",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/ventas/{{notaVentaId}}/convertir",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tipoComprobante\": \"FACTURA\",\n  \"serieId\": {{serieFacturaId}},\n  \"clienteId\": {{clienteRucId}}\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "No mueve stock: la mercadería ya salió con la nota de venta."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 201\", () => pm.response.to.have.status(201));",
+                  "pm.test(\"Referencia a la nota de venta\", () => pm.expect(pm.response.json().comprobanteOrigen).to.include(\"-\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Nota de venta para anular",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/ventas",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tipoComprobante\": \"NOTA_VENTA\",\n  \"serieId\": {{serieNotaVentaId}},\n  \"items\": [{ \"varianteId\": {{varianteVentaId}}, \"cantidad\": 1 }],\n  \"pagos\": [{ \"metodo\": \"EFECTIVO\", \"monto\": {{precioVenta}} }]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 201\", () => pm.response.to.have.status(201));",
+                  "pm.collectionVariables.set(\"notaAnularId\", pm.response.json().id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Anular la nota de venta (solo admin)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/ventas/{{notaAnularId}}/anular",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"motivo\": \"El cliente se arrepintió\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Devuelve la mercadería al stock. Las boletas y facturas se corrigen con nota de crédito."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Queda anulada\", () => pm.expect(pm.response.json().estado).to.eql(\"ANULADO\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Factura a cliente sin RUC (debe dar 400)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/ventas",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tipoComprobante\": \"FACTURA\",\n  \"serieId\": {{serieFacturaId}},\n  \"items\": [{ \"varianteId\": {{varianteVentaId}}, \"cantidad\": 1 }],\n  \"pagos\": [{ \"metodo\": \"EFECTIVO\", \"monto\": {{precioVenta}} }]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Ventas de hoy",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/ventas?desde={{hoy}}&hasta={{hoy}}",
+            "description": "Fecha de Perú (UTC-5)."
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.collectionVariables.set(\"hoy\", new Date(Date.now() - 5 * 3600 * 1000).toISOString().slice(0, 10));"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "08 Pruebas de seguridad",
       "item": [
         {
           "name": "Sin token (debe dar 401)",

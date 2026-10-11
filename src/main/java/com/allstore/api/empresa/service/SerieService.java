@@ -83,6 +83,12 @@ public class SerieService {
         return new NumeroComprobante(serie.getTipoComprobante(), serie.getCodigo(), correlativo);
     }
 
+    /** Para ventas: la serie sin bloquear (el bloqueo ocurre al asignar el número). */
+    @Transactional(readOnly = true)
+    public Serie obtener(Long id) {
+        return serieRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Serie", id));
+    }
+
     private Establecimiento establecimientoActivo(Long id) {
         Establecimiento establecimiento = establecimientoService.obtener(id);
         if (!establecimiento.isActivo()) {

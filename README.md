@@ -13,9 +13,11 @@ producción (desde la recepción de materia prima hasta la venta final).
 | `cliente` | Clientes con documento del Catálogo 06 SUNAT (DNI, RUC validado, etc.) y cliente genérico "Clientes varios" |
 | `empresa` | Empresa emisora, establecimientos (código de anexo SUNAT) y series por tipo de comprobante |
 | `seguridad` | Usuarios, roles, login con JWT, bloqueo por intentos fallidos, auditoría de quién hizo cada cambio |
+| `inventario` | Stock por variante y establecimiento, kardex, inventario inicial, ajustes y traslados |
+| `venta` | Nota de venta, boleta y factura con IGV, descuentos y pagos mixtos; conversión de nota de venta y anulación |
 
-Pendiente: ventas, notas de crédito/débito, envío a SUNAT, guía de remisión, inventario,
-contabilidad, producción.
+Pendiente: notas de crédito/débito, envío a SUNAT, guía de remisión, compras, producción,
+contabilidad.
 
 ## Levantar en local
 
@@ -64,9 +66,9 @@ Toda la API exige sesión, salvo `POST /api/auth/login` y `/actuator/health`.
 
 | Rol | Puede |
 | --- | --- |
-| `ADMIN` | Todo: usuarios, empresa, establecimientos, series, catálogo, clientes |
-| `CAJERO` | Consultar todo; registrar y editar clientes (y luego ventas) |
-| `ALMACENERO` | Consultar todo; administrar el catálogo de productos (y luego inventario) |
+| `ADMIN` | Todo, incluido anular ventas y administrar usuarios, empresa y series |
+| `CAJERO` | Vender (nota de venta, boleta, factura) y registrar clientes; consultar catálogo y stock |
+| `ALMACENERO` | Catálogo de productos, ajustes e inventario, traslados; consultar lo demás (no ve ventas) |
 
 La matriz completa está en `SecurityConfig`. Lo que no está permitido ahí, se niega.
 
@@ -84,6 +86,21 @@ La matriz completa está en `SecurityConfig`. Lo que no está permitido ahí, se
 
 **Variables obligatorias en producción:** `JWT_SECRET` (aleatoria, mínimo 32 caracteres; sin
 ella el sistema no arranca), `DB_PASSWORD`, `CORS_ORIGENES`.
+
+## Ventas e inventario
+
+- El **precio lo pone el servidor** (el del producto o el propio de la variante); desde la caja
+  solo se envía la cantidad y, si hay, un descuento.
+- IGV por línea: `total = cantidad x precio - descuento`, `base = total / 1.18`,
+  `IGV = total - base` (por diferencia, así base + IGV cuadra siempre al céntimo).
+- Una venta, en una sola transacción: valida, descuenta stock (bloqueando las filas en orden fijo
+  para evitar deadlocks), toma el número de la serie y guarda. Si algo falla no queda nada.
+- Reglas: la factura solo a un cliente con RUC; la boleta mayor a S/ 700 exige identificar al
+  cliente; los pagos deben sumar el total y solo el efectivo da vuelto.
+- La nota de venta se puede **convertir** en boleta o factura (sin volver a mover stock) o
+  **anular** (solo ADMIN; devuelve el stock). Las boletas y facturas no se anulan: se corrigen
+  con nota de crédito (próximo módulo).
+- El kardex no se edita: cada entrada o salida queda con su motivo, documento, usuario y saldo.
 
 ## Pruebas
 

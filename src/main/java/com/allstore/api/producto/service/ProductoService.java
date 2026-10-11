@@ -31,7 +31,9 @@ import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -137,6 +139,21 @@ public class ProductoService {
         return varianteRepository.findByCodigoBarrasOrSku(codigo.trim())
                 .map(VarianteResponse::from)
                 .orElseThrow(() -> new ResourceNotFoundException("No existe ninguna prenda con el código " + codigo));
+    }
+
+    /**
+     * Para inventario y ventas: las variantes pedidas con su producto, talla y color, en una
+     * sola consulta. Falla si alguna no existe.
+     */
+    @Transactional(readOnly = true)
+    public Map<Long, ProductoVariante> obtenerVariantes(Collection<Long> ids) {
+        Set<Long> unicos = new HashSet<>(ids);
+        Map<Long, ProductoVariante> variantes = varianteRepository.findAllConDetalle(unicos).stream()
+                .collect(Collectors.toMap(ProductoVariante::getId, v -> v));
+        unicos.stream().filter(id -> !variantes.containsKey(id)).findFirst().ifPresent(id -> {
+            throw new ResourceNotFoundException("Variante", id);
+        });
+        return variantes;
     }
 
     /** Crea en memoria las combinaciones talla x color que el producto aún no tiene. */

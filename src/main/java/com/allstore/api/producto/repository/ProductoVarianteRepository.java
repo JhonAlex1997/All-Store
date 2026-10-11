@@ -5,9 +5,18 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 
 public interface ProductoVarianteRepository extends JpaRepository<ProductoVariante, Long> {
+
+    @Query("""
+            select v from ProductoVariante v
+            join fetch v.producto join fetch v.talla join fetch v.color
+            where v.id in :ids
+            """)
+    List<ProductoVariante> findAllConDetalle(@Param("ids") Collection<Long> ids);
 
     /** Búsqueda para el punto de venta: acepta el código de barras escaneado o el SKU. */
     @Query("""
