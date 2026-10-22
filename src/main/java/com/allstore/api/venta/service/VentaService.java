@@ -16,16 +16,13 @@ import com.allstore.api.inventario.service.InventarioService;
 import com.allstore.api.producto.entity.ProductoVariante;
 import com.allstore.api.producto.service.ProductoService;
 import com.allstore.api.venta.dto.ConvertirVentaRequest;
-import com.allstore.api.venta.dto.PagoRequest;
 import com.allstore.api.venta.dto.VentaItemRequest;
 import com.allstore.api.venta.dto.VentaRequest;
 import com.allstore.api.venta.dto.VentaResponse;
 import com.allstore.api.venta.dto.VentaResumenResponse;
 import com.allstore.api.venta.entity.Comprobante;
 import com.allstore.api.venta.entity.ComprobanteDetalle;
-import com.allstore.api.venta.entity.ComprobantePago;
 import com.allstore.api.venta.entity.EstadoComprobante;
-import com.allstore.api.venta.entity.MetodoPago;
 import com.allstore.api.venta.repository.ComprobanteRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
@@ -99,7 +96,7 @@ public class VentaService {
             throw new BusinessException("El total de la venta debe ser mayor a cero");
         }
         validarCliente(tipo, cliente, comprobante.getTotal());
-        agregarPagos(comprobante, request.pagos());
+        emision.agregarPagos(comprobante, request.pagos());
 
         List<MovimientoInventario> movimientos = inventarioService.registrar(
                 serie.getEstablecimiento().getId(), MotivoMovimiento.VENTA,
@@ -153,20 +150,24 @@ public class VentaService {
 
     /**
      * Incluye los documentos relacionados: la boleta o factura en que se convirtió una nota de
-     * venta, o las notas de crédito emitidas sobre una boleta o factura.
+     * venta, o las notas de crédito y de débito emitidas sobre una boleta o factura.
      */
     @Transactional(readOnly = true)
     public VentaResponse obtenerDetalle(Long id) {
         Comprobante comprobante = emision.obtener(id);
         String convertidoEn = null;
         List<String> notasCredito = List.of();
-        if (comprobante.getTipoComprobante() == TipoComprobante.NOTA_VENTA) {
+        List<String> notasDebito = List.of();
+        TipoComprobante tipo = comprobante.getTipoComprobante();
+        if (tipo == TipoComprobante.NOTA_VENTA) {
             convertidoEn = comprobanteRepository.findFirstByComprobanteOrigenIdOrderByIdDesc(id)
                     .map(Comprobante::getNumeroImpreso).orElse(null);
-        } else if (comprobante.getTipoComprobante() != TipoComprobante.NOTA_CREDITO) {
-            notasCredito = comprobanteRepository.notasCreditoDe(id).stream().map(Comprobante::getNumeroImpreso).toList();
+        } else if (tipo == TipoComprobante.BOLETA || tipo == TipoComprobante.FACTURA) {
+            List<Comprobante> notas = comprobanteRepository.notasVigentesDe(id);
+            notasCredito = numeros(notas, TipoComprobante.NOTA_CREDITO);
+            notasDebito = numeros(notas, TipoComprobante.NOTA_DEBITO);
         }
-        return emision.respuesta(comprobante, convertidoEn, notasCredito);
+        return emision.respuesta(comprobante, convertidoEn, notasCredito, notasDebito);
     }
 
     /** La búsqueda acepta un número (B001-15 o B001-00000015), un documento o parte del nombre del cliente. */
@@ -250,34 +251,6 @@ public class VentaService {
         }
     }
 
-    /** Los pagos deben sumar exactamente el total. Solo el efectivo admite vuelto. */
-    private void agregarPagos(Comprobante comprobante, List<PagoRequest> pagos) {
-        BigDecimal suma = BigDecimal.ZERO;
-        for (PagoRequest p : pagos) {
-            ComprobantePago pago = new ComprobantePago();
-            pago.setMetodo(p.metodo());
-            pago.setMonto(p.monto().setScale(2));
-            pago.setReferencia(limpiar(p.referencia()));
-            if (p.montoRecibido() != null) {
-                if (p.metodo() != MetodoPago.EFECTIVO) {
-                    throw new BusinessException("El monto recibido y el vuelto solo aplican a pagos en efectivo");
-                }
-                if (p.montoRecibido().compareTo(p.monto()) < 0) {
-                    throw new BusinessException("El monto recibido (S/ " + p.montoRecibido()
-                            + ") es menor que el pago en efectivo (S/ " + p.monto() + ")");
-                }
-                pago.setMontoRecibido(p.montoRecibido().setScale(2));
-                pago.setVuelto(p.montoRecibido().subtract(p.monto()).setScale(2));
-            }
-            suma = suma.add(pago.getMonto());
-            comprobante.agregarPago(pago);
-        }
-        if (suma.compareTo(comprobante.getTotal()) != 0) {
-            throw new BusinessException("Los pagos suman S/ " + suma + " pero el total de la venta es S/ "
-                    + comprobante.getTotal());
-        }
-    }
-
     /**
      * Factura: solo a un cliente con RUC. Boleta: por encima de S/ 700 hay que identificar al
      * comprador. Nota de venta: sin restricciones (es un documento interno).
@@ -299,6 +272,10 @@ public class VentaService {
             throw new BusinessException("El cliente " + cliente.getNombre() + " está inactivo");
         }
         return cliente;
+    }
+
+    private static List<String> numeros(List<Comprobante> notas, TipoComprobante tipo) {
+        return notas.stream().filter(n -> n.getTipoComprobante() == tipo).map(Comprobante::getNumeroImpreso).toList();
     }
 
     private static void exigirEmitido(Comprobante comprobante) {

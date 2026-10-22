@@ -122,7 +122,7 @@ public class ComprobantePdf {
         texto(t, "SON: " + d.montoEnLetras(), chica);
         separador(t);
 
-        String prefijoPago = d.referencia() != null ? "Devolución - " : "";
+        String prefijoPago = d.esDevolucion() ? "Devolución - " : "";
         for (DatosImpresion.Pago p : d.pagos()) {
             dosColumnas(t, prefijoPago + p.metodo() + (p.referencia() != null ? " (" + p.referencia() + ")" : ""),
                     dinero(p.monto()), normal, normal);
@@ -242,7 +242,7 @@ public class ComprobantePdf {
             PdfPCell izquierda = sinBorde();
             izquierda.addElement(new Paragraph("SON: " + d.montoEnLetras(), negrita));
             // En una nota de crédito el "pago" es el dinero que se le devuelve al cliente.
-            StringBuilder pagos = new StringBuilder(d.referencia() != null ? "Devolución al cliente: " : "Forma de pago: Contado - ");
+            StringBuilder pagos = new StringBuilder(d.esDevolucion() ? "Devolución al cliente: " : "Forma de pago: Contado - ");
             d.pagos().forEach(p -> pagos.append(p.metodo()).append(" ").append(dinero(p.monto())).append("  "));
             izquierda.addElement(new Paragraph(pagos.toString().trim(), normal));
             if (d.observacion() != null) {

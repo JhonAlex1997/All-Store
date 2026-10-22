@@ -19,6 +19,8 @@ import java.math.BigDecimal;
  * Línea de un comprobante. Guarda una copia de lo vendido (SKU, descripción, códigos SUNAT y
  * precio) para que el comprobante no cambie si luego se edita el producto. No extiende
  * BaseEntity: la auditoría está en el comprobante.
+ *
+ * <p>En la nota de débito la línea es un concepto (intereses, penalidad): sin prenda ni SKU.
  */
 @Getter
 @Setter
@@ -37,11 +39,12 @@ public class ComprobanteDetalle {
     @Column(nullable = false)
     private int item;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    /** Prenda vendida; null en las líneas de concepto de una nota de débito. */
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "variante_id")
     private ProductoVariante variante;
 
-    @Column(nullable = false, length = 60)
+    @Column(length = 60)
     private String sku;
 
     @Column(nullable = false, length = 250)

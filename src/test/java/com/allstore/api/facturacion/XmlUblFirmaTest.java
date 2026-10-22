@@ -12,6 +12,7 @@ import com.allstore.api.facturacion.service.GeneradorXmlUbl;
 import com.allstore.api.venta.entity.Comprobante;
 import com.allstore.api.venta.entity.ComprobanteDetalle;
 import com.allstore.api.venta.entity.MotivoNotaCredito;
+import com.allstore.api.venta.entity.MotivoNotaDebito;
 import org.junit.jupiter.api.Test;
 import org.w3c.dom.Document;
 import org.w3c.dom.NodeList;
@@ -45,6 +46,7 @@ class XmlUblFirmaTest {
 
     private static final String NS_CBC = "urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2";
     private static final String NS_SAC = "urn:sunat:names:specification:ubl:peru:schema:xsd:SunatAggregateComponents-1";
+    private static final String NS_CAC = "urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2";
 
     private final GeneradorXmlUbl generador = new GeneradorXmlUbl();
     private final GeneradorResumenXml generadorResumen = new GeneradorResumenXml();
@@ -87,7 +89,7 @@ class XmlUblFirmaTest {
         nota.setSerie("BC01");
         nota.setCorrelativo(3);
         nota.setComprobanteOrigen(boleta);
-        nota.setMotivoNota(MotivoNotaCredito.DEVOLUCION_POR_ITEM);
+        nota.setMotivoNotaCredito(MotivoNotaCredito.DEVOLUCION_POR_ITEM);
         nota.setSustento("Cambio de talla");
 
         Document xml = parsear(firmador.firmar(generador.generar(nota, empresa())).xml());
@@ -102,6 +104,47 @@ class XmlUblFirmaTest {
         assertThat(ordenDeHijos(xml, "CreditNoteLine")).doesNotContain("AllowanceCharge");
         var precios = xml.getElementsByTagNameNS(NS_CBC, "PriceAmount");
         assertThat(precios.item(precios.getLength() - 1).getTextContent()).isEqualTo("71.95");
+    }
+
+    @Test
+    void notaDeDebitoConSuMotivoTotalesYLineaDeConcepto() throws Exception {
+        Comprobante factura = boleta();
+        factura.setTipoComprobante(TipoComprobante.FACTURA);
+        factura.setSerie("F001");
+        Comprobante nota = new Comprobante();
+        nota.setTipoComprobante(TipoComprobante.NOTA_DEBITO);
+        nota.setSerie("FD01");
+        nota.setCorrelativo(2);
+        nota.setFechaEmision(factura.getFechaEmision());
+        nota.copiarClienteDe(factura);
+        nota.setComprobanteOrigen(factura);
+        nota.setMotivoNotaDebito(MotivoNotaDebito.PENALIDADES);
+        nota.setSustento("Penalidad por pago fuera de plazo");
+        ComprobanteDetalle concepto = new ComprobanteDetalle();
+        concepto.setDescripcion("Penalidad");
+        concepto.setUnidadMedida("ZZ");
+        concepto.setTipoAfectacionIgv("10");
+        concepto.setCantidad(1);
+        concepto.setPrecioUnitario(new BigDecimal("23.60"));
+        concepto.setDescuento(BigDecimal.ZERO);
+        concepto.setValorVenta(new BigDecimal("20.00"));
+        concepto.setIgv(new BigDecimal("3.60"));
+        concepto.setTotal(new BigDecimal("23.60"));
+        nota.agregarDetalle(concepto);
+        nota.recalcularTotales();
+
+        FirmadorXml.XmlFirmado firmado = firmador.firmar(generador.generar(nota, empresa()));
+        Document xml = parsear(firmado.xml());
+
+        assertThat(firmaValida(xml)).isTrue();
+        assertThat(xml.getDocumentElement().getLocalName()).isEqualTo("DebitNote");
+        assertThat(cbc(xml, "ResponseCode")).isEqualTo("03");
+        assertThat(cbc(xml, "ReferenceID")).isEqualTo("F001-15");
+        assertThat(cbc(xml, "DebitedQuantity")).isEqualTo("1");
+        assertThat(xml.getElementsByTagNameNS(NS_CAC, "RequestedMonetaryTotal").getLength()).isEqualTo(1);
+        assertThat(xml.getElementsByTagNameNS(NS_CAC, "LegalMonetaryTotal").getLength()).isZero();
+        assertThat(cbc(xml, "PayableAmount")).isEqualTo("23.60");
+        assertThat(firmado.xml()).as("el concepto no tiene código de producto").doesNotContain("SellersItemIdentification");
     }
 
     @Test

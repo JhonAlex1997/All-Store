@@ -44,8 +44,9 @@ import java.util.Set;
 @RequiredArgsConstructor
 public class CajaService {
 
-    private static final Set<TipoComprobante> TIPOS_VENTA =
-            EnumSet.of(TipoComprobante.NOTA_VENTA, TipoComprobante.BOLETA, TipoComprobante.FACTURA);
+    /** Comprobantes que cobran: las ventas y las notas de débito (cobran un monto adicional). */
+    private static final Set<TipoComprobante> TIPOS_VENTA = EnumSet.of(TipoComprobante.NOTA_VENTA,
+            TipoComprobante.BOLETA, TipoComprobante.FACTURA, TipoComprobante.NOTA_DEBITO);
     private static final Set<TipoComprobante> TIPOS_DEVOLUCION = EnumSet.of(TipoComprobante.NOTA_CREDITO);
     private static final DateTimeFormatter HORA = DateTimeFormatter.ofPattern("dd/MM HH:mm");
 

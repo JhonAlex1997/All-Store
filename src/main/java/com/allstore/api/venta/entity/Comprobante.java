@@ -29,8 +29,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Documento de venta: nota de venta, boleta, factura o nota de crédito. El usuario que lo emitió
- * es created_by (BaseEntity).
+ * Documento de venta: nota de venta, boleta, factura, nota de crédito o nota de débito. El
+ * usuario que lo emitió es created_by (BaseEntity).
  */
 @Getter
 @Setter
@@ -114,10 +114,12 @@ public class Comprobante extends BaseEntity {
     @Column(length = 500)
     private String observacion;
 
-    /** Solo notas de crédito: motivo del Catálogo 09 y su sustento. */
-    @Convert(converter = MotivoNotaCreditoConverter.class)
+    /**
+     * Solo notas: código del motivo (Catálogo 09 en la de crédito, Catálogo 10 en la de débito) y
+     * su sustento. Se lee con getMotivoNotaCredito / getMotivoNotaDebito.
+     */
     @Column(name = "motivo_nota", length = 2, updatable = false)
-    private MotivoNotaCredito motivoNota;
+    private String motivoNota;
 
     @Column(length = 250, updatable = false)
     private String sustento;
@@ -185,6 +187,24 @@ public class Comprobante extends BaseEntity {
             totalIgv = totalIgv.add(d.getIgv());
             total = total.add(d.getTotal());
         }
+    }
+
+    public MotivoNotaCredito getMotivoNotaCredito() {
+        return tipoComprobante == TipoComprobante.NOTA_CREDITO && motivoNota != null
+                ? MotivoNotaCredito.desdeCodigo(motivoNota) : null;
+    }
+
+    public void setMotivoNotaCredito(MotivoNotaCredito motivo) {
+        this.motivoNota = motivo.getCodigo();
+    }
+
+    public MotivoNotaDebito getMotivoNotaDebito() {
+        return tipoComprobante == TipoComprobante.NOTA_DEBITO && motivoNota != null
+                ? MotivoNotaDebito.desdeCodigo(motivoNota) : null;
+    }
+
+    public void setMotivoNotaDebito(MotivoNotaDebito motivo) {
+        this.motivoNota = motivo.getCodigo();
     }
 
     public String getNumeroImpreso() {

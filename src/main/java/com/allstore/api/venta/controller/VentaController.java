@@ -7,12 +7,14 @@ import com.allstore.api.impresion.ImpresionService;
 import com.allstore.api.venta.dto.AnularVentaRequest;
 import com.allstore.api.venta.dto.ConvertirVentaRequest;
 import com.allstore.api.venta.dto.NotaCreditoRequest;
+import com.allstore.api.venta.dto.NotaDebitoRequest;
 import com.allstore.api.venta.dto.VentaRequest;
 import com.allstore.api.venta.dto.VentaResponse;
 import com.allstore.api.venta.dto.VentaResumenResponse;
 import com.allstore.api.venta.entity.EstadoComprobante;
 import com.allstore.api.venta.service.AnulacionService;
 import com.allstore.api.venta.service.NotaCreditoService;
+import com.allstore.api.venta.service.NotaDebitoService;
 import com.allstore.api.venta.service.VentaService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -45,6 +47,7 @@ public class VentaController {
     private final VentaService ventaService;
     private final NotaCreditoService notaCreditoService;
     private final AnulacionService anulacionService;
+    private final NotaDebitoService notaDebitoService;
     private final ImpresionService impresionService;
 
     /** Ej: GET /api/ventas?desde=2026-10-01&hasta=2026-10-31&tipoComprobante=BOLETA&busqueda=B001-15 */
@@ -99,6 +102,16 @@ public class VentaController {
     @ResponseStatus(HttpStatus.CREATED)
     public VentaResponse emitirNotaCredito(@PathVariable Long id, @Valid @RequestBody NotaCreditoRequest request) {
         return notaCreditoService.emitir(id, request);
+    }
+
+    /**
+     * Cobro adicional sobre una boleta o factura: intereses por mora, penalidad o aumento en el
+     * valor. Ej. conceptos: [{"descripcion": "Penalidad por pago fuera de plazo", "monto": 20.00}]
+     */
+    @PostMapping("/{id}/notas-debito")
+    @ResponseStatus(HttpStatus.CREATED)
+    public VentaResponse emitirNotaDebito(@PathVariable Long id, @Valid @RequestBody NotaDebitoRequest request) {
+        return notaDebitoService.emitir(id, request);
     }
 
     /**

@@ -22,9 +22,9 @@ import static com.allstore.api.facturacion.service.XmlUbl.monto;
 import static com.allstore.api.facturacion.service.XmlUbl.raiz;
 
 /**
- * Arma el XML UBL 2.1 que exige SUNAT para factura y boleta (Invoice) y nota de crédito
- * (CreditNote). El orden de los elementos es el del esquema UBL: SUNAT lo valida y rechaza un
- * XML con los elementos en otro orden.
+ * Arma el XML UBL 2.1 que exige SUNAT para factura y boleta (Invoice), nota de crédito
+ * (CreditNote) y nota de débito (DebitNote). El orden de los elementos es el del esquema UBL:
+ * SUNAT lo valida y rechaza un XML con los elementos en otro orden.
  *
  * <p>Los montos salen del comprobante tal como se guardó (base, IGV y total por línea), así el
  * XML siempre coincide con lo que se cobró y se imprimió.
@@ -32,15 +32,48 @@ import static com.allstore.api.facturacion.service.XmlUbl.raiz;
 @Component
 public class GeneradorXmlUbl {
 
-    static final String NS_INVOICE = "urn:oasis:names:specification:ubl:schema:xsd:Invoice-2";
-    static final String NS_CREDIT_NOTE = "urn:oasis:names:specification:ubl:schema:xsd:CreditNote-2";
+    /** Lo que cambia entre los tres documentos: raíz, nombre de la línea y de sus totales. */
+    private enum Formato {
+        FACTURA("urn:oasis:names:specification:ubl:schema:xsd:Invoice-2", "Invoice", "InvoiceLine",
+                "InvoicedQuantity", "LegalMonetaryTotal"),
+        NOTA_CREDITO("urn:oasis:names:specification:ubl:schema:xsd:CreditNote-2", "CreditNote", "CreditNoteLine",
+                "CreditedQuantity", "LegalMonetaryTotal"),
+        NOTA_DEBITO("urn:oasis:names:specification:ubl:schema:xsd:DebitNote-2", "DebitNote", "DebitNoteLine",
+                "DebitedQuantity", "RequestedMonetaryTotal");
+
+        final String espacioNombres;
+        final String raiz;
+        final String linea;
+        final String cantidad;
+        final String totales;
+
+        Formato(String espacioNombres, String raiz, String linea, String cantidad, String totales) {
+            this.espacioNombres = espacioNombres;
+            this.raiz = raiz;
+            this.linea = linea;
+            this.cantidad = cantidad;
+            this.totales = totales;
+        }
+
+        static Formato de(TipoComprobante tipo) {
+            return switch (tipo) {
+                case NOTA_CREDITO -> NOTA_CREDITO;
+                case NOTA_DEBITO -> NOTA_DEBITO;
+                default -> FACTURA;
+            };
+        }
+
+        boolean esNota() {
+            return this != FACTURA;
+        }
+    }
 
     private static final BigDecimal FACTOR_IGV = BigDecimal.ONE.add(CalculoIgv.TASA_IGV);
     private static final DateTimeFormatter HORA = DateTimeFormatter.ofPattern("HH:mm:ss");
 
     public Document generar(Comprobante c, Empresa empresa) {
-        boolean notaCredito = c.getTipoComprobante() == TipoComprobante.NOTA_CREDITO;
-        Element raiz = raiz(notaCredito ? NS_CREDIT_NOTE : NS_INVOICE, notaCredito ? "CreditNote" : "Invoice", false);
+        Formato formato = Formato.de(c.getTipoComprobante());
+        Element raiz = raiz(formato.espacioNombres, formato.raiz, false);
 
         OffsetDateTime fecha = c.getFechaEmision().atZoneSameInstant(JpaAuditingConfig.ZONA_LIMA).toOffsetDateTime();
         cbc(raiz, "UBLVersionID", "2.1");
@@ -48,7 +81,7 @@ public class GeneradorXmlUbl {
         cbc(raiz, "ID", numero(c));
         cbc(raiz, "IssueDate", fecha.toLocalDate().toString());
         cbc(raiz, "IssueTime", HORA.format(fecha));
-        if (!notaCredito) {
+        if (!formato.esNota()) {
             // Catálogo 51: 0101 = venta interna.
             cbc(raiz, "InvoiceTypeCode", c.getTipoComprobante().getCodigo()).setAttribute("listID", "0101");
         }
@@ -56,11 +89,12 @@ public class GeneradorXmlUbl {
         cbc(raiz, "Note", MontoEnLetras.convertir(c.getTotal())).setAttribute("languageLocaleID", "1000");
         cbc(raiz, "DocumentCurrencyCode", XmlUbl.MONEDA);
 
-        if (notaCredito) {
+        if (formato.esNota()) {
+            // Comprobante que modifica y motivo (Catálogo 09 en crédito, 10 en débito).
             Comprobante origen = c.getComprobanteOrigen();
             Element discrepancia = cac(raiz, "DiscrepancyResponse");
             cbc(discrepancia, "ReferenceID", numero(origen));
-            cbc(discrepancia, "ResponseCode", c.getMotivoNota().getCodigo());
+            cbc(discrepancia, "ResponseCode", c.getMotivoNota());
             cbc(discrepancia, "Description", c.getSustento());
             Element referencia = cac(cac(raiz, "BillingReference"), "InvoiceDocumentReference");
             cbc(referencia, "ID", numero(origen));
@@ -77,10 +111,10 @@ public class GeneradorXmlUbl {
             cbc(forma, "PaymentMeansID", "Contado");
         }
         impuestos(raiz, c);
-        totales(raiz, c);
+        totales(raiz, c, formato);
         int i = 1;
         for (ComprobanteDetalle d : c.getDetalles()) {
-            linea(raiz, d, i++, notaCredito);
+            linea(raiz, d, i++, formato);
         }
         return raiz.getOwnerDocument();
     }
@@ -135,18 +169,18 @@ public class GeneradorXmlUbl {
         }
     }
 
-    private void totales(Element raiz, Comprobante c) {
-        Element totales = cac(raiz, "LegalMonetaryTotal");
+    private void totales(Element raiz, Comprobante c, Formato formato) {
+        Element totales = cac(raiz, formato.totales);
         BigDecimal valorVenta = c.getOpGravadas().add(c.getOpExoneradas()).add(c.getOpInafectas());
         monto(totales, "LineExtensionAmount", valorVenta);
         monto(totales, "TaxInclusiveAmount", c.getTotal());
         monto(totales, "PayableAmount", c.getTotal());
     }
 
-    private void linea(Element raiz, ComprobanteDetalle d, int numero, boolean notaCredito) {
-        Element linea = cac(raiz, notaCredito ? "CreditNoteLine" : "InvoiceLine");
+    private void linea(Element raiz, ComprobanteDetalle d, int numero, Formato formato) {
+        Element linea = cac(raiz, formato.linea);
         cbc(linea, "ID", String.valueOf(numero));
-        cbc(linea, notaCredito ? "CreditedQuantity" : "InvoicedQuantity", String.valueOf(d.getCantidad()))
+        cbc(linea, formato.cantidad, String.valueOf(d.getCantidad()))
                 .setAttribute("unitCode", d.getUnidadMedida());
         monto(linea, "LineExtensionAmount", d.getValorVenta());
 
@@ -163,7 +197,7 @@ public class GeneradorXmlUbl {
         BigDecimal descuento = valorBruto.subtract(d.getValorVenta());
         boolean conDescuento = d.getDescuento().signum() > 0 && descuento.signum() > 0;
 
-        if (conDescuento && notaCredito) {
+        if (conDescuento && formato == Formato.NOTA_CREDITO) {
             // En notas de crédito SUNAT no resta el descuento de la línea (AllowanceCharge) al
             // validar cantidad x valor unitario = valor de la línea (rechaza con 3271 / observa con
             // 4288). Se informa el valor unitario ya neto del descuento, sin AllowanceCharge.
@@ -179,7 +213,10 @@ public class GeneradorXmlUbl {
 
         Element item = cac(linea, "Item");
         cbc(item, "Description", d.getDescripcion());
-        cbc(cac(item, "SellersItemIdentification"), "ID", d.getSku());
+        if (d.getSku() != null) {
+            // Las líneas de concepto (nota de débito) no tienen código de producto.
+            cbc(cac(item, "SellersItemIdentification"), "ID", d.getSku());
+        }
         precio(cac(linea, "Price"), "PriceAmount", valorUnitario);
     }
 

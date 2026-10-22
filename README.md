@@ -14,13 +14,12 @@ producción (desde la recepción de materia prima hasta la venta final).
 | `empresa` | Empresa emisora, establecimientos (código de anexo SUNAT) y series por tipo de comprobante |
 | `seguridad` | Usuarios, roles, login con JWT, bloqueo por intentos fallidos, auditoría de quién hizo cada cambio |
 | `inventario` | Stock por variante y establecimiento, kardex, inventario inicial, ajustes y traslados |
-| `venta` | Nota de venta, boleta, factura y nota de crédito con IGV, descuentos y pagos mixtos; conversión y anulación de nota de venta |
+| `venta` | Nota de venta, boleta, factura, notas de crédito y débito con IGV, descuentos y pagos mixtos; conversión de nota de venta y anulación de comprobantes |
 | `caja` | Apertura con fondo, ingresos y egresos de efectivo, cierre con cuadre (esperado, contado, diferencia) |
 | `facturacion` | Facturación electrónica SUNAT: XML UBL 2.1, firma digital, envío con reintentos, CDR, hash y QR; baja de comprobantes (comunicación de baja y resumen diario) |
 | `impresion` | Representación impresa en PDF: ticket de 80 mm y A4, con QR, hash y leyenda de SUNAT |
 
-Pendiente: nota de débito, guía de remisión electrónica, compras, producción, contabilidad.
-Frontend.
+Pendiente: guía de remisión electrónica, compras, producción, contabilidad. Frontend.
 
 ## Levantar en local
 
@@ -115,11 +114,22 @@ ella el sistema no arranca), `DB_PASSWORD`, `CORS_ORIGENES`.
   prorratea según la cantidad devuelta.
 - Cambio de talla = nota de crédito por la prenda devuelta + venta nueva por la que se lleva.
 
+## Notas de débito
+
+`POST /api/ventas/{id}/notas-debito` cobra un monto adicional sobre una boleta o factura vigente.
+
+- Motivos del Catálogo 10: `INTERESES_MORA` (01), `AUMENTO_VALOR` (02), `PENALIDADES` (03).
+- Serie con la misma letra que el comprobante (BD01 para boletas, FD01 para facturas).
+- Cada línea es un concepto (unidad ZZ, servicio), no una prenda: no mueve stock. Cada concepto
+  indica su afectación del IGV: 10 gravado (por defecto), 20 exonerado o 30 inafecto. Los
+  intereses moratorios y las penalidades suelen no estar gravados: confírmalo con el contador.
+- Se cobra en la caja abierta, como una venta (cuenta en el cuadre).
+
 ## Caja
 
 - Cada cajero abre su caja con un fondo de sencillo (una sola abierta a la vez). Sin caja abierta
   no se vende ni se devuelve dinero, y la caja debe ser del local de la serie.
-- `efectivo esperado = fondo + ventas en efectivo - devoluciones en efectivo + ingresos - egresos`
+- `efectivo esperado = fondo + cobros en efectivo (ventas y notas de débito) - devoluciones en efectivo + ingresos - egresos`
   (el vuelto no cuenta: entra y sale en el momento). El resumen trae también lo cobrado con
   tarjeta, Yape, Plin y transferencia para cuadrar vouchers y capturas.
 - Al cerrar se guarda una foto del cuadre (esperado, contado, diferencia) que ya no cambia: una
@@ -128,7 +138,7 @@ ella el sistema no arranca), `DB_PASSWORD`, `CORS_ORIGENES`.
 
 ## Facturación electrónica (SUNAT)
 
-Boletas, facturas y notas de crédito se envían **directo a SUNAT** (servicio SOAP `billService`).
+Boletas, facturas y notas de crédito y débito se envían **directo a SUNAT** (servicio SOAP `billService`).
 El envío está detrás de la interfaz `ServicioEnvioSunat`: para usar un OSE basta con otra
 implementación.
 
@@ -188,8 +198,9 @@ SUNAT_CERTIFICADO_CLAVE=...
 ```
 
 Verificado contra SUNAT beta: boletas (con DNI y a "Clientes varios"), facturas con varias líneas
-y descuentos, notas de crédito total y por ítem sobre boleta y factura, comunicaciones de baja
-(factura y nota de crédito) y resúmenes diarios de anulación de boletas, todos aceptados.
+y descuentos, notas de crédito total y por ítem sobre boleta y factura, notas de débito (con
+conceptos gravados e inafectos), comunicaciones de baja (factura y notas) y resúmenes diarios de
+anulación de boletas y sus notas, todos aceptados.
 
 ## Representación impresa
 

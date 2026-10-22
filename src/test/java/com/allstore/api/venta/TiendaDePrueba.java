@@ -24,6 +24,7 @@ import com.allstore.api.venta.dto.VentaResponse;
 import com.allstore.api.venta.entity.MetodoPago;
 import com.allstore.api.venta.service.AnulacionService;
 import com.allstore.api.venta.service.NotaCreditoService;
+import com.allstore.api.venta.service.NotaDebitoService;
 import com.allstore.api.venta.service.VentaService;
 import org.junit.jupiter.api.BeforeEach;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -45,6 +46,7 @@ abstract class TiendaDePrueba {
     @Autowired protected VentaService ventaService;
     @Autowired protected NotaCreditoService notaCreditoService;
     @Autowired protected AnulacionService anulacionService;
+    @Autowired protected NotaDebitoService notaDebitoService;
     @Autowired protected InventarioService inventarioService;
     @Autowired protected CajaService cajaService;
     @Autowired protected ProductoService productoService;
@@ -59,6 +61,8 @@ abstract class TiendaDePrueba {
     protected Long serieFactura;
     protected Long serieNcBoleta;
     protected Long serieNcFactura;
+    protected Long serieNdBoleta;
+    protected Long serieNdFactura;
     /** Jean de S/ 89.90 con 5 unidades en la tienda. */
     protected Long jeanA;
     /** Jean de S/ 89.90 con 10 unidades en la tienda. */
@@ -77,6 +81,8 @@ abstract class TiendaDePrueba {
         serieFactura = serie(TipoComprobante.FACTURA, "F991");
         serieNcBoleta = serie(TipoComprobante.NOTA_CREDITO, "BC91");
         serieNcFactura = serie(TipoComprobante.NOTA_CREDITO, "FC91");
+        serieNdBoleta = serie(TipoComprobante.NOTA_DEBITO, "BD91");
+        serieNdFactura = serie(TipoComprobante.NOTA_DEBITO, "FD91");
 
         ProductoDetalleResponse jean = productoService.crear(new ProductoCreateRequest("PRUEBA-VTA", "Jean prueba", null,
                 1L, new BigDecimal("89.90"), List.of(3L, 4L), List.of(1L)));

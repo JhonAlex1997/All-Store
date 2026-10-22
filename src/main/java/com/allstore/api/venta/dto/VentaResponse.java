@@ -9,6 +9,7 @@ import com.allstore.api.venta.entity.ComprobantePago;
 import com.allstore.api.venta.entity.EstadoComprobante;
 import com.allstore.api.venta.entity.MetodoPago;
 import com.allstore.api.venta.entity.MotivoNotaCredito;
+import com.allstore.api.venta.entity.MotivoNotaDebito;
 
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
@@ -20,8 +21,10 @@ import java.util.List;
  * @param comprobanteOrigen número del documento del que proviene (la nota de venta convertida, o
  *                          el comprobante que modifica una nota de crédito)
  * @param convertidoEn      si es una nota de venta convertida, el número de la boleta o factura
- * @param notasCredito      si es una boleta o factura, las notas de crédito emitidas sobre ella
+ * @param notasCredito      si es una boleta o factura, las notas de crédito vigentes emitidas sobre ella
+ * @param notasDebito       si es una boleta o factura, las notas de débito vigentes emitidas sobre ella
  * @param motivoNota        solo notas de crédito: motivo del Catálogo 09
+ * @param motivoNotaDebito  solo notas de débito: motivo del Catálogo 10
  * @param vendedor          usuario que registró el comprobante
  * @param sunat             estado ante SUNAT, hash y QR (null en notas de venta, que no se envían)
  * @param bajaSunat         si se anuló un comprobante electrónico: su baja ante SUNAT y el estado
@@ -48,7 +51,9 @@ public record VentaResponse(
         String comprobanteOrigen,
         String convertidoEn,
         List<String> notasCredito,
+        List<String> notasDebito,
         MotivoNotaCredito motivoNota,
+        MotivoNotaDebito motivoNotaDebito,
         String sustento,
         Long cajaSesionId,
         String motivoAnulacion,
@@ -63,11 +68,12 @@ public record VentaResponse(
     public record Cliente(Long id, String tipoDocumento, String numeroDocumento, String nombre, String direccion) {
     }
 
+    /** varianteId y sku son null en las líneas de concepto de una nota de débito. */
     public record Detalle(int item, Long varianteId, String sku, String descripcion, String unidadMedida,
                           String tipoAfectacionIgv, int cantidad, BigDecimal precioUnitario, BigDecimal descuento,
                           BigDecimal valorVenta, BigDecimal igv, BigDecimal total) {
         static Detalle from(ComprobanteDetalle d) {
-            return new Detalle(d.getItem(), d.getVariante().getId(), d.getSku(), d.getDescripcion(), d.getUnidadMedida(),
+            return new Detalle(d.getItem(), d.getVariante() == null ? null : d.getVariante().getId(), d.getSku(), d.getDescripcion(), d.getUnidadMedida(),
                     d.getTipoAfectacionIgv(), d.getCantidad(), d.getPrecioUnitario(), d.getDescuento(),
                     d.getValorVenta(), d.getIgv(), d.getTotal());
         }
@@ -80,8 +86,8 @@ public record VentaResponse(
         }
     }
 
-    public static VentaResponse from(Comprobante c, String convertidoEn, List<String> notasCredito, SunatInfo sunat,
-                                     BajaSunatInfo bajaSunat) {
+    public static VentaResponse from(Comprobante c, String convertidoEn, List<String> notasCredito,
+                                     List<String> notasDebito, SunatInfo sunat, BajaSunatInfo bajaSunat) {
         return new VentaResponse(
                 c.getId(),
                 c.getTipoComprobante(),
@@ -105,7 +111,9 @@ public record VentaResponse(
                 c.getComprobanteOrigen() == null ? null : c.getComprobanteOrigen().getNumeroImpreso(),
                 convertidoEn,
                 notasCredito,
-                c.getMotivoNota(),
+                notasDebito,
+                c.getMotivoNotaCredito(),
+                c.getMotivoNotaDebito(),
                 c.getSustento(),
                 c.getCajaSesion() == null ? null : c.getCajaSesion().getId(),
                 c.getMotivoAnulacion(),

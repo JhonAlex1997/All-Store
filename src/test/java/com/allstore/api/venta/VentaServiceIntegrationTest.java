@@ -72,7 +72,7 @@ class VentaServiceIntegrationTest extends TiendaDePrueba {
         assertThatThrownBy(() -> vender(TipoComprobante.BOLETA, serieBoleta, null,
                 List.of(item(jeanA, 1, null)), List.of(efectivo("80.00", null))))
                 .isInstanceOf(BusinessException.class)
-                .hasMessageContaining("Los pagos suman S/ 80.00 pero el total de la venta es S/ 89.90");
+                .hasMessageContaining("Los pagos suman S/ 80.00 pero el total es S/ 89.90");
     }
 
     @Test

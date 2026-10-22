@@ -56,7 +56,8 @@ import java.util.Set;
 public class EnvioSunatService {
 
     private static final Set<TipoComprobante> ELECTRONICOS =
-            EnumSet.of(TipoComprobante.FACTURA, TipoComprobante.BOLETA, TipoComprobante.NOTA_CREDITO);
+            EnumSet.of(TipoComprobante.FACTURA, TipoComprobante.BOLETA, TipoComprobante.NOTA_CREDITO,
+                    TipoComprobante.NOTA_DEBITO);
     private static final int LOTE = 20;
     /** Espera antes de la primera consulta de un ticket: SUNAT suele procesarlo en segundos. */
     private static final int SEGUNDOS_PRIMERA_CONSULTA = 20;

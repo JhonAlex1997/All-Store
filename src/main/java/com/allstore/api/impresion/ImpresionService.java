@@ -60,10 +60,7 @@ public class ImpresionService {
                 v.fechaEmision().atZoneSameInstant(JpaAuditingConfig.ZONA_LIMA).toOffsetDateTime(),
                 v.vendedor(),
                 cliente(v),
-                v.tipoComprobante() == TipoComprobante.NOTA_CREDITO
-                        ? new DatosImpresion.Referencia(v.comprobanteOrigen(),
-                        v.motivoNota().getCodigo() + " - " + v.motivoNota().getDescripcion(), v.sustento())
-                        : null,
+                referencia(v),
                 v.detalles().stream().map(d -> new DatosImpresion.Linea(d.cantidad(), unidad(d.unidadMedida()), d.sku(),
                         d.descripcion(), d.precioUnitario(), d.descuento(), d.total())).toList(),
                 v.opGravadas(),
@@ -80,6 +77,19 @@ public class ImpresionService {
                 leyenda(v, titulo, electronico),
                 v.observacion()
         );
+    }
+
+    /** En las notas: el comprobante que modifican y el motivo con su código de SUNAT. */
+    private static DatosImpresion.Referencia referencia(VentaResponse v) {
+        if (v.motivoNota() != null) {
+            return new DatosImpresion.Referencia(v.comprobanteOrigen(),
+                    v.motivoNota().getCodigo() + " - " + v.motivoNota().getDescripcion(), v.sustento(), true);
+        }
+        if (v.motivoNotaDebito() != null) {
+            return new DatosImpresion.Referencia(v.comprobanteOrigen(),
+                    v.motivoNotaDebito().getCodigo() + " - " + v.motivoNotaDebito().getDescripcion(), v.sustento(), false);
+        }
+        return null;
     }
 
     /** Lo anulado y lo emitido en el entorno de pruebas se marca para que nadie lo tome por válido. */
@@ -133,9 +143,13 @@ public class ImpresionService {
         };
     }
 
-    /** NIU (Catálogo 03) se imprime como UND, que es lo que entiende el cliente. */
+    /** Códigos del Catálogo 03 en la forma que entiende el cliente: NIU = UND, ZZ (servicio) = SERV. */
     private static String unidad(String codigoSunat) {
-        return "NIU".equals(codigoSunat) ? "UND" : codigoSunat;
+        return switch (codigoSunat) {
+            case "NIU" -> "UND";
+            case "ZZ" -> "SERV";
+            default -> codigoSunat;
+        };
     }
 
     /** "BOLETA DE VENTA ELECTRÓNICA" → "Boleta de Venta Electrónica". */

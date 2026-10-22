@@ -51,8 +51,18 @@ public record DatosImpresion(
     public record Cliente(String tipoDocumento, String numeroDocumento, String nombre, String direccion) {
     }
 
-    /** Solo notas de crédito: el comprobante que modifica y por qué. */
-    public record Referencia(String documento, String motivo, String sustento) {
+    /**
+     * Solo notas: el comprobante que modifica y por qué.
+     *
+     * @param devolucion true en la nota de crédito: sus "pagos" son dinero que se le devuelve al
+     *                   cliente; en la nota de débito son un cobro
+     */
+    public record Referencia(String documento, String motivo, String sustento, boolean devolucion) {
+    }
+
+    /** Si los pagos son una devolución al cliente (nota de crédito). */
+    public boolean esDevolucion() {
+        return referencia != null && referencia.devolucion();
     }
 
     public record Linea(int cantidad, String unidad, String codigo, String descripcion, BigDecimal precioUnitario,

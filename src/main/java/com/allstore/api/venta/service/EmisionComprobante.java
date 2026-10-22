@@ -10,19 +10,25 @@ import com.allstore.api.empresa.service.SerieService;
 import com.allstore.api.facturacion.dto.BajaSunatInfo;
 import com.allstore.api.facturacion.service.EnvioSunatService;
 import com.allstore.api.inventario.entity.MovimientoInventario;
+import com.allstore.api.venta.dto.PagoRequest;
 import com.allstore.api.venta.dto.VentaResponse;
 import com.allstore.api.venta.entity.Comprobante;
+import com.allstore.api.venta.entity.ComprobantePago;
 import com.allstore.api.venta.entity.EstadoComprobante;
+import com.allstore.api.venta.entity.MetodoPago;
 import com.allstore.api.venta.repository.ComprobanteRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 
+import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.util.List;
 
 /**
- * Pasos comunes a todo comprobante (venta, conversión, nota de crédito): validar la serie,
- * tomar el número, guardar y enlazar los movimientos de inventario con el documento.
+ * Pasos comunes a todo comprobante (venta, conversión, notas de crédito y débito): validar la
+ * serie, registrar los pagos, tomar el número, guardar y enlazar los movimientos de inventario
+ * con el documento.
  */
 @Component
 @RequiredArgsConstructor
@@ -66,9 +72,43 @@ public class EmisionComprobante {
 
     /** Respuesta completa del comprobante, con su estado ante SUNAT (y el de su baja, si se anuló). */
     public VentaResponse respuesta(Comprobante comprobante, String convertidoEn, List<String> notasCredito) {
+        return respuesta(comprobante, convertidoEn, notasCredito, List.of());
+    }
+
+    public VentaResponse respuesta(Comprobante comprobante, String convertidoEn, List<String> notasCredito,
+                                   List<String> notasDebito) {
         BajaSunatInfo baja = comprobante.getEstado() == EstadoComprobante.ANULADO
                 && comprobante.getTipoComprobante().isElectronico() ? envioSunatService.infoBaja(comprobante) : null;
-        return VentaResponse.from(comprobante, convertidoEn, notasCredito, envioSunatService.info(comprobante), baja);
+        return VentaResponse.from(comprobante, convertidoEn, notasCredito, notasDebito,
+                envioSunatService.info(comprobante), baja);
+    }
+
+    /** Los pagos deben sumar exactamente el total. Solo el efectivo admite vuelto. */
+    public void agregarPagos(Comprobante comprobante, List<PagoRequest> pagos) {
+        BigDecimal suma = BigDecimal.ZERO;
+        for (PagoRequest p : pagos) {
+            ComprobantePago pago = new ComprobantePago();
+            pago.setMetodo(p.metodo());
+            pago.setMonto(p.monto().setScale(2));
+            pago.setReferencia(StringUtils.hasText(p.referencia()) ? p.referencia().trim() : null);
+            if (p.montoRecibido() != null) {
+                if (p.metodo() != MetodoPago.EFECTIVO) {
+                    throw new BusinessException("El monto recibido y el vuelto solo aplican a pagos en efectivo");
+                }
+                if (p.montoRecibido().compareTo(p.monto()) < 0) {
+                    throw new BusinessException("El monto recibido (S/ " + p.montoRecibido()
+                            + ") es menor que el pago en efectivo (S/ " + p.monto() + ")");
+                }
+                pago.setMontoRecibido(p.montoRecibido().setScale(2));
+                pago.setVuelto(p.montoRecibido().subtract(p.monto()).setScale(2));
+            }
+            suma = suma.add(pago.getMonto());
+            comprobante.agregarPago(pago);
+        }
+        if (suma.compareTo(comprobante.getTotal()) != 0) {
+            throw new BusinessException("Los pagos suman S/ " + suma + " pero el total es S/ "
+                    + comprobante.getTotal());
+        }
     }
 
     public void referenciar(List<MovimientoInventario> movimientos, Comprobante comprobante) {

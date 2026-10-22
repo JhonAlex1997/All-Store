@@ -124,6 +124,10 @@
       "value": ""
     },
     {
+      "key": "serieNdBoletaId",
+      "value": ""
+    },
+    {
       "key": "boletaAnularId",
       "value": ""
     },
@@ -1070,7 +1074,7 @@
             "method": "GET",
             "header": [],
             "url": "{{baseUrl}}/api/series",
-            "description": "Guarda los ids de las primeras series activas de nota de venta, boleta, factura y nota de crédito para boletas."
+            "description": "Guarda los ids de las primeras series activas de nota de venta, boleta, factura y notas de crédito y débito para boletas."
           },
           "event": [
             {
@@ -1085,7 +1089,9 @@
                   "pm.collectionVariables.set(\"serieBoletaId\", id(\"BOLETA\"));",
                   "pm.collectionVariables.set(\"serieFacturaId\", id(\"FACTURA\"));",
                   "const nc = series.find(s => s.tipoComprobante === \"NOTA_CREDITO\" && s.codigo.startsWith(\"B\"));",
-                  "pm.collectionVariables.set(\"serieNcBoletaId\", nc ? nc.id : \"\");"
+                  "pm.collectionVariables.set(\"serieNcBoletaId\", nc ? nc.id : \"\");",
+                  "const nd = series.find(s => s.tipoComprobante === \"NOTA_DEBITO\" && s.codigo.startsWith(\"B\"));",
+                  "pm.collectionVariables.set(\"serieNdBoletaId\", nd ? nd.id : \"\");"
                 ]
               }
             }
@@ -1284,6 +1290,43 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test(\"Responde 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Nota de débito: penalidad sobre la boleta",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/ventas/{{ventaId}}/notas-debito",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"serieId\": {{serieNdBoletaId}},\n  \"motivo\": \"PENALIDADES\",\n  \"sustento\": \"Penalidad por pago fuera de plazo\",\n  \"conceptos\": [{ \"descripcion\": \"Penalidad por pago fuera de plazo\", \"monto\": 11.80 }],\n  \"pagos\": [{ \"metodo\": \"EFECTIVO\", \"monto\": 11.80 }]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Cobra un monto adicional sobre la boleta; no mueve stock y el cobro entra a la caja. Motivos: INTERESES_MORA, AUMENTO_VALOR, PENALIDADES. tipoAfectacionIgv por concepto: 10 gravado (por defecto), 20 exonerado, 30 inafecto."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 201\", () => pm.response.to.have.status(201));",
+                  "const nd = pm.response.json();",
+                  "pm.test(\"Separa el IGV del concepto\", () => pm.expect(nd.totalIgv).to.eql(1.8));",
+                  "console.log(nd.numero + \" cobra S/ \" + nd.total);"
                 ]
               }
             }

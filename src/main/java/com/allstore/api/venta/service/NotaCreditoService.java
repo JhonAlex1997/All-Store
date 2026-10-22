@@ -65,7 +65,7 @@ public class NotaCreditoService {
         nota.setCajaSesion(caja);
         nota.copiarClienteDe(origen);
         nota.setComprobanteOrigen(origen);
-        nota.setMotivoNota(request.motivo());
+        nota.setMotivoNotaCredito(request.motivo());
         nota.setSustento(request.sustento().trim());
 
         List<ComprobanteDetalle> lineas = request.motivo().isTotal()
