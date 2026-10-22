@@ -1,25 +1,26 @@
 # Modelo de datos de AllStore
 
-18 tablas y 20 llaves foráneas (versión de base de datos V8). Todas las tablas, salvo
-`comprobante_detalle` y `comprobante_pago`, tienen además `created_at`, `updated_at`,
-`created_by` y `updated_by` (auditoría), que no se repiten en el diagrama.
+22 tablas y 30 llaves foráneas (versión de base de datos V11). Todas las tablas, salvo las
+de líneas (`comprobante_detalle`, `comprobante_pago`, `guia_remision_detalle`, `resumen_sunat_detalle`), tienen además `created_at`, `updated_at`,
+`created_by` y `updated_by` (auditoría), que no se repiten en los diagramas.
 
 `empresa` y `usuario` no tienen llaves foráneas: hay una sola empresa (id = 1) y el usuario se
 relaciona por su `username` en las columnas de auditoría y en `caja_sesion.usuario`.
+
+El diccionario completo (cada columna con su tipo, reglas y descripción) se genera aparte en PDF.
 
 ## Catálogo e inventario
 
 ```mermaid
 erDiagram
-  CATEGORIA ||--o{ PRODUCTO : clasifica
-  PRODUCTO ||--|{ PRODUCTO_VARIANTE : tiene
-  TALLA ||--o{ PRODUCTO_VARIANTE : define
-  COLOR ||--o{ PRODUCTO_VARIANTE : define
+  CATEGORIA ||--o{ PRODUCTO : "clasifica"
+  PRODUCTO ||--|{ PRODUCTO_VARIANTE : "tiene"
+  TALLA ||--o{ PRODUCTO_VARIANTE : "define"
+  COLOR ||--o{ PRODUCTO_VARIANTE : "define"
   PRODUCTO_VARIANTE ||--o{ STOCK : "saldo en"
-  ESTABLECIMIENTO ||--o{ STOCK : guarda
-  PRODUCTO_VARIANTE ||--o{ MOVIMIENTO_INVENTARIO : kardex
-  ESTABLECIMIENTO ||--o{ MOVIMIENTO_INVENTARIO : registra
-
+  ESTABLECIMIENTO ||--o{ STOCK : "guarda"
+  PRODUCTO_VARIANTE ||--o{ MOVIMIENTO_INVENTARIO : "kardex"
+  ESTABLECIMIENTO ||--o{ MOVIMIENTO_INVENTARIO : "registra"
   CATEGORIA {
     bigint id PK
     varchar nombre
@@ -92,19 +93,27 @@ erDiagram
 
 ```mermaid
 erDiagram
-  ESTABLECIMIENTO ||--o{ SERIE : numera
+  ESTABLECIMIENTO ||--o{ SERIE : "numera"
   ESTABLECIMIENTO ||--o{ CAJA_SESION : "abre caja"
   CAJA_SESION ||--o{ CAJA_MOVIMIENTO : "ingreso o egreso"
-  CAJA_SESION ||--o{ COMPROBANTE : cobra
+  CAJA_SESION ||--o{ COMPROBANTE : "cobra"
   SERIE ||--o{ COMPROBANTE : "da numero"
-  ESTABLECIMIENTO ||--o{ COMPROBANTE : emite
-  CLIENTE ||--o{ COMPROBANTE : recibe
-  COMPROBANTE |o--o{ COMPROBANTE : "origen (NC, conversion)"
-  COMPROBANTE ||--|{ COMPROBANTE_DETALLE : lineas
-  PRODUCTO_VARIANTE ||--o{ COMPROBANTE_DETALLE : vendida
-  COMPROBANTE ||--|{ COMPROBANTE_PAGO : pagos
+  ESTABLECIMIENTO ||--o{ COMPROBANTE : "emite"
+  CLIENTE ||--o{ COMPROBANTE : "recibe"
+  COMPROBANTE |o--o{ COMPROBANTE : "origen"
+  COMPROBANTE ||--|{ COMPROBANTE_DETALLE : "lineas"
+  PRODUCTO_VARIANTE |o--o{ COMPROBANTE_DETALLE : "vendida"
+  COMPROBANTE ||--|{ COMPROBANTE_PAGO : "pagos"
   COMPROBANTE ||--o| ENVIO_SUNAT : "se envia"
-
+  ESTABLECIMIENTO {
+    bigint id PK
+    varchar codigo
+    varchar nombre
+    varchar tipo
+    varchar direccion
+    varchar ubigeo
+    boolean activo
+  }
   SERIE {
     bigint id PK
     varchar tipo_comprobante
@@ -128,6 +137,7 @@ erDiagram
     numeric efectivo_esperado
     numeric efectivo_contado
     numeric diferencia
+    varchar observacion_cierre
   }
   CAJA_MOVIMIENTO {
     bigint id PK
@@ -159,13 +169,20 @@ erDiagram
     varchar cliente_tipo_documento
     varchar cliente_numero_documento
     varchar cliente_nombre
+    varchar cliente_direccion
     timestamptz fecha_emision
+    varchar moneda
     numeric op_gravadas
+    numeric op_exoneradas
+    numeric op_inafectas
     numeric total_descuento
     numeric total_igv
     numeric total
     varchar estado
     bigint comprobante_origen_id FK
+    varchar motivo_anulacion
+    timestamptz fecha_anulacion
+    varchar observacion
     varchar motivo_nota
     varchar sustento
     bigint caja_sesion_id FK
@@ -177,6 +194,8 @@ erDiagram
     bigint variante_id FK
     varchar sku
     varchar descripcion
+    varchar unidad_medida
+    varchar tipo_afectacion_igv
     int cantidad
     numeric precio_unitario
     numeric descuento
@@ -203,8 +222,180 @@ erDiagram
     varchar hash
     bytea cdr
     varchar codigo_respuesta
+    varchar descripcion_respuesta
+    text observaciones
     int intentos
     timestamptz proximo_intento
+    timestamptz fecha_envio
+    timestamptz fecha_respuesta
+    bigint resumen_id FK
+    varchar ticket
+    bigint guia_id FK
+  }
+  PRODUCTO_VARIANTE {
+    bigint id PK
+    bigint producto_id FK
+    bigint talla_id FK
+    bigint color_id FK
+    varchar sku
+    varchar codigo_barras
+    numeric precio_venta
+    boolean activo
+  }
+```
+
+## Bajas y guías de remisión
+
+```mermaid
+erDiagram
+  ESTABLECIMIENTO ||--o{ SERIE : "numera"
+  SERIE ||--o{ COMPROBANTE : "da numero"
+  ESTABLECIMIENTO ||--o{ COMPROBANTE : "emite"
+  COMPROBANTE |o--o{ COMPROBANTE : "origen"
+  COMPROBANTE ||--o| ENVIO_SUNAT : "se envia"
+  RESUMEN_SUNAT ||--|{ RESUMEN_SUNAT_DETALLE : "incluye"
+  COMPROBANTE ||--o{ RESUMEN_SUNAT_DETALLE : "se da de baja"
+  RESUMEN_SUNAT ||--o| ENVIO_SUNAT : "se envia"
+  SERIE ||--o{ GUIA_REMISION : "numera"
+  ESTABLECIMIENTO ||--o{ GUIA_REMISION : "parte de"
+  ESTABLECIMIENTO |o--o{ GUIA_REMISION : "llega a"
+  COMPROBANTE |o--o{ GUIA_REMISION : "se entrega con"
+  GUIA_REMISION ||--|{ GUIA_REMISION_DETALLE : "lineas"
+  PRODUCTO_VARIANTE ||--o{ GUIA_REMISION_DETALLE : "trasladada"
+  GUIA_REMISION ||--o| ENVIO_SUNAT : "se envia"
+  COMPROBANTE {
+    bigint id PK
+    varchar tipo_comprobante
+    bigint serie_id FK
+    varchar serie
+    bigint correlativo
+    bigint establecimiento_id FK
+    bigint cliente_id FK
+    varchar cliente_tipo_documento
+    varchar cliente_numero_documento
+    varchar cliente_nombre
+    varchar cliente_direccion
+    timestamptz fecha_emision
+    varchar moneda
+    numeric op_gravadas
+    numeric op_exoneradas
+    numeric op_inafectas
+    numeric total_descuento
+    numeric total_igv
+    numeric total
+    varchar estado
+    bigint comprobante_origen_id FK
+    varchar motivo_anulacion
+    timestamptz fecha_anulacion
+    varchar observacion
+    varchar motivo_nota
+    varchar sustento
+    bigint caja_sesion_id FK
+  }
+  RESUMEN_SUNAT {
+    bigint id PK
+    varchar tipo
+    date fecha_generacion
+    int correlativo
+    date fecha_referencia
+  }
+  RESUMEN_SUNAT_DETALLE {
+    bigint id PK
+    bigint resumen_id FK
+    bigint comprobante_id FK
+    varchar motivo
+  }
+  ENVIO_SUNAT {
+    bigint id PK
+    bigint comprobante_id FK
+    varchar estado
+    varchar entorno
+    varchar nombre_archivo
+    text xml_firmado
+    varchar hash
+    bytea cdr
+    varchar codigo_respuesta
+    varchar descripcion_respuesta
+    text observaciones
+    int intentos
+    timestamptz proximo_intento
+    timestamptz fecha_envio
+    timestamptz fecha_respuesta
+    bigint resumen_id FK
+    varchar ticket
+    bigint guia_id FK
+  }
+  SERIE {
+    bigint id PK
+    varchar tipo_comprobante
+    varchar codigo
+    bigint establecimiento_id FK
+    bigint correlativo_actual
+    boolean activo
+  }
+  ESTABLECIMIENTO {
+    bigint id PK
+    varchar codigo
+    varchar nombre
+    varchar tipo
+    varchar direccion
+    varchar ubigeo
+    boolean activo
+  }
+  GUIA_REMISION {
+    bigint id PK
+    bigint serie_id FK
+    varchar serie
+    bigint correlativo
+    bigint establecimiento_id FK
+    timestamptz fecha_emision
+    date fecha_traslado
+    varchar motivo_traslado
+    varchar modalidad_transporte
+    numeric peso_bruto_kg
+    int numero_bultos
+    varchar destinatario_tipo_documento
+    varchar destinatario_numero_documento
+    varchar destinatario_nombre
+    varchar partida_ubigeo
+    varchar partida_direccion
+    varchar partida_codigo_local
+    varchar llegada_ubigeo
+    varchar llegada_direccion
+    varchar llegada_codigo_local
+    bigint establecimiento_destino_id FK
+    bigint comprobante_id FK
+    varchar transportista_ruc
+    varchar transportista_razon_social
+    varchar transportista_registro_mtc
+    boolean vehiculo_m1l
+    varchar conductor_tipo_documento
+    varchar conductor_numero_documento
+    varchar conductor_nombres
+    varchar conductor_apellidos
+    varchar conductor_licencia
+    varchar vehiculo_placa
+    varchar observacion
+  }
+  GUIA_REMISION_DETALLE {
+    bigint id PK
+    bigint guia_id FK
+    int item
+    bigint variante_id FK
+    varchar codigo
+    varchar descripcion
+    varchar unidad_medida
+    int cantidad
+  }
+  PRODUCTO_VARIANTE {
+    bigint id PK
+    bigint producto_id FK
+    bigint talla_id FK
+    bigint color_id FK
+    varchar sku
+    varchar codigo_barras
+    numeric precio_venta
+    boolean activo
   }
 ```
 
@@ -213,12 +404,14 @@ erDiagram
 ```mermaid
 erDiagram
   EMPRESA {
-    bigint id PK "siempre 1"
+    bigint id PK
     varchar ruc
     varchar razon_social
     varchar nombre_comercial
     varchar direccion_fiscal
     varchar ubigeo
+    varchar telefono
+    varchar email
   }
   USUARIO {
     bigint id PK
@@ -230,6 +423,7 @@ erDiagram
     int intentos_fallidos
     timestamptz bloqueado_hasta
     timestamptz tokens_validos_desde
+    timestamptz ultimo_acceso
     boolean activo
   }
 ```
