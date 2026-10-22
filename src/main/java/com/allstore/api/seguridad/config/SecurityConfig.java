@@ -65,6 +65,9 @@ public class SecurityConfig {
                         // Público
                         .requestMatchers(HttpMethod.POST, "/api/auth/login").permitAll()
                         .requestMatchers("/actuator/health").permitAll()
+                        // Enlace de descarga que recibe el cliente: solo lectura, protegido por un
+                        // código aleatorio imposible de adivinar
+                        .requestMatchers(HttpMethod.GET, "/api/publico/comprobantes/**").permitAll()
                         // Swagger solo existe con el perfil dev (en producción está apagado).
                         .requestMatchers("/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**").permitAll()
                         .requestMatchers("/error").permitAll()

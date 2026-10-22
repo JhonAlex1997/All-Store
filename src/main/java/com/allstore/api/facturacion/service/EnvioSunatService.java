@@ -14,11 +14,13 @@ import com.allstore.api.facturacion.dto.SunatInfo;
 import com.allstore.api.facturacion.entity.EnvioSunat;
 import com.allstore.api.facturacion.entity.EstadoSunat;
 import com.allstore.api.facturacion.entity.ResumenSunat;
+import com.allstore.api.facturacion.evento.ComprobanteAceptado;
 import com.allstore.api.facturacion.repository.EnvioSunatRepository;
 import com.allstore.api.facturacion.repository.ResumenSunatRepository;
 import com.allstore.api.guia.entity.GuiaRemision;
 import com.allstore.api.venta.entity.Comprobante;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -34,6 +36,7 @@ import java.io.IOException;
 import java.math.RoundingMode;
 import java.nio.charset.StandardCharsets;
 import java.time.OffsetDateTime;
+import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Optional;
@@ -76,12 +79,13 @@ public class EnvioSunatService {
     private final EmpresaService empresaService;
     private final SunatProperties properties;
     private final TransactionTemplate transaccionPropia;
+    private final ApplicationEventPublisher eventos;
 
     public EnvioSunatService(EnvioSunatRepository envioRepository, ResumenSunatRepository resumenRepository,
                              GeneradorXmlUbl generador, GeneradorResumenXml generadorResumen,
                              GeneradorGuiaXml generadorGuia, FirmadorXml firmador, ServicioEnvioSunat servicio,
                              ServicioGuiaSunat servicioGuia, EmpresaService empresaService, SunatProperties properties,
-                             PlatformTransactionManager transactionManager) {
+                             PlatformTransactionManager transactionManager, ApplicationEventPublisher eventos) {
         this.envioRepository = envioRepository;
         this.resumenRepository = resumenRepository;
         this.generador = generador;
@@ -94,6 +98,7 @@ public class EnvioSunatService {
         this.properties = properties;
         this.transaccionPropia = new TransactionTemplate(transactionManager);
         this.transaccionPropia.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
+        this.eventos = eventos;
     }
 
     // ---------- Al emitir ----------
@@ -297,6 +302,9 @@ public class EnvioSunatService {
             envio.setProximoIntento(null);
             if (codigo == 0 || codigo >= 4000) {
                 envio.setEstado(respuesta.notas().isEmpty() ? EstadoSunat.ACEPTADO : EstadoSunat.OBSERVADO);
+                if (envio.getComprobante() != null) {
+                    eventos.publishEvent(new ComprobanteAceptado(envio.getComprobante().getId()));
+                }
             } else {
                 envio.setEstado(EstadoSunat.RECHAZADO);
             }
@@ -408,6 +416,24 @@ public class EnvioSunatService {
     @Transactional(readOnly = true)
     public Archivo cdrDeEnvio(Long envioId) {
         return cdr(obtenerEnvio(envioId));
+    }
+
+    /**
+     * Archivos de SUNAT que se entregan al cliente con su comprobante: el XML firmado y, si SUNAT
+     * ya respondió, su constancia (CDR). Vacío si el comprobante no es electrónico.
+     */
+    @Transactional(readOnly = true)
+    public List<Archivo> archivosParaCliente(Long comprobanteId) {
+        return envioRepository.findByComprobanteId(comprobanteId).map(envio -> {
+            List<Archivo> archivos = new ArrayList<>();
+            if (envio.tieneXml()) {
+                archivos.add(xml(envio));
+            }
+            if (envio.getCdr() != null) {
+                archivos.add(cdr(envio));
+            }
+            return archivos;
+        }).orElse(List.of());
     }
 
     private static Archivo xml(EnvioSunat envio) {

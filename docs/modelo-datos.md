@@ -1,6 +1,6 @@
 # Modelo de datos de AllStore
 
-22 tablas y 30 llaves foráneas (versión de base de datos V11). Todas las tablas, salvo las
+23 tablas y 31 llaves foráneas (versión de base de datos V12). Todas las tablas, salvo las
 de líneas (`comprobante_detalle`, `comprobante_pago`, `guia_remision_detalle`, `resumen_sunat_detalle`), tienen además `created_at`, `updated_at`,
 `created_by` y `updated_by` (auditoría), que no se repiten en los diagramas.
 
@@ -186,6 +186,7 @@ erDiagram
     varchar motivo_nota
     varchar sustento
     bigint caja_sesion_id FK
+    uuid codigo_consulta
   }
   COMPROBANTE_DETALLE {
     bigint id PK
@@ -244,7 +245,7 @@ erDiagram
   }
 ```
 
-## Bajas y guías de remisión
+## Bajas, guías de remisión y entrega al cliente
 
 ```mermaid
 erDiagram
@@ -263,6 +264,7 @@ erDiagram
   GUIA_REMISION ||--|{ GUIA_REMISION_DETALLE : "lineas"
   PRODUCTO_VARIANTE ||--o{ GUIA_REMISION_DETALLE : "trasladada"
   GUIA_REMISION ||--o| ENVIO_SUNAT : "se envia"
+  COMPROBANTE ||--o{ ENVIO_CORREO : "se entrega por correo"
   COMPROBANTE {
     bigint id PK
     varchar tipo_comprobante
@@ -291,6 +293,7 @@ erDiagram
     varchar motivo_nota
     varchar sustento
     bigint caja_sesion_id FK
+    uuid codigo_consulta
   }
   RESUMEN_SUNAT {
     bigint id PK
@@ -396,6 +399,17 @@ erDiagram
     varchar codigo_barras
     numeric precio_venta
     boolean activo
+  }
+  ENVIO_CORREO {
+    bigint id PK
+    bigint comprobante_id FK
+    varchar destinatario
+    varchar estado
+    boolean automatico
+    int intentos
+    timestamptz proximo_intento
+    timestamptz fecha_envio
+    varchar error
   }
 ```
 

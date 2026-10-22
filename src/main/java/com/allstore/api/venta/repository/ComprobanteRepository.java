@@ -8,8 +8,12 @@ import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 public interface ComprobanteRepository extends JpaRepository<Comprobante, Long>, JpaSpecificationExecutor<Comprobante> {
+
+    /** Para el enlace público de descarga. */
+    Optional<Comprobante> findByCodigoConsulta(UUID codigoConsulta);
 
     /** El comprobante que se emitió a partir de otro (ej. la boleta de una nota de venta). */
     Optional<Comprobante> findFirstByComprobanteOrigenIdOrderByIdDesc(Long comprobanteOrigenId);

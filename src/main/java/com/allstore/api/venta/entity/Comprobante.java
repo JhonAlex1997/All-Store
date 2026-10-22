@@ -27,6 +27,7 @@ import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 /**
  * Documento de venta: nota de venta, boleta, factura, nota de crédito o nota de débito. El
@@ -128,6 +129,13 @@ public class Comprobante extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "caja_sesion_id", updatable = false)
     private CajaSesion cajaSesion;
+
+    /**
+     * Código aleatorio del enlace público con que el cliente descarga su comprobante sin iniciar
+     * sesión (UUID: imposible de adivinar o recorrer).
+     */
+    @Column(name = "codigo_consulta", nullable = false, updatable = false)
+    private UUID codigoConsulta = UUID.randomUUID();
 
     @OneToMany(mappedBy = "comprobante", cascade = CascadeType.ALL)
     @OrderBy("item")

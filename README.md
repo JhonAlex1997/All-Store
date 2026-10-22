@@ -19,6 +19,7 @@ producción (desde la recepción de materia prima hasta la venta final).
 | `facturacion` | Facturación electrónica SUNAT: XML UBL 2.1, firma digital, envío con reintentos, CDR, hash y QR; baja de comprobantes (comunicación de baja y resumen diario) |
 | `guia` | Guía de remisión remitente electrónica: traslado entre locales (mueve stock) y entrega de ventas |
 | `impresion` | Representación impresa en PDF: ticket de 80 mm y A4, con QR, hash y leyenda de SUNAT; guías en A4 |
+| `entrega` | Entrega al cliente: correo con PDF, XML y constancia de SUNAT; enlace público de descarga; WhatsApp |
 
 Pendiente: compras, producción, contabilidad. Frontend.
 
@@ -88,7 +89,8 @@ La matriz completa está en `SecurityConfig`. Lo que no está permitido ahí, se
 (`application-dev.properties`).
 
 **Variables obligatorias en producción:** `JWT_SECRET` (aleatoria, mínimo 32 caracteres; sin
-ella el sistema no arranca), `DB_PASSWORD`, `CORS_ORIGENES`.
+ella el sistema no arranca), `DB_PASSWORD`, `CORS_ORIGENES`, `URL_PUBLICA` (dirección del sistema
+en internet: con ella se arman los enlaces de descarga que recibe el cliente).
 
 ## Ventas e inventario
 
@@ -250,6 +252,30 @@ backend para que el comprobante sea idéntico desde cualquier caja o reimpresió
 - Nota de venta: leyenda "Documento interno. No es un comprobante de pago".
 - Marca de agua **ANULADO** en lo anulado y **PRUEBA - SIN VALIDEZ TRIBUTARIA** en el entorno beta.
 - El ticket mide exactamente lo que ocupa su contenido: la térmica corta sin papel en blanco.
+
+## Entrega al cliente
+
+| Endpoint | Para qué |
+| --- | --- |
+| `GET /api/ventas/{id}/entrega` | Enlaces públicos (PDF, ticket, XML, constancia), enlace de WhatsApp con el mensaje listo y los correos enviados |
+| `POST /api/ventas/{id}/entrega/correo` | Enviar por correo el PDF, el XML y la constancia (`{"email": ...}`; sin email, al correo del cliente) |
+| `GET /api/publico/comprobantes/{codigo}/pdf` · `/xml` · `/cdr` | Descarga **sin iniciar sesión**: es el enlace que recibe el cliente |
+
+- **Automático:** cuando SUNAT acepta un comprobante y el cliente tiene correo registrado, se le
+  envía solo (`CORREO_ENVIO_AUTOMATICO=false` lo apaga).
+- Cada correo queda registrado (a quién, cuándo, quién lo originó). Si el servidor de correo falla,
+  queda `PENDIENTE` y se reintenta solo con espera creciente; tras 5 intentos queda en `ERROR`.
+- No se entrega lo anulado ni lo rechazado por SUNAT.
+- El enlace público usa un código aleatorio (UUID) por comprobante: no se puede adivinar ni
+  recorrer. Las descargas llevan `X-Robots-Tag: noindex` para que los buscadores no las guarden.
+- WhatsApp: si el cliente tiene un celular registrado, el enlace abre su chat; si no, WhatsApp pide
+  elegir el contacto.
+
+**Configuración.** `CORREO_MODO=SMTP` con el servidor en `SPRING_MAIL_HOST`, `SPRING_MAIL_PORT`
+(587), `SPRING_MAIL_USERNAME` y `SPRING_MAIL_PASSWORD`, y `CORREO_REMITENTE` (normalmente la misma
+cuenta). `URL_PUBLICA` es la dirección del sistema en internet, con la que se arman los enlaces.
+En el perfil `dev` el correo no sale: se guarda como archivo `.eml` en `target/correos` (se abre
+con Outlook o Thunderbird).
 
 ## Pruebas
 
