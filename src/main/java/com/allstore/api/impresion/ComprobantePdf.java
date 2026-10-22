@@ -41,9 +41,9 @@ import java.util.stream.Stream;
 @Component
 public class ComprobantePdf {
 
-    private static final Color GRIS = new Color(90, 90, 90);
-    private static final Color GRIS_CLARO = new Color(225, 225, 225);
-    private static final Color FONDO_ENCABEZADO = new Color(240, 240, 240);
+    static final Color GRIS = new Color(90, 90, 90);
+    static final Color GRIS_CLARO = new Color(225, 225, 225);
+    static final Color FONDO_ENCABEZADO = new Color(240, 240, 240);
     private static final Color MARCA = new Color(215, 215, 215);
 
     /** 80 mm en puntos PDF (1 pulgada = 72 puntos = 25.4 mm). */
@@ -307,11 +307,11 @@ public class ComprobantePdf {
         return filas;
     }
 
-    private interface Contenido {
+    interface Contenido {
         void agregar() throws DocumentException, IOException;
     }
 
-    private static byte[] escribir(Document doc, String marcaDeAgua, float tamanoMarca, Contenido contenido)
+    static byte[] escribir(Document doc, String marcaDeAgua, float tamanoMarca, Contenido contenido)
             throws DocumentException, IOException {
         ByteArrayOutputStream salida = new ByteArrayOutputStream();
         PdfWriter writer = PdfWriter.getInstance(doc, salida);
@@ -344,14 +344,14 @@ public class ComprobantePdf {
         }
     }
 
-    private static Image qr(String texto, float lado) throws IOException {
+    static Image qr(String texto, float lado) throws IOException {
         Image imagen = Image.getInstance(CodigoQr.png(texto, 300));
         imagen.scaleToFit(lado, lado);
         imagen.setAlignment(Element.ALIGN_CENTER);
         return imagen;
     }
 
-    private static Optional<String> contacto(DatosImpresion.Emisor e) {
+    static Optional<String> contacto(DatosImpresion.Emisor e) {
         String texto = Stream.of(e.telefono() != null ? "Tel. " + e.telefono() : null, e.email())
                 .filter(Objects::nonNull)
                 .collect(Collectors.joining("  ·  "));
@@ -391,12 +391,12 @@ public class ComprobantePdf {
         t.addCell(aire);
     }
 
-    private static void etiquetaValor(PdfPTable t, String etiqueta, String valor, Font fEtiqueta, Font fValor) {
+    static void etiquetaValor(PdfPTable t, String etiqueta, String valor, Font fEtiqueta, Font fValor) {
         t.addCell(celda(etiqueta, fEtiqueta, Rectangle.NO_BORDER));
         t.addCell(celda(valor, fValor, Rectangle.NO_BORDER));
     }
 
-    private static void celdaCentrada(PdfPTable t, String texto, Font fuente, Color fondo) {
+    static void celdaCentrada(PdfPTable t, String texto, Font fuente, Color fondo) {
         PdfPCell c = celda(texto, fuente, Rectangle.NO_BORDER);
         c.setHorizontalAlignment(Element.ALIGN_CENTER);
         c.setPadding(4);
@@ -406,7 +406,7 @@ public class ComprobantePdf {
         t.addCell(c);
     }
 
-    private static PdfPCell celda(String texto, Font fuente, int borde) {
+    static PdfPCell celda(String texto, Font fuente, int borde) {
         PdfPCell c = new PdfPCell(new Phrase(texto == null ? "" : texto, fuente));
         c.setBorder(borde);
         c.setBorderColor(GRIS_CLARO);
@@ -414,7 +414,7 @@ public class ComprobantePdf {
         return c;
     }
 
-    private static PdfPCell derecha(String texto, Font fuente) {
+    static PdfPCell derecha(String texto, Font fuente) {
         PdfPCell c = celda(texto, fuente, Rectangle.BOTTOM);
         c.setHorizontalAlignment(Element.ALIGN_RIGHT);
         return c;
@@ -426,23 +426,23 @@ public class ComprobantePdf {
         return c;
     }
 
-    private static PdfPCell sinBorde() {
+    static PdfPCell sinBorde() {
         PdfPCell c = new PdfPCell();
         c.setBorder(Rectangle.NO_BORDER);
         return c;
     }
 
-    private static Paragraph espacio(float alto) {
+    static Paragraph espacio(float alto) {
         Paragraph p = new Paragraph(" ", fuente(1, Font.NORMAL));
         p.setSpacingAfter(alto);
         return p;
     }
 
-    private static Font fuente(float tamano, int estilo) {
+    static Font fuente(float tamano, int estilo) {
         return new Font(Font.HELVETICA, tamano, estilo);
     }
 
-    private static Font fuente(float tamano, int estilo, Color color) {
+    static Font fuente(float tamano, int estilo, Color color) {
         return new Font(Font.HELVETICA, tamano, estilo, color);
     }
 

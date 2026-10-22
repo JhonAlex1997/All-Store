@@ -19,6 +19,8 @@ public interface EnvioSunatRepository extends JpaRepository<EnvioSunat, Long> {
 
     Optional<EnvioSunat> findByResumenId(Long resumenId);
 
+    Optional<EnvioSunat> findByGuiaId(Long guiaId);
+
     /**
      * Por enviar (PENDIENTE) o por consultar su ticket (EN_PROCESO), cuyo próximo intento ya
      * llegó, los más antiguos primero.
@@ -39,10 +41,10 @@ public interface EnvioSunatRepository extends JpaRepository<EnvioSunat, Long> {
     @Query(value = "select * from envio_sunat where id = :id for update skip locked", nativeQuery = true)
     Optional<EnvioSunat> tomarParaProcesar(@Param("id") Long id);
 
-    @EntityGraph(attributePaths = {"comprobante", "resumen"})
+    @EntityGraph(attributePaths = {"comprobante", "resumen", "guia"})
     Page<EnvioSunat> findByEstado(EstadoSunat estado, Pageable pageable);
 
     @Override
-    @EntityGraph(attributePaths = {"comprobante", "resumen"})
+    @EntityGraph(attributePaths = {"comprobante", "resumen", "guia"})
     Page<EnvioSunat> findAll(Pageable pageable);
 }

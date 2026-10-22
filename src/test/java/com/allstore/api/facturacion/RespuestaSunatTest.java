@@ -19,7 +19,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 class RespuestaSunatTest {
 
     private final ClienteSoapSunat cliente = new ClienteSoapSunat(
-            new SunatProperties(true, EntornoSunat.BETA, null, "MODDATOS", "moddatos", null, null, 30000, 8));
+            new SunatProperties(true, EntornoSunat.BETA, null, "MODDATOS", "moddatos", null, null, 30000, 8, null));
 
     @Test
     void cdrAceptadoConObservaciones() throws Exception {

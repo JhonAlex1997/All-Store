@@ -237,8 +237,7 @@ public class VentaService {
             ComprobanteDetalle detalle = new ComprobanteDetalle();
             detalle.setVariante(variante);
             detalle.setSku(variante.getSku());
-            detalle.setDescripcion(variante.getProducto().getNombre() + " - " + variante.getColor().getNombre()
-                    + " talla " + variante.getTalla().getCodigo());
+            detalle.setDescripcion(variante.getDescripcion());
             detalle.setUnidadMedida(variante.getProducto().getUnidadMedida());
             detalle.setTipoAfectacionIgv(afectacion);
             detalle.setCantidad(item.cantidad());

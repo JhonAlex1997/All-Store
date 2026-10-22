@@ -2,6 +2,7 @@ package com.allstore.api.facturacion.entity;
 
 import com.allstore.api.common.entity.BaseEntity;
 import com.allstore.api.facturacion.config.EntornoSunat;
+import com.allstore.api.guia.entity.GuiaRemision;
 import com.allstore.api.venta.entity.Comprobante;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -17,8 +18,8 @@ import lombok.Setter;
 import java.time.OffsetDateTime;
 
 /**
- * Envío a SUNAT de un documento electrónico (un comprobante o un resumen), con sus archivos y la
- * respuesta. Exactamente uno de los dos está presente.
+ * Envío a SUNAT de un documento electrónico (un comprobante, un resumen o una guía de remisión),
+ * con sus archivos y la respuesta. Exactamente uno de los tres está presente.
  */
 @Getter
 @Setter
@@ -34,7 +35,11 @@ public class EnvioSunat extends BaseEntity {
     @JoinColumn(name = "resumen_id", updatable = false)
     private ResumenSunat resumen;
 
-    /** Resúmenes: número de ticket con el que se consulta el resultado. */
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "guia_id", updatable = false)
+    private GuiaRemision guia;
+
+    /** Resúmenes y guías: número de ticket con el que se consulta el resultado. */
     @Column(length = 60)
     private String ticket;
 
@@ -85,8 +90,20 @@ public class EnvioSunat extends BaseEntity {
 
     /** Ej. "Boleta de venta B001-00000015" o "Comunicación de baja RA-20261022-1". */
     public String getDocumento() {
-        return comprobante != null
-                ? comprobante.getTipoComprobante().getDescripcion() + " " + comprobante.getNumeroImpreso()
-                : resumen.getTipo().getDescripcion() + " " + resumen.getNumero();
+        if (comprobante != null) {
+            return comprobante.getTipoComprobante().getDescripcion() + " " + comprobante.getNumeroImpreso();
+        }
+        if (guia != null) {
+            return "Guía de remisión " + guia.getNumeroImpreso();
+        }
+        return resumen.getTipo().getDescripcion() + " " + resumen.getNumero();
+    }
+
+    /** Número a mostrar: B001-00000015, RA-20261022-1 o T001-00000003. */
+    public String getNumero() {
+        if (comprobante != null) {
+            return comprobante.getNumeroImpreso();
+        }
+        return guia != null ? guia.getNumeroImpreso() : resumen.getNumero();
     }
 }

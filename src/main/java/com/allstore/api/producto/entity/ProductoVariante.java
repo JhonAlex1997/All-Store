@@ -47,4 +47,9 @@ public class ProductoVariante extends BaseEntity {
     public BigDecimal getPrecioEfectivo() {
         return precioVenta != null ? precioVenta : producto.getPrecioVenta();
     }
+
+    /** Como se imprime en comprobantes y guías: "Jean Mom Fit Clásico - Azul talla 28". */
+    public String getDescripcion() {
+        return producto.getNombre() + " - " + color.getNombre() + " talla " + talla.getCodigo();
+    }
 }

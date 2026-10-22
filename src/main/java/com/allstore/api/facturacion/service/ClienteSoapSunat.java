@@ -4,30 +4,19 @@ import com.allstore.api.facturacion.config.SunatProperties;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.w3c.dom.Document;
-import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
-import org.xml.sax.InputSource;
 
-import javax.xml.XMLConstants;
-import javax.xml.parsers.DocumentBuilderFactory;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.StringReader;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
-import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipInputStream;
-import java.util.zip.ZipOutputStream;
 
 /**
  * Envío directo a SUNAT por su servicio SOAP "billService": el XML va comprimido en zip y en
@@ -56,7 +45,7 @@ public class ClienteSoapSunat implements ServicioEnvioSunat {
     @Override
     public Ticket enviarResumen(String nombreArchivo, byte[] xmlFirmado) throws IOException {
         String cuerpo = llamar("sendSummary", nombreArchivo, operacionConArchivo("sendSummary", nombreArchivo, xmlFirmado));
-        Document soap = parsear(cuerpo);
+        Document soap = CdrSunat.parsear(cuerpo);
         String ticket = texto(soap, "ticket");
         if (ticket != null && !ticket.isBlank()) {
             return new Ticket(ticket.trim(), null);
@@ -71,7 +60,7 @@ public class ClienteSoapSunat implements ServicioEnvioSunat {
     }
 
     private static String operacionConArchivo(String operacion, String nombreArchivo, byte[] xmlFirmado) throws IOException {
-        String zip = Base64.getEncoder().encodeToString(comprimir(nombreArchivo + ".xml", xmlFirmado));
+        String zip = Base64.getEncoder().encodeToString(CdrSunat.comprimir(nombreArchivo + ".xml", xmlFirmado));
         return "<ser:%s><fileName>%s.zip</fileName><contentFile>%s</contentFile></ser:%s>"
                 .formatted(operacion, nombreArchivo, zip, operacion);
     }
@@ -115,7 +104,7 @@ public class ClienteSoapSunat implements ServicioEnvioSunat {
 
     /** Respuesta de sendBill: CDR (procesado) o excepción SOAP (no procesado). */
     Respuesta interpretar(String cuerpo) throws IOException {
-        Document soap = parsear(cuerpo);
+        Document soap = CdrSunat.parsear(cuerpo);
         String applicationResponse = texto(soap, "applicationResponse");
         if (applicationResponse != null) {
             return leerCdr(applicationResponse);
@@ -125,7 +114,7 @@ public class ClienteSoapSunat implements ServicioEnvioSunat {
 
     /** Respuesta de getStatus: statusCode 98 = en proceso; 0 (aceptado) o 99 (con errores) traen el CDR. */
     EstadoTicket interpretarEstado(String cuerpo) throws IOException {
-        Document soap = parsear(cuerpo);
+        Document soap = CdrSunat.parsear(cuerpo);
         String estado = texto(soap, "statusCode");
         if (estado == null) {
             return EstadoTicket.terminado(excepcion(soap, cuerpo));
@@ -143,16 +132,7 @@ public class ClienteSoapSunat implements ServicioEnvioSunat {
 
     /** Constancia (CDR): zip en base64 con el XML ApplicationResponse. */
     private static Respuesta leerCdr(String base64) throws IOException {
-        byte[] cdrZip = Base64.getDecoder().decode(base64.trim());
-        Document cdr = parsear(new String(descomprimir(cdrZip), StandardCharsets.UTF_8));
-        String codigo = textoNs(cdr, "ResponseCode");
-        String descripcion = textoNs(cdr, "Description");
-        List<String> notas = new ArrayList<>();
-        NodeList elementos = cdr.getElementsByTagNameNS(XmlUbl.NS_CBC, "Note");
-        for (int i = 0; i < elementos.getLength(); i++) {
-            notas.add(elementos.item(i).getTextContent().trim());
-        }
-        return new Respuesta(true, codigo, descripcion, notas, cdrZip);
+        return CdrSunat.leer(Base64.getDecoder().decode(base64.trim()));
     }
 
     /** Excepción SOAP: SUNAT no registró el documento. El código va en faultcode o en el mensaje. */
@@ -177,58 +157,10 @@ public class ClienteSoapSunat implements ServicioEnvioSunat {
         return m.find() ? m.group(1) : null;
     }
 
-    static byte[] comprimir(String nombre, byte[] contenido) throws IOException {
-        ByteArrayOutputStream salida = new ByteArrayOutputStream();
-        try (ZipOutputStream zip = new ZipOutputStream(salida)) {
-            zip.putNextEntry(new ZipEntry(nombre));
-            zip.write(contenido);
-            zip.closeEntry();
-        }
-        return salida.toByteArray();
-    }
-
-    /** Primer archivo .xml dentro del zip (la constancia se llama R-<nombre>.xml). */
-    static byte[] descomprimir(byte[] zip) throws IOException {
-        try (ZipInputStream entrada = new ZipInputStream(new ByteArrayInputStream(zip))) {
-            ZipEntry entry;
-            while ((entry = entrada.getNextEntry()) != null) {
-                if (entry.getName().toLowerCase().endsWith(".xml")) {
-                    return entrada.readAllBytes();
-                }
-            }
-        }
-        throw new IOException("El CDR de SUNAT no contiene un XML");
-    }
-
-    private static Document parsear(String xml) throws IOException {
-        try {
-            DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-            factory.setNamespaceAware(true);
-            // Sin entidades externas: un XML de respuesta nunca debe poder leer archivos del servidor (XXE).
-            factory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
-            factory.setAttribute(XMLConstants.ACCESS_EXTERNAL_DTD, "");
-            factory.setAttribute(XMLConstants.ACCESS_EXTERNAL_SCHEMA, "");
-            return factory.newDocumentBuilder().parse(new InputSource(new StringReader(xml)));
-        } catch (Exception e) {
-            throw new IOException("No se pudo leer la respuesta de SUNAT: " + e.getMessage(), e);
-        }
-    }
-
     /** Texto del primer elemento con ese nombre local, sin importar el espacio de nombres. */
     private static String texto(Document doc, String nombreLocal) {
         NodeList nodos = doc.getElementsByTagNameNS("*", nombreLocal);
         return nodos.getLength() == 0 ? null : nodos.item(0).getTextContent();
-    }
-
-    private static String textoNs(Document doc, String nombreLocal) {
-        NodeList nodos = doc.getElementsByTagNameNS(XmlUbl.NS_CBC, nombreLocal);
-        for (int i = 0; i < nodos.getLength(); i++) {
-            Element e = (Element) nodos.item(i);
-            if ("Response".equals(e.getParentNode().getLocalName())) {
-                return e.getTextContent().trim();
-            }
-        }
-        return nodos.getLength() == 0 ? null : nodos.item(0).getTextContent().trim();
     }
 
     private static String escapar(String texto) {

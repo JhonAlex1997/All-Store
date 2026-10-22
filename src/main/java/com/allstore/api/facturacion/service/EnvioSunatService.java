@@ -16,6 +16,7 @@ import com.allstore.api.facturacion.entity.EstadoSunat;
 import com.allstore.api.facturacion.entity.ResumenSunat;
 import com.allstore.api.facturacion.repository.EnvioSunatRepository;
 import com.allstore.api.facturacion.repository.ResumenSunatRepository;
+import com.allstore.api.guia.entity.GuiaRemision;
 import com.allstore.api.venta.entity.Comprobante;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
@@ -46,8 +47,8 @@ import java.util.Set;
  *   <li>Un proceso programado envía los pendientes. Sin comunicación, reintenta con espera
  *       creciente (1, 2, 4... hasta 60 minutos); tras el máximo de intentos queda en ERROR.</li>
  *   <li>Comprobantes: SUNAT responde en el acto y queda ACEPTADO, OBSERVADO o RECHAZADO, con su
- *       constancia (CDR). Resúmenes (bajas): SUNAT entrega un ticket, el envío queda EN_PROCESO
- *       y el mismo proceso consulta el ticket hasta tener la constancia.</li>
+ *       constancia (CDR). Resúmenes (bajas) y guías de remisión: SUNAT entrega un ticket, el envío
+ *       queda EN_PROCESO y el mismo proceso consulta el ticket hasta tener la constancia.</li>
  * </ol>
  * La venta nunca espera a SUNAT ni falla por SUNAT.
  */
@@ -61,27 +62,34 @@ public class EnvioSunatService {
     private static final int LOTE = 20;
     /** Espera antes de la primera consulta de un ticket: SUNAT suele procesarlo en segundos. */
     private static final int SEGUNDOS_PRIMERA_CONSULTA = 20;
+    /** Sin acceso configurado a la API de guías, se vuelve a revisar cada hora (sin gastar intentos). */
+    private static final int MINUTOS_SIN_CONFIGURACION = 60;
 
     private final EnvioSunatRepository envioRepository;
     private final ResumenSunatRepository resumenRepository;
     private final GeneradorXmlUbl generador;
     private final GeneradorResumenXml generadorResumen;
+    private final GeneradorGuiaXml generadorGuia;
     private final FirmadorXml firmador;
     private final ServicioEnvioSunat servicio;
+    private final ServicioGuiaSunat servicioGuia;
     private final EmpresaService empresaService;
     private final SunatProperties properties;
     private final TransactionTemplate transaccionPropia;
 
     public EnvioSunatService(EnvioSunatRepository envioRepository, ResumenSunatRepository resumenRepository,
-                             GeneradorXmlUbl generador, GeneradorResumenXml generadorResumen, FirmadorXml firmador,
-                             ServicioEnvioSunat servicio, EmpresaService empresaService, SunatProperties properties,
+                             GeneradorXmlUbl generador, GeneradorResumenXml generadorResumen,
+                             GeneradorGuiaXml generadorGuia, FirmadorXml firmador, ServicioEnvioSunat servicio,
+                             ServicioGuiaSunat servicioGuia, EmpresaService empresaService, SunatProperties properties,
                              PlatformTransactionManager transactionManager) {
         this.envioRepository = envioRepository;
         this.resumenRepository = resumenRepository;
         this.generador = generador;
         this.generadorResumen = generadorResumen;
+        this.generadorGuia = generadorGuia;
         this.firmador = firmador;
         this.servicio = servicio;
+        this.servicioGuia = servicioGuia;
         this.empresaService = empresaService;
         this.properties = properties;
         this.transaccionPropia = new TransactionTemplate(transactionManager);
@@ -110,6 +118,14 @@ public class EnvioSunatService {
     public void registrar(ResumenSunat resumen) {
         EnvioSunat envio = new EnvioSunat();
         envio.setResumen(resumen);
+        registrar(envio);
+    }
+
+    /** Registra el envío de una guía de remisión recién emitida (en la transacción de la guía). */
+    @Transactional(propagation = Propagation.MANDATORY)
+    public void registrar(GuiaRemision guia) {
+        EnvioSunat envio = new EnvioSunat();
+        envio.setGuia(guia);
         registrar(envio);
     }
 
@@ -209,12 +225,20 @@ public class EnvioSunatService {
             }
             prepararXml(envio, empresa.get());
         }
+        if (envio.getGuia() != null && !servicioGuia.configurado()) {
+            envio.setDescripcionRespuesta("Falta configurar el acceso a la API de guías de SUNAT (app.sunat.gre: "
+                    + "client_id y client_secret del menú SOL). SUNAT no ofrece entorno de pruebas para la guía vigente");
+            envio.setProximoIntento(ahora().plusMinutes(MINUTOS_SIN_CONFIGURACION));
+            return;
+        }
         envio.setIntentos(envio.getIntentos() + 1);
         envio.setFechaEnvio(ahora());
         byte[] xml = envio.getXmlFirmado().getBytes(StandardCharsets.UTF_8);
         try {
             if (envio.getComprobante() != null) {
                 aplicar(envio, servicio.enviar(envio.getNombreArchivo(), xml));
+            } else if (envio.getGuia() != null) {
+                recibirTicket(envio, servicioGuia.enviar(envio.getNombreArchivo(), xml));
             } else {
                 recibirTicket(envio, servicio.enviarResumen(envio.getNombreArchivo(), xml));
             }
@@ -225,7 +249,7 @@ public class EnvioSunatService {
         }
     }
 
-    /** SUNAT admitió el resumen y entregó un ticket (o lo rechazó sin admitirlo). */
+    /** SUNAT admitió el resumen o la guía y entregó un ticket (o lo rechazó sin admitirlo). */
     private void recibirTicket(EnvioSunat envio, ServicioEnvioSunat.Ticket ticket) {
         if (ticket.numero() == null) {
             aplicar(envio, ticket.rechazo());
@@ -241,7 +265,9 @@ public class EnvioSunatService {
     private void consultarTicket(EnvioSunat envio) {
         envio.setIntentos(envio.getIntentos() + 1);
         try {
-            ServicioEnvioSunat.EstadoTicket estado = servicio.consultarTicket(envio.getNombreArchivo(), envio.getTicket());
+            ServicioEnvioSunat.EstadoTicket estado = envio.getGuia() != null
+                    ? servicioGuia.consultar(envio.getNombreArchivo(), envio.getTicket())
+                    : servicio.consultarTicket(envio.getNombreArchivo(), envio.getTicket());
             if (estado.enProceso()) {
                 envio.setDescripcionRespuesta("SUNAT aún procesa el ticket " + envio.getTicket());
                 programarReintento(envio);
@@ -301,6 +327,9 @@ public class EnvioSunatService {
         if (envio.getComprobante() != null) {
             xml = generador.generar(envio.getComprobante(), empresa);
             envio.setNombreArchivo(GeneradorXmlUbl.nombreArchivo(envio.getComprobante(), empresa));
+        } else if (envio.getGuia() != null) {
+            xml = generadorGuia.generar(envio.getGuia(), empresa);
+            envio.setNombreArchivo(GeneradorGuiaXml.nombreArchivo(envio.getGuia(), empresa));
         } else {
             xml = generadorResumen.generar(envio.getResumen(), empresa);
             envio.setNombreArchivo(GeneradorResumenXml.nombreArchivo(envio.getResumen(), empresa));
@@ -329,6 +358,19 @@ public class EnvioSunatService {
                 .flatMap(d -> envioRepository.findByResumenId(d.getResumen().getId()))
                 .map(e -> new BajaSunatInfo(e.getResumen().getTipo().getDescripcion(), e.getResumen().getNumero(),
                         e.getId(), e.getEstado(), e.getCodigoRespuesta(), e.getDescripcionRespuesta()))
+                .orElse(null);
+    }
+
+    /**
+     * Para la respuesta de guías: estado y, cuando SUNAT la aceptó, el enlace de consulta de su
+     * constancia (va en el QR de la representación impresa).
+     */
+    @Transactional(readOnly = true)
+    public SunatInfo infoGuia(GuiaRemision guia) {
+        return envioRepository.findByGuiaId(guia.getId())
+                .map(e -> new SunatInfo(e.getEstado(), e.getHash(),
+                        e.getCdr() == null ? null : CdrSunat.enlaceConsulta(e.getCdr()).orElse(null),
+                        e.getCodigoRespuesta(), e.getDescripcionRespuesta()))
                 .orElse(null);
     }
 

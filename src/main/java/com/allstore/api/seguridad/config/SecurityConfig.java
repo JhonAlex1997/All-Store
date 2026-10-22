@@ -104,6 +104,10 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/caja/sesiones/**").hasRole(ADMIN)
                         .requestMatchers("/api/caja/**").hasAnyRole(ADMIN, CAJERO)
 
+                        // Guías de remisión: las emite quien despacha (caja en ventas con entrega,
+                        // almacén en traslados) y el administrador
+                        .requestMatchers("/api/guias/**").hasAnyRole(ADMIN, CAJERO, ALMACENERO)
+
                         // Facturación electrónica (envíos, XML, CDR): solo administrador
                         .requestMatchers("/api/sunat/**").hasRole(ADMIN)
 

@@ -42,6 +42,8 @@ import java.util.Set;
 public class InventarioService {
 
     public static final String REFERENCIA_TRASLADO = "TRASLADO";
+    /** Traslado entre locales hecho con guía de remisión: el movimiento referencia a la guía. */
+    public static final String REFERENCIA_GUIA = "GUIA";
 
     private final StockRepository stockRepository;
     private final MovimientoInventarioRepository movimientoRepository;
@@ -100,15 +102,34 @@ public class InventarioService {
         return movimientos.stream().map(MovimientoResponse::from).toList();
     }
 
-    /** Salida del origen y entrada al destino en la misma transacción: o se mueven ambas o ninguna. */
+    /**
+     * Traslado sin guía de remisión (ej. dentro del mismo edificio). Si la mercadería viaja por la
+     * vía pública, se emite la guía (POST /api/guias), que hace este mismo movimiento.
+     */
     @Transactional
     public List<MovimientoResponse> trasladar(TrasladoRequest request) {
-        if (request.origenId().equals(request.destinoId())) {
+        List<MovimientoInventario> movimientos = moverEntreLocales(request.origenId(), request.destinoId(),
+                aLineas(request.items()), limpiar(request.observacion()));
+        // Todos los movimientos del traslado comparten la misma referencia para poder agruparlos.
+        Long grupo = movimientos.getFirst().getId();
+        String documento = "Traslado " + establecimientoService.obtener(request.origenId()).getNombre() + " -> "
+                + establecimientoService.obtener(request.destinoId()).getNombre();
+        movimientos.forEach(m -> m.referenciar(REFERENCIA_TRASLADO, grupo, documento));
+        return movimientos.stream().map(MovimientoResponse::from).toList();
+    }
+
+    /**
+     * Salida del origen y entrada al destino en la misma transacción: o se mueven ambas o ninguna.
+     * Devuelve los movimientos sin referenciar, para que quien traslada (el traslado simple o la
+     * guía de remisión) los enlace con su documento.
+     */
+    @Transactional
+    public List<MovimientoInventario> moverEntreLocales(Long origenId, Long destinoId, List<Linea> lineas, String observacion) {
+        if (origenId.equals(destinoId)) {
             throw new BusinessException("El origen y el destino del traslado deben ser distintos");
         }
-        Establecimiento origen = establecimientoActivo(request.origenId());
-        Establecimiento destino = establecimientoActivo(request.destinoId());
-        List<Linea> lineas = aLineas(request.items());
+        Establecimiento origen = establecimientoActivo(origenId);
+        Establecimiento destino = establecimientoActivo(destinoId);
         validarLineas(lineas);
 
         List<Operacion> operaciones = new ArrayList<>();
@@ -116,12 +137,7 @@ public class InventarioService {
             operaciones.add(new Operacion(linea.varianteId(), origen.getId(), MotivoMovimiento.TRASLADO_SALIDA, linea.cantidad()));
             operaciones.add(new Operacion(linea.varianteId(), destino.getId(), MotivoMovimiento.TRASLADO_ENTRADA, linea.cantidad()));
         }
-        List<MovimientoInventario> movimientos = aplicar(operaciones, limpiar(request.observacion()));
-        // Todos los movimientos del traslado comparten la misma referencia para poder agruparlos.
-        Long grupo = movimientos.getFirst().getId();
-        String documento = "Traslado " + origen.getNombre() + " -> " + destino.getNombre();
-        movimientos.forEach(m -> m.referenciar(REFERENCIA_TRASLADO, grupo, documento));
-        return movimientos.stream().map(MovimientoResponse::from).toList();
+        return aplicar(operaciones, observacion);
     }
 
     // ---------- Para otros módulos (ventas) ----------

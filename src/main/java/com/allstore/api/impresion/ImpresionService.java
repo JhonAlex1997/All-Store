@@ -11,6 +11,9 @@ import com.allstore.api.empresa.service.EstablecimientoService;
 import com.allstore.api.facturacion.config.EntornoSunat;
 import com.allstore.api.facturacion.config.SunatProperties;
 import com.allstore.api.facturacion.service.MontoEnLetras;
+import com.allstore.api.guia.dto.GuiaRemisionResponse;
+import com.allstore.api.guia.entity.ModalidadTransporte;
+import com.allstore.api.guia.service.GuiaRemisionService;
 import com.allstore.api.venta.dto.VentaResponse;
 import com.allstore.api.venta.entity.EstadoComprobante;
 import com.allstore.api.venta.entity.MetodoPago;
@@ -18,11 +21,12 @@ import com.allstore.api.venta.service.VentaService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Representación impresa de un comprobante: reúne los datos (venta, emisor, local, SUNAT), los
- * pone en texto legible y los entrega al generador de PDF.
+ * Representación impresa de comprobantes y guías de remisión: reúne los datos (documento, emisor,
+ * local, SUNAT), los pone en texto legible y los entrega al generador de PDF.
  */
 @Service
 @RequiredArgsConstructor
@@ -33,6 +37,8 @@ public class ImpresionService {
     private final EstablecimientoService establecimientoService;
     private final SunatProperties sunatProperties;
     private final ComprobantePdf comprobantePdf;
+    private final GuiaRemisionService guiaService;
+    private final GuiaPdf guiaPdf;
 
     public record Pdf(String nombreArchivo, byte[] contenido) {
     }
@@ -46,6 +52,78 @@ public class ImpresionService {
         return new Pdf(venta.numero() + (formato == FormatoImpresion.TICKET ? "-ticket" : "") + ".pdf", pdf);
     }
 
+    public Pdf generarGuia(Long guiaId) {
+        GuiaRemisionResponse guia = guiaService.obtenerDetalle(guiaId);
+        Empresa empresa = empresaService.buscarEntidad()
+                .orElseThrow(() -> new BusinessException("Registra los datos de la empresa antes de imprimir guías"));
+        return new Pdf(guia.numero() + ".pdf", guiaPdf.generar(datosGuia(guia, empresa)));
+    }
+
+    DatosGuia datosGuia(GuiaRemisionResponse g, Empresa empresa) {
+        String titulo = titulo(TipoComprobante.GUIA_REMISION_REMITENTE);
+        boolean aceptada = g.sunat() != null && g.sunat().codigoQr() != null;
+        return new DatosGuia(
+                titulo,
+                g.numero(),
+                sunatProperties.entorno() == EntornoSunat.BETA ? "PRUEBA - SIN VALIDEZ TRIBUTARIA" : null,
+                emisor(empresa),
+                g.fechaEmision().atZoneSameInstant(JpaAuditingConfig.ZONA_LIMA).toOffsetDateTime(),
+                g.fechaTraslado(),
+                g.motivo().getCodigo() + " - " + g.motivoDescripcion(),
+                g.modalidad().getCodigo() + " - " + g.modalidad().getDescripcion(),
+                g.comprobante(),
+                documento(g.destinatario().tipoDocumento(), g.destinatario().numeroDocumento()) + " - " + g.destinatario().nombre(),
+                punto(g.partida(), g.establecimiento()),
+                punto(g.llegada(), g.establecimientoDestino()),
+                g.pesoBrutoKg(),
+                g.numeroBultos(),
+                transporte(g),
+                g.detalles().stream().map(d -> new DatosGuia.Linea(d.item(), d.codigo(), d.descripcion(),
+                        unidad(d.unidadMedida()), d.cantidad())).toList(),
+                g.observacion(),
+                aceptada ? g.sunat().codigoQr() : null,
+                "Representación impresa de la " + capitalizar(titulo) + "."
+                        + (aceptada ? " Consulte su validez escaneando el código QR." : " Pendiente de aceptación por SUNAT."),
+                g.emitidoPor());
+    }
+
+    private static String punto(GuiaRemisionResponse.Punto p, String local) {
+        return p.direccion() + " (ubigeo " + p.ubigeo() + ")"
+                + (p.codigoLocal() != null ? " - " + local + ", establecimiento " + p.codigoLocal() : "");
+    }
+
+    private static List<String> transporte(GuiaRemisionResponse g) {
+        List<String> lineas = new ArrayList<>();
+        if (g.modalidad() == ModalidadTransporte.PUBLICO) {
+            GuiaRemisionResponse.Transportista t = g.transportista();
+            lineas.add("Transportista: RUC " + t.ruc() + " - " + t.razonSocial()
+                    + (t.registroMtc() != null ? " (registro MTC " + t.registroMtc() + ")" : ""));
+            return lineas;
+        }
+        if (g.vehiculoM1l()) {
+            lineas.add("Traslado en vehículo de categoría M1 o L");
+        }
+        if (g.conductor() != null) {
+            GuiaRemisionResponse.Conductor c = g.conductor();
+            lineas.add("Conductor: " + c.nombres() + " " + c.apellidos() + " - " + documento(c.tipoDocumento(), c.numeroDocumento())
+                    + " - Licencia " + c.licencia());
+        }
+        if (g.placa() != null) {
+            lineas.add("Vehículo: placa " + g.placa());
+        }
+        return lineas;
+    }
+
+    /** "RUC 20123456786", "DNI 45678912". */
+    private static String documento(String codigoSunat, String numero) {
+        return TipoDocumentoIdentidad.desdeCodigoSunat(codigoSunat).getDescripcion() + " " + numero;
+    }
+
+    private static DatosImpresion.Emisor emisor(Empresa empresa) {
+        return new DatosImpresion.Emisor(empresa.getRuc(), empresa.getRazonSocial(), empresa.getNombreComercial(),
+                empresa.getDireccionFiscal(), empresa.getTelefono(), empresa.getEmail());
+    }
+
     DatosImpresion datos(VentaResponse v, Empresa empresa, Establecimiento local) {
         boolean electronico = v.tipoComprobante().isElectronico();
         String titulo = titulo(v.tipoComprobante());
@@ -53,8 +131,7 @@ public class ImpresionService {
                 titulo,
                 v.numero(),
                 marcaDeAgua(v, electronico),
-                new DatosImpresion.Emisor(empresa.getRuc(), empresa.getRazonSocial(), empresa.getNombreComercial(),
-                        empresa.getDireccionFiscal(), empresa.getTelefono(), empresa.getEmail()),
+                emisor(empresa),
                 local.getNombre(),
                 local.getDireccion(),
                 v.fechaEmision().atZoneSameInstant(JpaAuditingConfig.ZONA_LIMA).toOffsetDateTime(),

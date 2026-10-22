@@ -17,9 +17,10 @@ producción (desde la recepción de materia prima hasta la venta final).
 | `venta` | Nota de venta, boleta, factura, notas de crédito y débito con IGV, descuentos y pagos mixtos; conversión de nota de venta y anulación de comprobantes |
 | `caja` | Apertura con fondo, ingresos y egresos de efectivo, cierre con cuadre (esperado, contado, diferencia) |
 | `facturacion` | Facturación electrónica SUNAT: XML UBL 2.1, firma digital, envío con reintentos, CDR, hash y QR; baja de comprobantes (comunicación de baja y resumen diario) |
-| `impresion` | Representación impresa en PDF: ticket de 80 mm y A4, con QR, hash y leyenda de SUNAT |
+| `guia` | Guía de remisión remitente electrónica: traslado entre locales (mueve stock) y entrega de ventas |
+| `impresion` | Representación impresa en PDF: ticket de 80 mm y A4, con QR, hash y leyenda de SUNAT; guías en A4 |
 
-Pendiente: guía de remisión electrónica, compras, producción, contabilidad. Frontend.
+Pendiente: compras, producción, contabilidad. Frontend.
 
 ## Levantar en local
 
@@ -69,8 +70,8 @@ Toda la API exige sesión, salvo `POST /api/auth/login` y `/actuator/health`.
 | Rol | Puede |
 | --- | --- |
 | `ADMIN` | Todo, incluido anular ventas y administrar usuarios, empresa y series |
-| `CAJERO` | Abrir y cerrar su caja, vender, emitir notas de crédito, registrar clientes; consultar catálogo y stock |
-| `ALMACENERO` | Catálogo de productos, ajustes e inventario, traslados; consultar lo demás (no ve ventas) |
+| `CAJERO` | Abrir y cerrar su caja, vender, emitir notas de crédito y débito y guías de remisión, registrar clientes; consultar catálogo y stock |
+| `ALMACENERO` | Catálogo de productos, ajustes e inventario, traslados y guías de remisión; consultar lo demás (no ve ventas) |
 
 La matriz completa está en `SecurityConfig`. Lo que no está permitido ahí, se niega.
 
@@ -124,6 +125,39 @@ ella el sistema no arranca), `DB_PASSWORD`, `CORS_ORIGENES`.
   indica su afectación del IGV: 10 gravado (por defecto), 20 exonerado o 30 inafecto. Los
   intereses moratorios y las penalidades suelen no estar gravados: confírmalo con el contador.
 - Se cobra en la caja abierta, como una venta (cuenta en el cuadre).
+
+## Guía de remisión electrónica
+
+`POST /api/guias` emite la guía de remisión remitente (tipo 09, serie T). Sale del local de la serie
+(punto de partida).
+
+| Motivo (Catálogo 20) | Qué hace |
+| --- | --- |
+| `TRASLADO_ESTABLECIMIENTOS` (04) | Lleva prendas a otro local: mueve el stock en la misma operación. El destinatario es la propia empresa y la guía lleva los códigos de anexo de ambos locales. |
+| `VENTA` (01) | Entrega al cliente lo vendido con una boleta o factura del mismo local: todo lo pendiente o solo algunas prendas, nunca más de lo vendido. No mueve stock (ya salió con la venta). El cliente debe estar identificado. |
+
+- Transporte **público**: RUC y razón social del transportista. **Privado**: conductor (documento,
+  nombres, licencia) y placa; en auto o moto propios (categoría M1 o L) basta `vehiculoM1l: true`.
+- Peso bruto en kg (obligatorio) y número de bultos. La fecha de traslado no puede ser pasada.
+- `GET /api/guias/{id}/pdf` imprime la guía en A4; cuando SUNAT la acepta, lleva el QR con el
+  enlace de consulta de su constancia.
+- El traslado simple `POST /api/inventario/traslados` sigue disponible para movimientos que no
+  salen a la vía pública.
+
+**Envío a SUNAT.** Desde el formato 2022 la guía no va por el servicio SOAP de los comprobantes
+sino por la **API REST** de SUNAT: token OAuth2, envío del zip con su hash SHA-256 y consulta del
+ticket (el mismo proceso en segundo plano). Necesita credenciales propias, que se generan en el
+menú SOL (Empresas > Credenciales de API SUNAT):
+
+```
+SUNAT_GRE_CLIENT_ID=...
+SUNAT_GRE_CLIENT_SECRET=...
+```
+
+SUNAT **no tiene entorno de pruebas** para la guía vigente (su servicio beta de guías solo acepta
+el formato anterior, versión 1.0). Sin credenciales, la guía queda pendiente con ese motivo y se
+envía sola cuando se configuren. El XML se verifica con pruebas automáticas de su estructura y el
+cliente REST con un servidor local que imita a SUNAT.
 
 ## Caja
 
@@ -195,6 +229,8 @@ SUNAT_USUARIO_SOL=...          (sin el RUC delante)
 SUNAT_CLAVE_SOL=...
 SUNAT_CERTIFICADO_RUTA=/ruta/certificado.pfx
 SUNAT_CERTIFICADO_CLAVE=...
+SUNAT_GRE_CLIENT_ID=...        (guías de remisión: credenciales de API del menú SOL)
+SUNAT_GRE_CLIENT_SECRET=...
 ```
 
 Verificado contra SUNAT beta: boletas (con DNI y a "Clientes varios"), facturas con varias líneas
