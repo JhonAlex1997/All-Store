@@ -1,6 +1,7 @@
 package com.allstore.api.venta.dto;
 
 import com.allstore.api.empresa.entity.TipoComprobante;
+import com.allstore.api.facturacion.dto.BajaSunatInfo;
 import com.allstore.api.facturacion.dto.SunatInfo;
 import com.allstore.api.venta.entity.Comprobante;
 import com.allstore.api.venta.entity.ComprobanteDetalle;
@@ -23,6 +24,7 @@ import java.util.List;
  * @param motivoNota        solo notas de crédito: motivo del Catálogo 09
  * @param vendedor          usuario que registró el comprobante
  * @param sunat             estado ante SUNAT, hash y QR (null en notas de venta, que no se envían)
+ * @param bajaSunat         si se anuló un comprobante electrónico: su baja ante SUNAT y el estado
  */
 public record VentaResponse(
         Long id,
@@ -54,7 +56,8 @@ public record VentaResponse(
         String observacion,
         List<Detalle> detalles,
         List<Pago> pagos,
-        SunatInfo sunat
+        SunatInfo sunat,
+        BajaSunatInfo bajaSunat
 ) {
     /** Datos del cliente tal como quedaron en el comprobante. */
     public record Cliente(Long id, String tipoDocumento, String numeroDocumento, String nombre, String direccion) {
@@ -77,7 +80,8 @@ public record VentaResponse(
         }
     }
 
-    public static VentaResponse from(Comprobante c, String convertidoEn, List<String> notasCredito, SunatInfo sunat) {
+    public static VentaResponse from(Comprobante c, String convertidoEn, List<String> notasCredito, SunatInfo sunat,
+                                     BajaSunatInfo bajaSunat) {
         return new VentaResponse(
                 c.getId(),
                 c.getTipoComprobante(),
@@ -109,7 +113,8 @@ public record VentaResponse(
                 c.getObservacion(),
                 c.getDetalles().stream().map(Detalle::from).toList(),
                 c.getPagos().stream().map(Pago::from).toList(),
-                sunat
+                sunat,
+                bajaSunat
         );
     }
 }

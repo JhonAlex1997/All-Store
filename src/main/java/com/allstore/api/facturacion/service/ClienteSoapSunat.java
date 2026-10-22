@@ -30,9 +30,14 @@ import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 
 /**
- * Envío directo a SUNAT por su servicio SOAP "billService" (operación sendBill): el XML va
- * comprimido en zip y en base64, con el usuario SOL en la cabecera WS-Security. La respuesta es
- * otro zip con la constancia de recepción (CDR), o una excepción SOAP si el envío no se procesó.
+ * Envío directo a SUNAT por su servicio SOAP "billService": el XML va comprimido en zip y en
+ * base64, con el usuario SOL en la cabecera WS-Security.
+ * <ul>
+ *   <li>sendBill (comprobantes): responde en el acto con otro zip que trae la constancia de
+ *       recepción (CDR), o con una excepción SOAP si el envío no se procesó.</li>
+ *   <li>sendSummary (comunicación de baja, resumen diario): responde con un ticket.</li>
+ *   <li>getStatus: estado del ticket; 98 = en proceso, 0 o 99 = terminado, con su CDR.</li>
+ * </ul>
  */
 @Component
 @RequiredArgsConstructor
@@ -45,12 +50,39 @@ public class ClienteSoapSunat implements ServicioEnvioSunat {
 
     @Override
     public Respuesta enviar(String nombreArchivo, byte[] xmlFirmado) throws IOException {
+        return interpretar(llamar("sendBill", nombreArchivo, operacionConArchivo("sendBill", nombreArchivo, xmlFirmado)));
+    }
+
+    @Override
+    public Ticket enviarResumen(String nombreArchivo, byte[] xmlFirmado) throws IOException {
+        String cuerpo = llamar("sendSummary", nombreArchivo, operacionConArchivo("sendSummary", nombreArchivo, xmlFirmado));
+        Document soap = parsear(cuerpo);
+        String ticket = texto(soap, "ticket");
+        if (ticket != null && !ticket.isBlank()) {
+            return new Ticket(ticket.trim(), null);
+        }
+        return new Ticket(null, excepcion(soap, cuerpo));
+    }
+
+    @Override
+    public EstadoTicket consultarTicket(String nombreArchivo, String ticket) throws IOException {
+        String operacion = "<ser:getStatus><ticket>" + escapar(ticket) + "</ticket></ser:getStatus>";
+        return interpretarEstado(llamar("getStatus", nombreArchivo, operacion));
+    }
+
+    private static String operacionConArchivo(String operacion, String nombreArchivo, byte[] xmlFirmado) throws IOException {
         String zip = Base64.getEncoder().encodeToString(comprimir(nombreArchivo + ".xml", xmlFirmado));
+        return "<ser:%s><fileName>%s.zip</fileName><contentFile>%s</contentFile></ser:%s>"
+                .formatted(operacion, nombreArchivo, zip, operacion);
+    }
+
+    /** Llama a una operación del servicio y devuelve el cuerpo de la respuesta (con o sin excepción SOAP). */
+    private String llamar(String operacion, String nombreArchivo, String cuerpoOperacion) throws IOException {
         HttpRequest peticion = HttpRequest.newBuilder(URI.create(properties.urlEfectiva()))
                 .timeout(Duration.ofSeconds(60))
                 .header("Content-Type", "text/xml; charset=utf-8")
-                .header("SOAPAction", "urn:sendBill")
-                .POST(HttpRequest.BodyPublishers.ofString(sobre(nombreArchivo.substring(0, 11), nombreArchivo + ".zip", zip),
+                .header("SOAPAction", "urn:" + operacion)
+                .POST(HttpRequest.BodyPublishers.ofString(sobre(nombreArchivo.substring(0, 11), cuerpoOperacion),
                         StandardCharsets.UTF_8))
                 .build();
         HttpResponse<String> respuesta;
@@ -63,11 +95,11 @@ public class ClienteSoapSunat implements ServicioEnvioSunat {
         if (respuesta.statusCode() >= 500 && !respuesta.body().contains("Fault")) {
             throw new IOException("SUNAT respondió HTTP " + respuesta.statusCode());
         }
-        return interpretar(respuesta.body());
+        return respuesta.body();
     }
 
     /** El usuario de WS-Security es el RUC seguido del usuario SOL (ej. 20000000001MODDATOS). */
-    private String sobre(String ruc, String nombreZip, String contenidoBase64) {
+    private String sobre(String ruc, String cuerpoOperacion) {
         String usuario = escapar(ruc + (properties.usuarioSol() == null ? "" : properties.usuarioSol()));
         String clave = escapar(properties.claveSol() == null ? "" : properties.claveSol());
         return """
@@ -77,26 +109,54 @@ public class ClienteSoapSunat implements ServicioEnvioSunat {
                 <soapenv:Header><wsse:Security><wsse:UsernameToken>\
                 <wsse:Username>%s</wsse:Username><wsse:Password>%s</wsse:Password>\
                 </wsse:UsernameToken></wsse:Security></soapenv:Header>\
-                <soapenv:Body><ser:sendBill><fileName>%s</fileName><contentFile>%s</contentFile></ser:sendBill></soapenv:Body>\
-                </soapenv:Envelope>""".formatted(usuario, clave, nombreZip, contenidoBase64);
+                <soapenv:Body>%s</soapenv:Body>\
+                </soapenv:Envelope>""".formatted(usuario, clave, cuerpoOperacion);
     }
 
-    /** Respuesta de SUNAT: CDR (procesado) o excepción SOAP (no procesado). */
+    /** Respuesta de sendBill: CDR (procesado) o excepción SOAP (no procesado). */
     Respuesta interpretar(String cuerpo) throws IOException {
         Document soap = parsear(cuerpo);
         String applicationResponse = texto(soap, "applicationResponse");
         if (applicationResponse != null) {
-            byte[] cdrZip = Base64.getDecoder().decode(applicationResponse.trim());
-            Document cdr = parsear(new String(descomprimir(cdrZip), StandardCharsets.UTF_8));
-            String codigo = textoNs(cdr, "ResponseCode");
-            String descripcion = textoNs(cdr, "Description");
-            List<String> notas = new ArrayList<>();
-            NodeList elementos = cdr.getElementsByTagNameNS(GeneradorXmlUbl.NS_CBC, "Note");
-            for (int i = 0; i < elementos.getLength(); i++) {
-                notas.add(elementos.item(i).getTextContent().trim());
-            }
-            return new Respuesta(true, codigo, descripcion, notas, cdrZip);
+            return leerCdr(applicationResponse);
         }
+        return excepcion(soap, cuerpo);
+    }
+
+    /** Respuesta de getStatus: statusCode 98 = en proceso; 0 (aceptado) o 99 (con errores) traen el CDR. */
+    EstadoTicket interpretarEstado(String cuerpo) throws IOException {
+        Document soap = parsear(cuerpo);
+        String estado = texto(soap, "statusCode");
+        if (estado == null) {
+            return EstadoTicket.terminado(excepcion(soap, cuerpo));
+        }
+        if ("98".equals(estado.trim())) {
+            return EstadoTicket.procesando();
+        }
+        String contenido = texto(soap, "content");
+        if (contenido == null || contenido.isBlank()) {
+            return EstadoTicket.terminado(new Respuesta(false, estado.trim(),
+                    "SUNAT respondió el estado " + estado.trim() + " sin constancia", List.of(), null));
+        }
+        return EstadoTicket.terminado(leerCdr(contenido));
+    }
+
+    /** Constancia (CDR): zip en base64 con el XML ApplicationResponse. */
+    private static Respuesta leerCdr(String base64) throws IOException {
+        byte[] cdrZip = Base64.getDecoder().decode(base64.trim());
+        Document cdr = parsear(new String(descomprimir(cdrZip), StandardCharsets.UTF_8));
+        String codigo = textoNs(cdr, "ResponseCode");
+        String descripcion = textoNs(cdr, "Description");
+        List<String> notas = new ArrayList<>();
+        NodeList elementos = cdr.getElementsByTagNameNS(XmlUbl.NS_CBC, "Note");
+        for (int i = 0; i < elementos.getLength(); i++) {
+            notas.add(elementos.item(i).getTextContent().trim());
+        }
+        return new Respuesta(true, codigo, descripcion, notas, cdrZip);
+    }
+
+    /** Excepción SOAP: SUNAT no registró el documento. El código va en faultcode o en el mensaje. */
+    private static Respuesta excepcion(Document soap, String cuerpo) throws IOException {
         String faultcode = texto(soap, "faultcode");
         String faultstring = texto(soap, "faultstring");
         if (faultcode == null && faultstring == null) {
@@ -161,7 +221,7 @@ public class ClienteSoapSunat implements ServicioEnvioSunat {
     }
 
     private static String textoNs(Document doc, String nombreLocal) {
-        NodeList nodos = doc.getElementsByTagNameNS(GeneradorXmlUbl.NS_CBC, nombreLocal);
+        NodeList nodos = doc.getElementsByTagNameNS(XmlUbl.NS_CBC, nombreLocal);
         for (int i = 0; i < nodos.getLength(); i++) {
             Element e = (Element) nodos.item(i);
             if ("Response".equals(e.getParentNode().getLocalName())) {

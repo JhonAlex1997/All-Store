@@ -106,22 +106,22 @@ class VentaServiceIntegrationTest extends TiendaDePrueba {
                 List.of(item(jeanA, 2, null)), List.of(efectivo("179.80", null)));
         assertThat(stock(jeanA, tienda)).isEqualTo(3);
 
-        VentaResponse anulada = ventaService.anular(nota.id(), new AnularVentaRequest("Cliente se arrepintió"));
+        VentaResponse anulada = anulacionService.anular(nota.id(), new AnularVentaRequest("Cliente se arrepintió"));
         assertThat(anulada.estado()).isEqualTo(EstadoComprobante.ANULADO);
         assertThat(stock(jeanA, tienda)).isEqualTo(5);
 
-        assertThatThrownBy(() -> ventaService.anular(nota.id(), new AnularVentaRequest("otra vez")))
+        assertThatThrownBy(() -> anulacionService.anular(nota.id(), new AnularVentaRequest("otra vez")))
                 .isInstanceOf(BusinessException.class)
                 .hasMessageContaining("ya está anulado");
     }
 
     @Test
-    void boletaNoSeAnulaDirectamente() {
+    void boletaNoSeAnulaMientrasSunatNoLaAcepte() {
         VentaResponse boleta = vender(TipoComprobante.BOLETA, serieBoleta, null,
                 List.of(item(jeanA, 1, null)), List.of(efectivo("89.90", null)));
-        assertThatThrownBy(() -> ventaService.anular(boleta.id(), new AnularVentaRequest("error")))
+        assertThatThrownBy(() -> anulacionService.anular(boleta.id(), new AnularVentaRequest("error")))
                 .isInstanceOf(BusinessException.class)
-                .hasMessageContaining("nota de crédito");
+                .hasMessageContaining("SUNAT aún no recibe");
     }
 
     @Test
@@ -140,7 +140,7 @@ class VentaServiceIntegrationTest extends TiendaDePrueba {
         VentaResponse notaDespues = ventaService.obtenerDetalle(nota.id());
         assertThat(notaDespues.estado()).isEqualTo(EstadoComprobante.CONVERTIDO);
         assertThat(notaDespues.convertidoEn()).isEqualTo("F991-00000001");
-        assertThatThrownBy(() -> ventaService.anular(nota.id(), new AnularVentaRequest("x")))
+        assertThatThrownBy(() -> anulacionService.anular(nota.id(), new AnularVentaRequest("x")))
                 .isInstanceOf(BusinessException.class)
                 .hasMessageContaining("ya se convirtió");
     }

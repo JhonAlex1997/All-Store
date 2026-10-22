@@ -4,7 +4,10 @@ import com.allstore.api.empresa.entity.Empresa;
 import com.allstore.api.empresa.entity.TipoComprobante;
 import com.allstore.api.facturacion.config.EntornoSunat;
 import com.allstore.api.facturacion.config.SunatProperties;
+import com.allstore.api.facturacion.entity.ResumenSunat;
+import com.allstore.api.facturacion.entity.TipoResumen;
 import com.allstore.api.facturacion.service.FirmadorXml;
+import com.allstore.api.facturacion.service.GeneradorResumenXml;
 import com.allstore.api.facturacion.service.GeneradorXmlUbl;
 import com.allstore.api.venta.entity.Comprobante;
 import com.allstore.api.venta.entity.ComprobanteDetalle;
@@ -27,6 +30,7 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import java.io.StringReader;
 import java.math.BigDecimal;
 import java.security.cert.X509Certificate;
+import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 
@@ -40,8 +44,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 class XmlUblFirmaTest {
 
     private static final String NS_CBC = "urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2";
+    private static final String NS_SAC = "urn:sunat:names:specification:ubl:peru:schema:xsd:SunatAggregateComponents-1";
 
     private final GeneradorXmlUbl generador = new GeneradorXmlUbl();
+    private final GeneradorResumenXml generadorResumen = new GeneradorResumenXml();
     private final FirmadorXml firmador = new FirmadorXml(new SunatProperties(false, EntornoSunat.BETA, null, null, null,
             "config/sunat/certificado-beta-prueba.p12", "prueba-beta", 30000, 8));
 
@@ -105,8 +111,11 @@ class XmlUblFirmaTest {
     }
 
     private static java.util.List<String> ordenDeHijos(Document xml, String elemento) {
-        var linea = xml.getElementsByTagNameNS("urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2",
-                elemento).item(0);
+        return ordenDeHijos(xml, "urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2", elemento);
+    }
+
+    private static java.util.List<String> ordenDeHijos(Document xml, String espacioNombres, String elemento) {
+        var linea = xml.getElementsByTagNameNS(espacioNombres, elemento).item(0);
         java.util.List<String> nombres = new java.util.ArrayList<>();
         for (var hijo = linea.getFirstChild(); hijo != null; hijo = hijo.getNextSibling()) {
             nombres.add(hijo.getLocalName());
@@ -117,6 +126,76 @@ class XmlUblFirmaTest {
     @Test
     void nombreDeArchivoSegunSunat() {
         assertThat(GeneradorXmlUbl.nombreArchivo(boleta(), empresa())).isEqualTo("20000000001-03-B001-15");
+    }
+
+    // ---------- Comunicación de baja y resumen diario ----------
+
+    @Test
+    void comunicacionDeBajaFirmadaConSusLineas() throws Exception {
+        Comprobante factura = boleta();
+        factura.setTipoComprobante(TipoComprobante.FACTURA);
+        factura.setSerie("F001");
+        ResumenSunat baja = resumen(TipoResumen.RA, factura, "Error en el RUC del cliente");
+
+        FirmadorXml.XmlFirmado firmado = firmador.firmar(generadorResumen.generar(baja, empresa()));
+        Document xml = parsear(firmado.xml());
+
+        assertThat(firmaValida(xml)).isTrue();
+        assertThat(xml.getDocumentElement().getLocalName()).isEqualTo("VoidedDocuments");
+        assertThat(cbc(xml, "ID")).isEqualTo("RA-20261022-3");
+        assertThat(cbc(xml, "ReferenceDate")).isEqualTo("2026-10-10");
+        assertThat(cbc(xml, "IssueDate")).isEqualTo("2026-10-22");
+        assertThat(sac(xml, "DocumentSerialID")).isEqualTo("F001");
+        assertThat(sac(xml, "DocumentNumberID")).isEqualTo("15");
+        assertThat(sac(xml, "VoidReasonDescription")).isEqualTo("Error en el RUC del cliente");
+        assertThat(GeneradorResumenXml.nombreArchivo(baja, empresa())).isEqualTo("20000000001-RA-20261022-3");
+    }
+
+    @Test
+    void resumenDiarioInformaLaNotaAnuladaConLaBoletaQueModifica() throws Exception {
+        Comprobante boleta = boleta();
+        Comprobante nota = boleta();
+        nota.setTipoComprobante(TipoComprobante.NOTA_CREDITO);
+        nota.setSerie("BC01");
+        nota.setCorrelativo(3);
+        nota.setComprobanteOrigen(boleta);
+
+        String texto = firmador.firmar(generadorResumen.generar(resumen(TipoResumen.RC, nota, "Error"), empresa())).xml();
+        Document xml = parsear(texto);
+
+        assertThat(firmaValida(xml)).isTrue();
+        assertThat(xml.getDocumentElement().getLocalName()).isEqualTo("SummaryDocuments");
+        assertThat(cbc(xml, "CustomizationID")).isEqualTo("1.1");
+        assertThat(cbc(xml, "DocumentTypeCode")).isEqualTo("07");
+        assertThat(texto).contains("<cbc:ID>BC01-3</cbc:ID>", "<cac:InvoiceDocumentReference><cbc:ID>B001-15</cbc:ID>");
+        assertThat(cbc(xml, "ConditionCode")).isEqualTo("3");
+        assertThat(sac(xml, "TotalAmount")).isEqualTo("169.80");
+        assertThat(cbc(xml, "PaidAmount")).isEqualTo("143.90");
+        assertThat(cbc(xml, "InstructionID")).isEqualTo("01");
+        assertThat(cbc(xml, "Percent")).as("SUNAT rechaza sin la tasa (2992)").isEqualTo("18");
+        // El orden lo exige el esquema: cliente, referencia, estado, montos, impuestos.
+        assertThat(ordenDeHijos(xml, NS_SAC, "SummaryDocumentsLine")).containsSubsequence(
+                "AccountingCustomerParty", "BillingReference", "Status", "TotalAmount", "BillingPayment", "TaxTotal");
+    }
+
+    private static ResumenSunat resumen(TipoResumen tipo, Comprobante comprobante, String motivo) {
+        ResumenSunat r = new ResumenSunat();
+        r.setTipo(tipo);
+        r.setFechaGeneracion(LocalDate.of(2026, 10, 22));
+        r.setCorrelativo(3);
+        r.setFechaReferencia(LocalDate.of(2026, 10, 10));
+        r.agregar(comprobante, motivo);
+        return r;
+    }
+
+    private static boolean firmaValida(Document xml) throws Exception {
+        NodeList firmas = xml.getElementsByTagNameNS(XMLSignature.XMLNS, "Signature");
+        DOMValidateContext contexto = new DOMValidateContext(new SelectorX509(), firmas.item(0));
+        return XMLSignatureFactory.getInstance("DOM").unmarshalXMLSignature(contexto).validate(contexto);
+    }
+
+    private static String sac(Document xml, String nombre) {
+        return xml.getElementsByTagNameNS(NS_SAC, nombre).item(0).getTextContent();
     }
 
     // ---------- Datos ----------

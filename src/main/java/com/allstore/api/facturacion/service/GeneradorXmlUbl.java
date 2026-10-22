@@ -10,12 +10,16 @@ import org.springframework.stereotype.Component;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
+
+import static com.allstore.api.facturacion.service.XmlUbl.cac;
+import static com.allstore.api.facturacion.service.XmlUbl.cbc;
+import static com.allstore.api.facturacion.service.XmlUbl.firma;
+import static com.allstore.api.facturacion.service.XmlUbl.monto;
+import static com.allstore.api.facturacion.service.XmlUbl.raiz;
 
 /**
  * Arma el XML UBL 2.1 que exige SUNAT para factura y boleta (Invoice) y nota de crédito
@@ -30,37 +34,13 @@ public class GeneradorXmlUbl {
 
     static final String NS_INVOICE = "urn:oasis:names:specification:ubl:schema:xsd:Invoice-2";
     static final String NS_CREDIT_NOTE = "urn:oasis:names:specification:ubl:schema:xsd:CreditNote-2";
-    static final String NS_CAC = "urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2";
-    static final String NS_CBC = "urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2";
-    static final String NS_EXT = "urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2";
-    static final String NS_DS = "http://www.w3.org/2000/09/xmldsig#";
-    private static final String NS_XMLNS = "http://www.w3.org/2000/xmlns/";
 
-    private static final String MONEDA = "PEN";
     private static final BigDecimal FACTOR_IGV = BigDecimal.ONE.add(CalculoIgv.TASA_IGV);
     private static final DateTimeFormatter HORA = DateTimeFormatter.ofPattern("HH:mm:ss");
 
-    /** Id de la firma: el bloque cac:Signature la referencia y el firmador la crea con este Id. */
-    public static final String ID_FIRMA = "SignatureSP";
-
     public Document generar(Comprobante c, Empresa empresa) {
         boolean notaCredito = c.getTipoComprobante() == TipoComprobante.NOTA_CREDITO;
-        Document doc = nuevoDocumento();
-        Element raiz = doc.createElementNS(notaCredito ? NS_CREDIT_NOTE : NS_INVOICE, notaCredito ? "CreditNote" : "Invoice");
-        doc.appendChild(raiz);
-        // Todas las declaraciones de espacio de nombres como atributos explícitos, incluida la
-        // principal: la firma se calcula sobre el DOM en memoria, y si el serializador agregara
-        // una declaración que no estaba, el XML enviado ya no coincidiría con el firmado
-        // (SUNAT lo rechaza con 2335 "Incorrect reference digest value").
-        raiz.setAttributeNS(NS_XMLNS, "xmlns", notaCredito ? NS_CREDIT_NOTE : NS_INVOICE);
-        raiz.setAttributeNS(NS_XMLNS, "xmlns:cac", NS_CAC);
-        raiz.setAttributeNS(NS_XMLNS, "xmlns:cbc", NS_CBC);
-        raiz.setAttributeNS(NS_XMLNS, "xmlns:ds", NS_DS);
-        raiz.setAttributeNS(NS_XMLNS, "xmlns:ext", NS_EXT);
-
-        // Aquí va la firma digital (la agrega FirmadorXml).
-        Element extensiones = hijo(raiz, NS_EXT, "ext:UBLExtensions");
-        hijo(hijo(extensiones, NS_EXT, "ext:UBLExtension"), NS_EXT, "ext:ExtensionContent");
+        Element raiz = raiz(notaCredito ? NS_CREDIT_NOTE : NS_INVOICE, notaCredito ? "CreditNote" : "Invoice", false);
 
         OffsetDateTime fecha = c.getFechaEmision().atZoneSameInstant(JpaAuditingConfig.ZONA_LIMA).toOffsetDateTime();
         cbc(raiz, "UBLVersionID", "2.1");
@@ -74,7 +54,7 @@ public class GeneradorXmlUbl {
         }
         // Leyenda 1000: importe en letras.
         cbc(raiz, "Note", MontoEnLetras.convertir(c.getTotal())).setAttribute("languageLocaleID", "1000");
-        cbc(raiz, "DocumentCurrencyCode", MONEDA);
+        cbc(raiz, "DocumentCurrencyCode", XmlUbl.MONEDA);
 
         if (notaCredito) {
             Comprobante origen = c.getComprobanteOrigen();
@@ -102,7 +82,7 @@ public class GeneradorXmlUbl {
         for (ComprobanteDetalle d : c.getDetalles()) {
             linea(raiz, d, i++, notaCredito);
         }
-        return doc;
+        return raiz.getOwnerDocument();
     }
 
     /** Nombre de archivo que exige SUNAT: RUC-TIPO-SERIE-CORRELATIVO. */
@@ -116,15 +96,6 @@ public class GeneradorXmlUbl {
     }
 
     // ---------- Bloques ----------
-
-    private void firma(Element raiz, Empresa empresa) {
-        Element firma = cac(raiz, "Signature");
-        cbc(firma, "ID", ID_FIRMA);
-        Element firmante = cac(firma, "SignatoryParty");
-        cbc(cac(firmante, "PartyIdentification"), "ID", empresa.getRuc());
-        cbc(cac(firmante, "PartyName"), "Name", empresa.getRazonSocial());
-        cbc(cac(cac(firma, "DigitalSignatureAttachment"), "ExternalReference"), "URI", "#" + ID_FIRMA);
-    }
 
     private void emisor(Element raiz, Empresa empresa) {
         Element parte = cac(cac(raiz, "AccountingSupplierParty"), "Party");
@@ -267,38 +238,7 @@ public class GeneradorXmlUbl {
         }
     }
 
-    // ---------- Utilidades DOM ----------
-
-    private static Document nuevoDocumento() {
-        try {
-            DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-            factory.setNamespaceAware(true);
-            return factory.newDocumentBuilder().newDocument();
-        } catch (ParserConfigurationException e) {
-            throw new IllegalStateException("No se pudo crear el documento XML", e);
-        }
-    }
-
-    private static Element hijo(Element padre, String ns, String nombre) {
-        Element e = padre.getOwnerDocument().createElementNS(ns, nombre);
-        padre.appendChild(e);
-        return e;
-    }
-
-    private static Element cac(Element padre, String nombre) {
-        return hijo(padre, NS_CAC, "cac:" + nombre);
-    }
-
-    private static Element cbc(Element padre, String nombre, String valor) {
-        Element e = hijo(padre, NS_CBC, "cbc:" + nombre);
-        e.setTextContent(valor);
-        return e;
-    }
-
-    /** Importe con 2 decimales y moneda. */
-    private static void monto(Element padre, String nombre, BigDecimal valor) {
-        cbc(padre, nombre, valor.setScale(2, RoundingMode.HALF_UP).toPlainString()).setAttribute("currencyID", MONEDA);
-    }
+    // ---------- Utilidades ----------
 
     /** Precio unitario: SUNAT admite hasta 10 decimales; se quitan los ceros sobrantes (mínimo 2). */
     private static void precio(Element padre, String nombre, BigDecimal valor) {
@@ -306,6 +246,6 @@ public class GeneradorXmlUbl {
         if (limpio.scale() < 2) {
             limpio = limpio.setScale(2);
         }
-        cbc(padre, nombre, limpio.toPlainString()).setAttribute("currencyID", MONEDA);
+        cbc(padre, nombre, limpio.toPlainString()).setAttribute("currencyID", XmlUbl.MONEDA);
     }
 }

@@ -16,16 +16,27 @@ import lombok.Setter;
 
 import java.time.OffsetDateTime;
 
-/** Envío de un comprobante electrónico a SUNAT, con sus archivos y la respuesta. */
+/**
+ * Envío a SUNAT de un documento electrónico (un comprobante o un resumen), con sus archivos y la
+ * respuesta. Exactamente uno de los dos está presente.
+ */
 @Getter
 @Setter
 @Entity
 @Table(name = "envio_sunat")
 public class EnvioSunat extends BaseEntity {
 
-    @OneToOne(fetch = FetchType.LAZY, optional = false)
+    @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "comprobante_id", updatable = false)
     private Comprobante comprobante;
+
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "resumen_id", updatable = false)
+    private ResumenSunat resumen;
+
+    /** Resúmenes: número de ticket con el que se consulta el resultado. */
+    @Column(length = 60)
+    private String ticket;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 10)
@@ -70,5 +81,12 @@ public class EnvioSunat extends BaseEntity {
 
     public boolean tieneXml() {
         return xmlFirmado != null;
+    }
+
+    /** Ej. "Boleta de venta B001-00000015" o "Comunicación de baja RA-20261022-1". */
+    public String getDocumento() {
+        return comprobante != null
+                ? comprobante.getTipoComprobante().getDescripcion() + " " + comprobante.getNumeroImpreso()
+                : resumen.getTipo().getDescripcion() + " " + resumen.getNumero();
     }
 }

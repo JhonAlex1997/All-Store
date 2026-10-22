@@ -17,10 +17,16 @@ public interface EnvioSunatRepository extends JpaRepository<EnvioSunat, Long> {
 
     Optional<EnvioSunat> findByComprobanteId(Long comprobanteId);
 
-    /** Pendientes cuyo próximo intento ya llegó, los más antiguos primero. */
+    Optional<EnvioSunat> findByResumenId(Long resumenId);
+
+    /**
+     * Por enviar (PENDIENTE) o por consultar su ticket (EN_PROCESO), cuyo próximo intento ya
+     * llegó, los más antiguos primero.
+     */
     @Query("""
             select e.id from EnvioSunat e
-            where e.estado = com.allstore.api.facturacion.entity.EstadoSunat.PENDIENTE
+            where e.estado in (com.allstore.api.facturacion.entity.EstadoSunat.PENDIENTE,
+                               com.allstore.api.facturacion.entity.EstadoSunat.EN_PROCESO)
               and (e.proximoIntento is null or e.proximoIntento <= :ahora)
             order by e.id
             """)
@@ -33,10 +39,10 @@ public interface EnvioSunatRepository extends JpaRepository<EnvioSunat, Long> {
     @Query(value = "select * from envio_sunat where id = :id for update skip locked", nativeQuery = true)
     Optional<EnvioSunat> tomarParaProcesar(@Param("id") Long id);
 
-    @EntityGraph(attributePaths = "comprobante")
+    @EntityGraph(attributePaths = {"comprobante", "resumen"})
     Page<EnvioSunat> findByEstado(EstadoSunat estado, Pageable pageable);
 
     @Override
-    @EntityGraph(attributePaths = "comprobante")
+    @EntityGraph(attributePaths = {"comprobante", "resumen"})
     Page<EnvioSunat> findAll(Pageable pageable);
 }

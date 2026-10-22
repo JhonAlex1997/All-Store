@@ -57,6 +57,26 @@ class RespuestaSunatTest {
         assertThat(r.descripcion()).contains("perfil");
     }
 
+    @Test
+    void ticketEnProceso() throws Exception {
+        ServicioEnvioSunat.EstadoTicket estado = interpretarEstado(respuestaEstado("98", null));
+
+        assertThat(estado.enProceso()).isTrue();
+        assertThat(estado.respuesta()).isNull();
+    }
+
+    @Test
+    void ticketTerminadoTraeLaConstancia() throws Exception {
+        String cdr = Base64.getEncoder().encodeToString(zipCdr("0", "La Comunicacion de baja RA-20261022-1, ha sido aceptada", ""));
+
+        ServicioEnvioSunat.EstadoTicket estado = interpretarEstado(respuestaEstado("0", cdr));
+
+        assertThat(estado.enProceso()).isFalse();
+        assertThat(estado.respuesta().cdrRecibido()).isTrue();
+        assertThat(estado.respuesta().codigoNumerico()).isZero();
+        assertThat(estado.respuesta().descripcion()).contains("RA-20261022-1");
+    }
+
     // ---------- Ayudas ----------
 
     private ServicioEnvioSunat.Respuesta interpretar(String cuerpo) throws Exception {
@@ -65,8 +85,33 @@ class RespuestaSunatTest {
         return (ServicioEnvioSunat.Respuesta) m.invoke(cliente, cuerpo);
     }
 
+    private ServicioEnvioSunat.EstadoTicket interpretarEstado(String cuerpo) throws Exception {
+        Method m = ClienteSoapSunat.class.getDeclaredMethod("interpretarEstado", String.class);
+        m.setAccessible(true);
+        return (ServicioEnvioSunat.EstadoTicket) m.invoke(cliente, cuerpo);
+    }
+
+    /** Respuesta SOAP de getStatus, como la envía SUNAT. */
+    private static String respuestaEstado(String codigo, String contenido) {
+        return """
+                <soap-env:Envelope xmlns:soap-env="http://schemas.xmlsoap.org/soap/envelope/"><soap-env:Body>\
+                <br:getStatusResponse xmlns:br="http://service.sunat.gob.pe"><status>%s<statusCode>%s</statusCode>\
+                </status></br:getStatusResponse></soap-env:Body></soap-env:Envelope>"""
+                .formatted(contenido == null ? "" : "<content>" + contenido + "</content>", codigo);
+    }
+
     /** Respuesta SOAP de sendBill con un CDR (ApplicationResponse) comprimido como lo envía SUNAT. */
     private static String respuestaConCdr(String codigo, String descripcion, String notas) throws Exception {
+        return """
+                <soap-env:Envelope xmlns:soap-env="http://schemas.xmlsoap.org/soap/envelope/"><soap-env:Body>\
+                <br:sendBillResponse xmlns:br="http://service.sunat.gob.pe">\
+                <applicationResponse>%s</applicationResponse></br:sendBillResponse>\
+                </soap-env:Body></soap-env:Envelope>""".formatted(
+                Base64.getEncoder().encodeToString(zipCdr(codigo, descripcion, notas)));
+    }
+
+    /** CDR (ApplicationResponse) comprimido en zip, como lo entrega SUNAT. */
+    private static byte[] zipCdr(String codigo, String descripcion, String notas) throws Exception {
         String cdr = """
                 <?xml version="1.0" encoding="UTF-8"?>
                 <ar:ApplicationResponse xmlns:ar="urn:oasis:names:specification:ubl:schema:xsd:ApplicationResponse-2" \
@@ -81,10 +126,6 @@ class RespuestaSunatTest {
             out.write(cdr.getBytes(StandardCharsets.UTF_8));
             out.closeEntry();
         }
-        return """
-                <soap-env:Envelope xmlns:soap-env="http://schemas.xmlsoap.org/soap/envelope/"><soap-env:Body>\
-                <br:sendBillResponse xmlns:br="http://service.sunat.gob.pe">\
-                <applicationResponse>%s</applicationResponse></br:sendBillResponse>\
-                </soap-env:Body></soap-env:Envelope>""".formatted(Base64.getEncoder().encodeToString(zip.toByteArray()));
+        return zip.toByteArray();
     }
 }

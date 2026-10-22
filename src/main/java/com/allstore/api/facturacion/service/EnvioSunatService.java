@@ -8,11 +8,14 @@ import com.allstore.api.empresa.entity.Empresa;
 import com.allstore.api.empresa.entity.TipoComprobante;
 import com.allstore.api.empresa.service.EmpresaService;
 import com.allstore.api.facturacion.config.SunatProperties;
+import com.allstore.api.facturacion.dto.BajaSunatInfo;
 import com.allstore.api.facturacion.dto.EnvioSunatResponse;
 import com.allstore.api.facturacion.dto.SunatInfo;
 import com.allstore.api.facturacion.entity.EnvioSunat;
 import com.allstore.api.facturacion.entity.EstadoSunat;
+import com.allstore.api.facturacion.entity.ResumenSunat;
 import com.allstore.api.facturacion.repository.EnvioSunatRepository;
+import com.allstore.api.facturacion.repository.ResumenSunatRepository;
 import com.allstore.api.venta.entity.Comprobante;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
@@ -24,6 +27,7 @@ import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionTemplate;
+import org.w3c.dom.Document;
 
 import java.io.IOException;
 import java.math.RoundingMode;
@@ -35,13 +39,15 @@ import java.util.Optional;
 import java.util.Set;
 
 /**
- * Ciclo de vida del envío a SUNAT:
+ * Ciclo de vida del envío a SUNAT de los documentos electrónicos:
  * <ol>
- *   <li>Al emitir el comprobante se crea el envío PENDIENTE y se genera y firma el XML (solo
- *       CPU, sin red): así el hash y el QR están listos para imprimir el ticket al instante.</li>
+ *   <li>Al emitir el documento se crea el envío PENDIENTE y se genera y firma el XML (solo CPU,
+ *       sin red): así el hash y el QR están listos para imprimir el ticket al instante.</li>
  *   <li>Un proceso programado envía los pendientes. Sin comunicación, reintenta con espera
  *       creciente (1, 2, 4... hasta 60 minutos); tras el máximo de intentos queda en ERROR.</li>
- *   <li>Con la respuesta de SUNAT queda ACEPTADO, OBSERVADO o RECHAZADO, con su constancia (CDR).</li>
+ *   <li>Comprobantes: SUNAT responde en el acto y queda ACEPTADO, OBSERVADO o RECHAZADO, con su
+ *       constancia (CDR). Resúmenes (bajas): SUNAT entrega un ticket, el envío queda EN_PROCESO
+ *       y el mismo proceso consulta el ticket hasta tener la constancia.</li>
  * </ol>
  * La venta nunca espera a SUNAT ni falla por SUNAT.
  */
@@ -52,20 +58,27 @@ public class EnvioSunatService {
     private static final Set<TipoComprobante> ELECTRONICOS =
             EnumSet.of(TipoComprobante.FACTURA, TipoComprobante.BOLETA, TipoComprobante.NOTA_CREDITO);
     private static final int LOTE = 20;
+    /** Espera antes de la primera consulta de un ticket: SUNAT suele procesarlo en segundos. */
+    private static final int SEGUNDOS_PRIMERA_CONSULTA = 20;
 
     private final EnvioSunatRepository envioRepository;
+    private final ResumenSunatRepository resumenRepository;
     private final GeneradorXmlUbl generador;
+    private final GeneradorResumenXml generadorResumen;
     private final FirmadorXml firmador;
     private final ServicioEnvioSunat servicio;
     private final EmpresaService empresaService;
     private final SunatProperties properties;
     private final TransactionTemplate transaccionPropia;
 
-    public EnvioSunatService(EnvioSunatRepository envioRepository, GeneradorXmlUbl generador, FirmadorXml firmador,
+    public EnvioSunatService(EnvioSunatRepository envioRepository, ResumenSunatRepository resumenRepository,
+                             GeneradorXmlUbl generador, GeneradorResumenXml generadorResumen, FirmadorXml firmador,
                              ServicioEnvioSunat servicio, EmpresaService empresaService, SunatProperties properties,
                              PlatformTransactionManager transactionManager) {
         this.envioRepository = envioRepository;
+        this.resumenRepository = resumenRepository;
         this.generador = generador;
+        this.generadorResumen = generadorResumen;
         this.firmador = firmador;
         this.servicio = servicio;
         this.empresaService = empresaService;
@@ -88,13 +101,25 @@ public class EnvioSunatService {
         }
         EnvioSunat envio = new EnvioSunat();
         envio.setComprobante(comprobante);
+        registrar(envio);
+    }
+
+    /** Registra el envío de una comunicación de baja o resumen diario recién generado. */
+    @Transactional(propagation = Propagation.MANDATORY)
+    public void registrar(ResumenSunat resumen) {
+        EnvioSunat envio = new EnvioSunat();
+        envio.setResumen(resumen);
+        registrar(envio);
+    }
+
+    private void registrar(EnvioSunat envio) {
         envio.setEntorno(properties.entorno());
         Optional<Empresa> empresa = empresaService.buscarEntidad();
         if (empresa.isPresent() && firmador.disponible()) {
             try {
                 prepararXml(envio, empresa.get());
             } catch (RuntimeException e) {
-                log.error("No se pudo generar el XML de {}", comprobante.getNumeroImpreso(), e);
+                log.error("No se pudo generar el XML de {}", envio.getDocumento(), e);
                 envio.setDescripcionRespuesta("No se pudo generar el XML: " + e.getMessage());
             }
         }
@@ -103,7 +128,7 @@ public class EnvioSunatService {
 
     // ---------- Envío ----------
 
-    /** Revisa los pendientes cada cierto tiempo (app.sunat.intervalo-envio-ms). */
+    /** Revisa los pendientes y los tickets por consultar cada cierto tiempo (app.sunat.intervalo-envio-ms). */
     @Scheduled(fixedDelayString = "${app.sunat.intervalo-envio-ms:30000}", initialDelay = 15_000)
     public void enviarPendientes() {
         if (!properties.habilitado()) {
@@ -112,9 +137,9 @@ public class EnvioSunatService {
         List<Long> ids = envioRepository.idsPorEnviar(ahora(), PageRequest.of(0, LOTE));
         for (Long id : ids) {
             try {
-                // Cada comprobante en su propia transacción: un fallo no afecta a los demás.
+                // Cada documento en su propia transacción: un fallo no afecta a los demás.
                 transaccionPropia.executeWithoutResult(s -> envioRepository.tomarParaProcesar(id)
-                        .filter(e -> e.getEstado() == EstadoSunat.PENDIENTE)
+                        .filter(e -> e.getEstado() == EstadoSunat.PENDIENTE || e.getEstado() == EstadoSunat.EN_PROCESO)
                         .ifPresent(this::procesar));
             } catch (RuntimeException e) {
                 log.error("Error procesando el envío SUNAT {}", id, e);
@@ -122,34 +147,57 @@ public class EnvioSunatService {
         }
     }
 
+    /** Envío manual del comprobante desde el panel (también para reintentar uno en ERROR). */
+    @Transactional
+    public EnvioSunatResponse enviarAhora(Long comprobanteId, boolean regenerarXml) {
+        return enviarAhora(obtener(comprobanteId), regenerarXml);
+    }
+
+    /** Envío manual de cualquier documento (comprobante o resumen) por el id de su envío. */
+    @Transactional
+    public EnvioSunatResponse enviarEnvioAhora(Long envioId, boolean regenerarXml) {
+        return enviarAhora(obtenerEnvio(envioId), regenerarXml);
+    }
+
     /**
-     * Envío manual desde el panel (también para reintentar uno en ERROR).
+     * Envía ahora sin esperar al proceso programado; si ya hay ticket, consulta su resultado.
      *
      * @param regenerarXml volver a generar y firmar el XML antes de enviar: para cuando SUNAT no
      *                     pudo leer el anterior (errores 0xxx) y ya se corrigió el sistema. Cambia
      *                     el hash, así que el comprobante debe volver a imprimirse.
      */
-    @Transactional
-    public EnvioSunatResponse enviarAhora(Long comprobanteId, boolean regenerarXml) {
-        EnvioSunat envio = obtener(comprobanteId);
+    private EnvioSunatResponse enviarAhora(EnvioSunat envio, boolean regenerarXml) {
         switch (envio.getEstado()) {
-            case ACEPTADO, OBSERVADO -> throw new BusinessException("SUNAT ya aceptó " + envio.getComprobante().getNumeroImpreso());
-            case RECHAZADO -> throw new BusinessException("SUNAT rechazó " + envio.getComprobante().getNumeroImpreso()
-                    + ": no se puede reenviar con el mismo número; emite un comprobante nuevo");
-            case PENDIENTE, ERROR -> {
+            case ACEPTADO, OBSERVADO -> throw new BusinessException("SUNAT ya aceptó " + envio.getDocumento());
+            case RECHAZADO -> throw new BusinessException("SUNAT rechazó " + envio.getDocumento()
+                    + ": no se puede reenviar con el mismo número"
+                    + (envio.getComprobante() != null ? "; emite un comprobante nuevo" : ""));
+            case PENDIENTE, EN_PROCESO, ERROR -> {
             }
         }
-        envio.setEstado(EstadoSunat.PENDIENTE);
-        envio.setProximoIntento(null);
-        if (regenerarXml) {
-            envio.setXmlFirmado(null);
-            envio.setHash(null);
+        if (envio.getTicket() != null) {
+            if (regenerarXml) {
+                throw new BusinessException("SUNAT ya recibió " + envio.getDocumento() + " (ticket " + envio.getTicket()
+                        + "); solo se puede consultar su resultado");
+            }
+            envio.setEstado(EstadoSunat.EN_PROCESO);
+        } else {
+            envio.setEstado(EstadoSunat.PENDIENTE);
+            if (regenerarXml) {
+                envio.setXmlFirmado(null);
+                envio.setHash(null);
+            }
         }
+        envio.setProximoIntento(null);
         procesar(envio);
         return EnvioSunatResponse.from(envio);
     }
 
     private void procesar(EnvioSunat envio) {
+        if (envio.getTicket() != null) {
+            consultarTicket(envio);
+            return;
+        }
         if (!envio.tieneXml()) {
             Optional<Empresa> empresa = empresaService.buscarEntidad();
             if (empresa.isEmpty() || !firmador.disponible()) {
@@ -162,10 +210,13 @@ public class EnvioSunatService {
         }
         envio.setIntentos(envio.getIntentos() + 1);
         envio.setFechaEnvio(ahora());
+        byte[] xml = envio.getXmlFirmado().getBytes(StandardCharsets.UTF_8);
         try {
-            ServicioEnvioSunat.Respuesta respuesta =
-                    servicio.enviar(envio.getNombreArchivo(), envio.getXmlFirmado().getBytes(StandardCharsets.UTF_8));
-            aplicar(envio, respuesta);
+            if (envio.getComprobante() != null) {
+                aplicar(envio, servicio.enviar(envio.getNombreArchivo(), xml));
+            } else {
+                recibirTicket(envio, servicio.enviarResumen(envio.getNombreArchivo(), xml));
+            }
         } catch (IOException e) {
             log.warn("Sin comunicación con SUNAT para {}: {}", envio.getNombreArchivo(), e.getMessage());
             envio.setDescripcionRespuesta("Sin comunicación con SUNAT: " + e.getMessage());
@@ -173,9 +224,39 @@ public class EnvioSunatService {
         }
     }
 
+    /** SUNAT admitió el resumen y entregó un ticket (o lo rechazó sin admitirlo). */
+    private void recibirTicket(EnvioSunat envio, ServicioEnvioSunat.Ticket ticket) {
+        if (ticket.numero() == null) {
+            aplicar(envio, ticket.rechazo());
+            return;
+        }
+        envio.setTicket(ticket.numero());
+        envio.setEstado(EstadoSunat.EN_PROCESO);
+        envio.setDescripcionRespuesta("SUNAT recibió el archivo; se consulta el resultado con el ticket");
+        envio.setProximoIntento(ahora().plusSeconds(SEGUNDOS_PRIMERA_CONSULTA));
+        log.info("SUNAT recibió {} con ticket {}", envio.getNombreArchivo(), ticket.numero());
+    }
+
+    private void consultarTicket(EnvioSunat envio) {
+        envio.setIntentos(envio.getIntentos() + 1);
+        try {
+            ServicioEnvioSunat.EstadoTicket estado = servicio.consultarTicket(envio.getNombreArchivo(), envio.getTicket());
+            if (estado.enProceso()) {
+                envio.setDescripcionRespuesta("SUNAT aún procesa el ticket " + envio.getTicket());
+                programarReintento(envio);
+                return;
+            }
+            aplicar(envio, estado.respuesta());
+        } catch (IOException e) {
+            log.warn("Sin comunicación con SUNAT para consultar {}: {}", envio.getNombreArchivo(), e.getMessage());
+            envio.setDescripcionRespuesta("Sin comunicación con SUNAT: " + e.getMessage());
+            programarReintento(envio);
+        }
+    }
+
     /**
      * CDR con código 0 = aceptado (observado si trae notas); CDR con código 2000-3999 =
-     * rechazado. Una excepción SOAP significa que SUNAT no registró el comprobante: con código
+     * rechazado. Una excepción SOAP significa que SUNAT no registró el documento: con código
      * 2000-3999 es rechazo; si no, es un error del envío y se reintenta.
      */
     void aplicar(EnvioSunat envio, ServicioEnvioSunat.Respuesta respuesta) {
@@ -215,11 +296,17 @@ public class EnvioSunatService {
     }
 
     private void prepararXml(EnvioSunat envio, Empresa empresa) {
-        Comprobante comprobante = envio.getComprobante();
-        FirmadorXml.XmlFirmado firmado = firmador.firmar(generador.generar(comprobante, empresa));
+        Document xml;
+        if (envio.getComprobante() != null) {
+            xml = generador.generar(envio.getComprobante(), empresa);
+            envio.setNombreArchivo(GeneradorXmlUbl.nombreArchivo(envio.getComprobante(), empresa));
+        } else {
+            xml = generadorResumen.generar(envio.getResumen(), empresa);
+            envio.setNombreArchivo(GeneradorResumenXml.nombreArchivo(envio.getResumen(), empresa));
+        }
+        FirmadorXml.XmlFirmado firmado = firmador.firmar(xml);
         envio.setXmlFirmado(firmado.xml());
         envio.setHash(firmado.hash());
-        envio.setNombreArchivo(GeneradorXmlUbl.nombreArchivo(comprobante, empresa));
         envio.setDescripcionRespuesta(null);
     }
 
@@ -234,9 +321,24 @@ public class EnvioSunatService {
                 .orElse(null);
     }
 
+    /** La baja del comprobante ante SUNAT y su estado (null si no se dio de baja). */
+    @Transactional(readOnly = true)
+    public BajaSunatInfo infoBaja(Comprobante comprobante) {
+        return resumenRepository.ultimaBaja(comprobante.getId())
+                .flatMap(d -> envioRepository.findByResumenId(d.getResumen().getId()))
+                .map(e -> new BajaSunatInfo(e.getResumen().getTipo().getDescripcion(), e.getResumen().getNumero(),
+                        e.getId(), e.getEstado(), e.getCodigoRespuesta(), e.getDescripcionRespuesta()))
+                .orElse(null);
+    }
+
     @Transactional(readOnly = true)
     public EnvioSunatResponse consultar(Long comprobanteId) {
         return EnvioSunatResponse.from(obtener(comprobanteId));
+    }
+
+    @Transactional(readOnly = true)
+    public EnvioSunatResponse consultarEnvio(Long envioId) {
+        return EnvioSunatResponse.from(obtenerEnvio(envioId));
     }
 
     @Transactional(readOnly = true)
@@ -247,18 +349,34 @@ public class EnvioSunatService {
 
     @Transactional(readOnly = true)
     public Archivo xml(Long comprobanteId) {
-        EnvioSunat envio = obtener(comprobanteId);
-        if (!envio.tieneXml()) {
-            throw new ResourceNotFoundException("El XML de este comprobante aún no se generó");
-        }
-        return new Archivo(envio.getNombreArchivo() + ".xml", envio.getXmlFirmado().getBytes(StandardCharsets.UTF_8));
+        return xml(obtener(comprobanteId));
+    }
+
+    @Transactional(readOnly = true)
+    public Archivo xmlDeEnvio(Long envioId) {
+        return xml(obtenerEnvio(envioId));
     }
 
     @Transactional(readOnly = true)
     public Archivo cdr(Long comprobanteId) {
-        EnvioSunat envio = obtener(comprobanteId);
+        return cdr(obtener(comprobanteId));
+    }
+
+    @Transactional(readOnly = true)
+    public Archivo cdrDeEnvio(Long envioId) {
+        return cdr(obtenerEnvio(envioId));
+    }
+
+    private static Archivo xml(EnvioSunat envio) {
+        if (!envio.tieneXml()) {
+            throw new ResourceNotFoundException("El XML de " + envio.getDocumento() + " aún no se generó");
+        }
+        return new Archivo(envio.getNombreArchivo() + ".xml", envio.getXmlFirmado().getBytes(StandardCharsets.UTF_8));
+    }
+
+    private static Archivo cdr(EnvioSunat envio) {
         if (envio.getCdr() == null) {
-            throw new ResourceNotFoundException("SUNAT aún no devolvió la constancia (CDR) de este comprobante");
+            throw new ResourceNotFoundException("SUNAT aún no devolvió la constancia (CDR) de " + envio.getDocumento());
         }
         return new Archivo("R-" + envio.getNombreArchivo() + ".zip", envio.getCdr());
     }
@@ -281,6 +399,10 @@ public class EnvioSunatService {
     private EnvioSunat obtener(Long comprobanteId) {
         return envioRepository.findByComprobanteId(comprobanteId)
                 .orElseThrow(() -> new ResourceNotFoundException("Este comprobante no se envía a SUNAT (o no existe)"));
+    }
+
+    private EnvioSunat obtenerEnvio(Long envioId) {
+        return envioRepository.findById(envioId).orElseThrow(() -> new ResourceNotFoundException("Envío a SUNAT", envioId));
     }
 
     private static OffsetDateTime ahora() {

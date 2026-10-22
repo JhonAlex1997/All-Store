@@ -11,6 +11,7 @@ import com.allstore.api.venta.dto.VentaRequest;
 import com.allstore.api.venta.dto.VentaResponse;
 import com.allstore.api.venta.dto.VentaResumenResponse;
 import com.allstore.api.venta.entity.EstadoComprobante;
+import com.allstore.api.venta.service.AnulacionService;
 import com.allstore.api.venta.service.NotaCreditoService;
 import com.allstore.api.venta.service.VentaService;
 import jakarta.validation.Valid;
@@ -43,6 +44,7 @@ public class VentaController {
 
     private final VentaService ventaService;
     private final NotaCreditoService notaCreditoService;
+    private final AnulacionService anulacionService;
     private final ImpresionService impresionService;
 
     /** Ej: GET /api/ventas?desde=2026-10-01&hasta=2026-10-31&tipoComprobante=BOLETA&busqueda=B001-15 */
@@ -99,9 +101,12 @@ public class VentaController {
         return notaCreditoService.emitir(id, request);
     }
 
-    /** Solo notas de venta, solo ADMIN (ver SecurityConfig). Devuelve la mercadería al stock. */
+    /**
+     * Solo ADMIN (ver SecurityConfig). Revierte la mercadería y el cobro; si es una factura, boleta
+     * o nota, además la da de baja ante SUNAT (dentro del plazo y si SUNAT ya la aceptó).
+     */
     @PostMapping("/{id}/anular")
     public VentaResponse anular(@PathVariable Long id, @Valid @RequestBody AnularVentaRequest request) {
-        return ventaService.anular(id, request);
+        return anulacionService.anular(id, request);
     }
 }

@@ -101,7 +101,7 @@ class FacturacionIntegrationTest extends TiendaDePrueba {
 
         VentaResponse nota = vender(TipoComprobante.NOTA_VENTA, serieNotaVenta, null,
                 List.of(item(jeanA, 1, null)), List.of(efectivo("89.90", null)));
-        ventaService.anular(nota.id(), new com.allstore.api.venta.dto.AnularVentaRequest("prueba"));
+        anulacionService.anular(nota.id(), new com.allstore.api.venta.dto.AnularVentaRequest("prueba"));
         String a4 = textoPdf(impresionService.generar(nota.id(), FormatoImpresion.A4).contenido());
         assertThat(a4).contains("NOTA DE VENTA", "ANULADO", "No es un comprobante de pago");
     }

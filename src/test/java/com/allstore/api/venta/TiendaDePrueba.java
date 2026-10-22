@@ -22,6 +22,7 @@ import com.allstore.api.venta.dto.VentaItemRequest;
 import com.allstore.api.venta.dto.VentaRequest;
 import com.allstore.api.venta.dto.VentaResponse;
 import com.allstore.api.venta.entity.MetodoPago;
+import com.allstore.api.venta.service.AnulacionService;
 import com.allstore.api.venta.service.NotaCreditoService;
 import com.allstore.api.venta.service.VentaService;
 import org.junit.jupiter.api.BeforeEach;
@@ -43,6 +44,7 @@ abstract class TiendaDePrueba {
 
     @Autowired protected VentaService ventaService;
     @Autowired protected NotaCreditoService notaCreditoService;
+    @Autowired protected AnulacionService anulacionService;
     @Autowired protected InventarioService inventarioService;
     @Autowired protected CajaService cajaService;
     @Autowired protected ProductoService productoService;

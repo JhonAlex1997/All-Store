@@ -16,11 +16,11 @@ producción (desde la recepción de materia prima hasta la venta final).
 | `inventario` | Stock por variante y establecimiento, kardex, inventario inicial, ajustes y traslados |
 | `venta` | Nota de venta, boleta, factura y nota de crédito con IGV, descuentos y pagos mixtos; conversión y anulación de nota de venta |
 | `caja` | Apertura con fondo, ingresos y egresos de efectivo, cierre con cuadre (esperado, contado, diferencia) |
-| `facturacion` | Facturación electrónica SUNAT: XML UBL 2.1, firma digital, envío con reintentos, CDR, hash y QR |
+| `facturacion` | Facturación electrónica SUNAT: XML UBL 2.1, firma digital, envío con reintentos, CDR, hash y QR; baja de comprobantes (comunicación de baja y resumen diario) |
 | `impresion` | Representación impresa en PDF: ticket de 80 mm y A4, con QR, hash y leyenda de SUNAT |
 
-Pendiente: nota de débito, comunicación de baja, guía de remisión electrónica, compras,
-producción, contabilidad. Frontend.
+Pendiente: nota de débito, guía de remisión electrónica, compras, producción, contabilidad.
+Frontend.
 
 ## Levantar en local
 
@@ -101,8 +101,8 @@ ella el sistema no arranca), `DB_PASSWORD`, `CORS_ORIGENES`.
 - Reglas: la factura solo a un cliente con RUC; la boleta mayor a S/ 700 exige identificar al
   cliente; los pagos deben sumar el total y solo el efectivo da vuelto.
 - La nota de venta se puede **convertir** en boleta o factura (sin volver a mover stock) o
-  **anular** (solo ADMIN; devuelve el stock). Las boletas y facturas no se anulan: se corrigen
-  con nota de crédito (próximo módulo).
+  **anular** (solo ADMIN; devuelve el stock). Las boletas y facturas también se anulan, con baja
+  ante SUNAT (ver "Anulación ante SUNAT"); fuera de plazo se corrigen con nota de crédito.
 - El kardex no se edita: cada entrada o salida queda con su motivo, documento, usuario y saldo.
 
 ## Notas de crédito
@@ -142,10 +142,33 @@ implementación.
 
 | Endpoint (solo ADMIN) | Para qué |
 | --- | --- |
-| `GET /api/sunat/envios?estado=PENDIENTE` | Envíos por estado |
+| `GET /api/sunat/envios?estado=PENDIENTE` | Envíos por estado (comprobantes y bajas) |
+| `GET /api/sunat/envios/{envioId}` · `POST .../enviar` | Ver o enviar ahora cualquier envío; si ya tiene ticket, lo consulta |
+| `GET /api/sunat/envios/{envioId}/xml` · `/cdr` | Descargar XML firmado y constancia de cualquier envío |
+| `POST /api/sunat/comprobantes/{id}/baja` | Generar otra baja si SUNAT rechazó la anterior |
 | `GET /api/sunat/comprobantes/{id}` | Estado, respuesta y observaciones de un comprobante |
 | `POST /api/sunat/comprobantes/{id}/enviar` | Enviar ahora (`?regenerarXml=true` si SUNAT no pudo leer el anterior) |
 | `GET /api/sunat/comprobantes/{id}/xml` · `/cdr` | Descargar XML firmado y constancia |
+
+### Anulación ante SUNAT (baja)
+
+`POST /api/ventas/{id}/anular` (solo ADMIN) también anula boletas, facturas y sus notas:
+
+| Comprobante | Documento que se envía a SUNAT |
+| --- | --- |
+| Factura y sus notas (serie F) | Comunicación de baja: `RA-AAAAMMDD-n` |
+| Boleta y sus notas (serie B) | Resumen diario con estado 3 "anulado": `RC-AAAAMMDD-n` |
+
+- Procede si SUNAT **ya aceptó** el comprobante y dentro de los **7 días** calendario siguientes
+  a su constancia. Si tiene notas vigentes, primero se anulan las notas. Pasado el plazo, se
+  corrige con nota de crédito.
+- La caja donde se cobró debe seguir abierta. Revierte la mercadería: lo vendido vuelve al stock
+  y, si se anula una nota de crédito, lo devuelto sale otra vez.
+- La anulación vale en el sistema al instante; la baja se envía en segundo plano (`sendSummary`).
+  SUNAT entrega un **ticket** (estado `EN_PROCESO`) y el mismo proceso lo consulta (`getStatus`)
+  hasta tener la constancia. El resultado se ve en `bajaSunat` de la venta.
+- Si SUNAT rechaza una baja, `POST /api/sunat/comprobantes/{id}/baja` genera otra con un número
+  nuevo (SUNAT no admite reenviar el mismo).
 
 **Entorno beta (pruebas).** En el perfil `dev` se envía a SUNAT beta con las credenciales públicas
 de pruebas (`MODDATOS`) y un certificado autofirmado (`config/sunat/certificado-beta-prueba.p12`).
@@ -165,7 +188,8 @@ SUNAT_CERTIFICADO_CLAVE=...
 ```
 
 Verificado contra SUNAT beta: boletas (con DNI y a "Clientes varios"), facturas con varias líneas
-y descuentos, notas de crédito total y por ítem sobre boleta y factura, todas aceptadas.
+y descuentos, notas de crédito total y por ítem sobre boleta y factura, comunicaciones de baja
+(factura y nota de crédito) y resúmenes diarios de anulación de boletas, todos aceptados.
 
 ## Representación impresa
 

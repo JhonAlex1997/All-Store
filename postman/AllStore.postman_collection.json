@@ -122,6 +122,14 @@
     {
       "key": "efectivoEsperado",
       "value": ""
+    },
+    {
+      "key": "boletaAnularId",
+      "value": ""
+    },
+    {
+      "key": "bajaEnvioId",
+      "value": ""
     }
   ],
   "item": [
@@ -1404,7 +1412,7 @@
                 }
               }
             },
-            "description": "Devuelve la mercadería al stock. Las boletas y facturas se corrigen con nota de crédito."
+            "description": "Devuelve la mercadería al stock. Boletas y facturas también se anulan, con baja ante SUNAT (ver carpeta 09)."
           },
           "event": [
             {
@@ -1686,6 +1694,176 @@
             "method": "GET",
             "header": [],
             "url": "{{baseUrl}}/api/sunat/envios"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Anular: abrir caja otra vez",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/caja/abrir",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"establecimientoId\": {{tiendaId}},\n  \"montoApertura\": 100.00\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "La carpeta 08 cerró la caja. Una anulación devuelve el dinero en la caja donde se cobró, que debe estar abierta."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Caja abierta\", () => pm.expect(pm.response.code === 201 || pm.response.json().message.includes(\"Ya tienes una caja abierta\")).to.eql(true));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Anular: boleta nueva",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/ventas",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tipoComprobante\": \"BOLETA\",\n  \"serieId\": {{serieBoletaId}},\n  \"items\": [{ \"varianteId\": {{varianteVentaId}}, \"cantidad\": 1 }],\n  \"pagos\": [{ \"metodo\": \"EFECTIVO\", \"monto\": {{precioVenta}} }]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 201\", () => pm.response.to.have.status(201));",
+                  "pm.collectionVariables.set(\"boletaAnularId\", pm.response.json().id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Anular: enviar la boleta a SUNAT",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": "{{baseUrl}}/api/sunat/comprobantes/{{boletaAnularId}}/enviar",
+            "description": "La baja procede solo si SUNAT ya aceptó el comprobante."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"SUNAT la aceptó\", () => pm.expect(pm.response.json().estado).to.eql(\"ACEPTADO\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Anular la boleta (resumen diario a SUNAT)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/ventas/{{boletaAnularId}}/anular",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"motivo\": \"Error en la venta\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Devuelve la prenda al stock y genera la baja ante SUNAT: resumen diario (RC) para boletas, comunicación de baja (RA) para facturas. Plazo: 7 días desde la aceptación; después se corrige con nota de crédito."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "const v = pm.response.json();",
+                  "pm.test(\"Queda anulada\", () => pm.expect(v.estado).to.eql(\"ANULADO\"));",
+                  "pm.test(\"Con resumen diario\", () => pm.expect(v.bajaSunat.numero).to.include(\"RC-\"));",
+                  "pm.collectionVariables.set(\"bajaEnvioId\", v.bajaSunat.envioId);",
+                  "console.log(v.numero + \" -> \" + v.bajaSunat.documento + \" \" + v.bajaSunat.numero);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Enviar la baja a SUNAT",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": "{{baseUrl}}/api/sunat/envios/{{bajaEnvioId}}/enviar",
+            "description": "SUNAT responde con un ticket (EN_PROCESO); el proceso automático consulta el resultado. Si se repite esta petición, consulta el ticket al momento. PENDIENTE = no hubo comunicación con SUNAT y se reintentará solo."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "const e = pm.response.json();",
+                  "pm.test(\"Enviada o por reintentar\", () => pm.expect([\"EN_PROCESO\", \"ACEPTADO\", \"PENDIENTE\"].includes(e.estado)).to.eql(true));",
+                  "console.log(e.numero + \" \" + e.estado + \" ticket \" + e.ticket);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Estado de la baja",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/sunat/envios/{{bajaEnvioId}}"
           },
           "event": [
             {

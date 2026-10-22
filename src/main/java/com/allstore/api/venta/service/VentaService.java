@@ -15,7 +15,6 @@ import com.allstore.api.inventario.entity.MovimientoInventario;
 import com.allstore.api.inventario.service.InventarioService;
 import com.allstore.api.producto.entity.ProductoVariante;
 import com.allstore.api.producto.service.ProductoService;
-import com.allstore.api.venta.dto.AnularVentaRequest;
 import com.allstore.api.venta.dto.ConvertirVentaRequest;
 import com.allstore.api.venta.dto.PagoRequest;
 import com.allstore.api.venta.dto.VentaItemRequest;
@@ -148,37 +147,6 @@ public class VentaService {
         emision.emitir(nuevo, serie);
         nota.setEstado(EstadoComprobante.CONVERTIDO);
         return emision.respuesta(nuevo, null, List.of());
-    }
-
-    /**
-     * Anula una nota de venta y devuelve la mercadería al stock. Las boletas y facturas no se
-     * anulan así: ante SUNAT se corrigen con una nota de crédito.
-     *
-     * <p>La caja en que se cobró debe seguir abierta (el dinero se devuelve de ella): una caja
-     * cerrada no se modifica nunca, su cuadre ya se entregó.
-     */
-    @Transactional
-    public VentaResponse anular(Long id, AnularVentaRequest request) {
-        Comprobante comprobante = emision.obtener(id);
-        if (comprobante.getTipoComprobante() != TipoComprobante.NOTA_VENTA) {
-            throw new BusinessException("Una " + comprobante.getTipoComprobante().getDescripcion().toLowerCase()
-                    + " no se anula directamente: se corrige con una nota de crédito");
-        }
-        exigirEmitido(comprobante);
-        if (comprobante.getCajaSesion() != null && !comprobante.getCajaSesion().isAbierta()) {
-            throw new BusinessException("No se puede anular: la caja en que se cobró " + comprobante.getNumeroImpreso()
-                    + " ya se cerró. Conviértela en boleta y emite una nota de crédito");
-        }
-        List<MovimientoInventario> movimientos = inventarioService.registrar(
-                comprobante.getEstablecimiento().getId(), MotivoMovimiento.ANULACION_VENTA,
-                comprobante.getDetalles().stream()
-                        .map(d -> new InventarioService.Linea(d.getVariante().getId(), d.getCantidad())).toList(),
-                limpiar(request.motivo()));
-        emision.referenciar(movimientos, comprobante);
-        comprobante.setEstado(EstadoComprobante.ANULADO);
-        comprobante.setMotivoAnulacion(request.motivo().trim());
-        comprobante.setFechaAnulacion(OffsetDateTime.now(JpaAuditingConfig.ZONA_LIMA));
-        return emision.respuesta(comprobante, null, List.of());
     }
 
     // ---------- Consultar ----------

@@ -7,10 +7,12 @@ import com.allstore.api.empresa.dto.NumeroComprobante;
 import com.allstore.api.empresa.entity.Serie;
 import com.allstore.api.empresa.entity.TipoComprobante;
 import com.allstore.api.empresa.service.SerieService;
+import com.allstore.api.facturacion.dto.BajaSunatInfo;
 import com.allstore.api.facturacion.service.EnvioSunatService;
 import com.allstore.api.inventario.entity.MovimientoInventario;
 import com.allstore.api.venta.dto.VentaResponse;
 import com.allstore.api.venta.entity.Comprobante;
+import com.allstore.api.venta.entity.EstadoComprobante;
 import com.allstore.api.venta.repository.ComprobanteRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -62,9 +64,11 @@ public class EmisionComprobante {
         envioSunatService.registrar(comprobante);
     }
 
-    /** Respuesta completa del comprobante, con su estado ante SUNAT. */
+    /** Respuesta completa del comprobante, con su estado ante SUNAT (y el de su baja, si se anuló). */
     public VentaResponse respuesta(Comprobante comprobante, String convertidoEn, List<String> notasCredito) {
-        return VentaResponse.from(comprobante, convertidoEn, notasCredito, envioSunatService.info(comprobante));
+        BajaSunatInfo baja = comprobante.getEstado() == EstadoComprobante.ANULADO
+                && comprobante.getTipoComprobante().isElectronico() ? envioSunatService.infoBaja(comprobante) : null;
+        return VentaResponse.from(comprobante, convertidoEn, notasCredito, envioSunatService.info(comprobante), baja);
     }
 
     public void referenciar(List<MovimientoInventario> movimientos, Comprobante comprobante) {

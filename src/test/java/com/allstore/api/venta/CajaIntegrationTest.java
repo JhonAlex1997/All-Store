@@ -90,7 +90,7 @@ class CajaIntegrationTest extends TiendaDePrueba {
                 List.of(item(jeanA, 1, null)), List.of(efectivo("89.90", null)));
         cajaService.cerrar(new CerrarCajaRequest(new BigDecimal("189.90"), null));
 
-        assertThatThrownBy(() -> ventaService.anular(nota.id(), new AnularVentaRequest("tarde")))
+        assertThatThrownBy(() -> anulacionService.anular(nota.id(), new AnularVentaRequest("tarde")))
                 .isInstanceOf(BusinessException.class)
                 .hasMessageContaining("ya se cerró");
     }

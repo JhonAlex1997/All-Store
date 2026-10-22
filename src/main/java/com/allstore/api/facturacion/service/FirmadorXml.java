@@ -100,7 +100,7 @@ public class FirmadorXml {
 
             DOMSignContext contexto = new DOMSignContext(clavePrivada, contenidoDeExtension(doc));
             contexto.setDefaultNamespacePrefix("ds");
-            XMLSignature firma = fabrica.newXMLSignature(info, keyInfo, null, GeneradorXmlUbl.ID_FIRMA, null);
+            XMLSignature firma = fabrica.newXMLSignature(info, keyInfo, null, XmlUbl.ID_FIRMA, null);
             firma.sign(contexto);
 
             String hash = Base64.getEncoder().encodeToString(referencia.getDigestValue());
@@ -111,7 +111,7 @@ public class FirmadorXml {
     }
 
     private static Node contenidoDeExtension(Document doc) {
-        NodeList nodos = doc.getElementsByTagNameNS(GeneradorXmlUbl.NS_EXT, "ExtensionContent");
+        NodeList nodos = doc.getElementsByTagNameNS(XmlUbl.NS_EXT, "ExtensionContent");
         if (nodos.getLength() == 0) {
             throw new IllegalStateException("El XML no tiene ext:ExtensionContent para la firma");
         }

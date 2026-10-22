@@ -23,4 +23,15 @@ public interface ComprobanteRepository extends JpaRepository<Comprobante, Long>,
             order by c.id
             """)
     List<Comprobante> notasCreditoDe(@Param("origenId") Long origenId);
+
+    /** Notas de crédito y de débito vigentes emitidas sobre un comprobante. */
+    @Query("""
+            select c from Comprobante c
+            where c.comprobanteOrigen.id = :origenId
+              and c.tipoComprobante in (com.allstore.api.empresa.entity.TipoComprobante.NOTA_CREDITO,
+                                        com.allstore.api.empresa.entity.TipoComprobante.NOTA_DEBITO)
+              and c.estado = com.allstore.api.venta.entity.EstadoComprobante.EMITIDO
+            order by c.id
+            """)
+    List<Comprobante> notasVigentesDe(@Param("origenId") Long origenId);
 }

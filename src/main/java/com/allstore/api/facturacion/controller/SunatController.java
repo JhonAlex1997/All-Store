@@ -1,8 +1,10 @@
 package com.allstore.api.facturacion.controller;
 
 import com.allstore.api.common.dto.PageResponse;
+import com.allstore.api.facturacion.dto.BajaSunatInfo;
 import com.allstore.api.facturacion.dto.EnvioSunatResponse;
 import com.allstore.api.facturacion.entity.EstadoSunat;
+import com.allstore.api.facturacion.service.BajaSunatService;
 import com.allstore.api.facturacion.service.EnvioSunatService;
 import lombok.RequiredArgsConstructor;
 import org.springdoc.core.annotations.ParameterObject;
@@ -27,14 +29,41 @@ import org.springframework.web.bind.annotation.RestController;
 public class SunatController {
 
     private final EnvioSunatService envioSunatService;
+    private final BajaSunatService bajaSunatService;
 
-    /** Ej: GET /api/sunat/envios?estado=PENDIENTE */
+    /** Comprobantes y bajas. Ej: GET /api/sunat/envios?estado=PENDIENTE */
     @GetMapping("/envios")
     public PageResponse<EnvioSunatResponse> listar(
             @RequestParam(required = false) EstadoSunat estado,
             @ParameterObject @PageableDefault(size = 20, sort = "id", direction = Sort.Direction.DESC) Pageable pageable) {
         return envioSunatService.listar(estado, pageable);
     }
+
+    // ---------- Por envío: cualquier documento (comprobante o baja) ----------
+
+    @GetMapping("/envios/{envioId}")
+    public EnvioSunatResponse consultarEnvio(@PathVariable Long envioId) {
+        return envioSunatService.consultarEnvio(envioId);
+    }
+
+    /** Envía ahora; si SUNAT ya entregó un ticket (bajas), consulta su resultado. */
+    @PostMapping("/envios/{envioId}/enviar")
+    public EnvioSunatResponse enviarEnvio(@PathVariable Long envioId,
+                                          @RequestParam(defaultValue = "false") boolean regenerarXml) {
+        return envioSunatService.enviarEnvioAhora(envioId, regenerarXml);
+    }
+
+    @GetMapping("/envios/{envioId}/xml")
+    public ResponseEntity<byte[]> xmlDeEnvio(@PathVariable Long envioId) {
+        return descarga(envioSunatService.xmlDeEnvio(envioId), MediaType.APPLICATION_XML);
+    }
+
+    @GetMapping("/envios/{envioId}/cdr")
+    public ResponseEntity<byte[]> cdrDeEnvio(@PathVariable Long envioId) {
+        return descarga(envioSunatService.cdrDeEnvio(envioId), MediaType.parseMediaType("application/zip"));
+    }
+
+    // ---------- Por comprobante ----------
 
     @GetMapping("/comprobantes/{comprobanteId}")
     public EnvioSunatResponse consultar(@PathVariable Long comprobanteId) {
@@ -49,6 +78,15 @@ public class SunatController {
     public EnvioSunatResponse enviar(@PathVariable Long comprobanteId,
                                      @RequestParam(defaultValue = "false") boolean regenerarXml) {
         return envioSunatService.enviarAhora(comprobanteId, regenerarXml);
+    }
+
+    /**
+     * Vuelve a dar de baja un comprobante anulado cuya baja rechazó SUNAT: genera una comunicación
+     * de baja o un resumen diario nuevo (con otro número) y lo deja pendiente de envío.
+     */
+    @PostMapping("/comprobantes/{comprobanteId}/baja")
+    public BajaSunatInfo reintentarBaja(@PathVariable Long comprobanteId) {
+        return bajaSunatService.reintentar(comprobanteId);
     }
 
     @GetMapping("/comprobantes/{comprobanteId}/xml")
