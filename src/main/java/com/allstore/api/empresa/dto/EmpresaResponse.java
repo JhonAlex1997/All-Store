@@ -9,10 +9,12 @@ public record EmpresaResponse(
         String direccionFiscal,
         String ubigeo,
         String telefono,
-        String email
+        String email,
+        int minimoPrendasPorMayor
 ) {
     public static EmpresaResponse from(Empresa e) {
         return new EmpresaResponse(e.getRuc(), e.getRazonSocial(), e.getNombreComercial(),
-                e.getDireccionFiscal(), e.getUbigeo(), e.getTelefono(), e.getEmail());
+                e.getDireccionFiscal(), e.getUbigeo(), e.getTelefono(), e.getEmail(),
+                e.getMinimoPrendasPorMayor());
     }
 }

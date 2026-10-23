@@ -26,6 +26,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
@@ -87,6 +88,7 @@ public class ProductoService {
         producto.setDescripcion(limpiar(request.descripcion()));
         producto.setCategoria(categoriaActiva(request.categoriaId()));
         producto.setPrecioVenta(request.precioVenta());
+        producto.setPrecioPorMayor(precioPorMayor(request.precioPorMayor(), request.precioVenta()));
 
         List<ProductoVariante> nuevas = conTallas
                 ? agregarCombinaciones(producto, request.tallaIds(), request.colorIds())
@@ -106,6 +108,7 @@ public class ProductoService {
             producto.setCategoria(categoriaActiva(request.categoriaId()));
         }
         producto.setPrecioVenta(request.precioVenta());
+        producto.setPrecioPorMayor(precioPorMayor(request.precioPorMayor(), request.precioVenta()));
         producto.setActivo(request.activo());
         return ProductoDetalleResponse.from(producto);
     }
@@ -129,8 +132,19 @@ public class ProductoService {
         ProductoVariante variante = varianteRepository.findById(varianteId)
                 .orElseThrow(() -> new ResourceNotFoundException("Variante", varianteId));
         variante.setPrecioVenta(request.precioVenta());
+        variante.setPrecioPorMayor(precioPorMayor(request.precioPorMayor(),
+                request.precioVenta() != null ? request.precioVenta() : variante.getProducto().getPrecioVenta()));
         variante.setActivo(request.activo());
         return VarianteResponse.from(variante);
+    }
+
+    /** El precio por mayor es una rebaja: no puede superar al precio normal. */
+    private static BigDecimal precioPorMayor(BigDecimal porMayor, BigDecimal normal) {
+        if (porMayor != null && porMayor.compareTo(normal) > 0) {
+            throw new BusinessException("El precio por mayor (S/ " + porMayor + ") no puede ser mayor que el precio normal (S/ "
+                    + normal + ")");
+        }
+        return porMayor;
     }
 
     /** Para el punto de venta: busca por código de barras escaneado o por SKU. */

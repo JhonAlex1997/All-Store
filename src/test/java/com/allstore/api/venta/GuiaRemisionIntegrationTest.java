@@ -43,7 +43,7 @@ class GuiaRemisionIntegrationTest extends TiendaDePrueba {
     void prepararGuias() {
         if (empresaService.buscarEntidad().isEmpty()) {
             empresaService.guardar(new EmpresaRequest("20000000001", "EMPRESA PRUEBA SAC", null,
-                    "Jr. Prueba 1", "150115", null, null));
+                    "Jr. Prueba 1", "150115", null, null, null));
         }
         serieGuia = serie(TipoComprobante.GUIA_REMISION_REMITENTE, "T991");
     }

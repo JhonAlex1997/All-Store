@@ -48,6 +48,10 @@ public class Producto extends BaseEntity {
     @Column(name = "precio_venta", nullable = false, precision = 12, scale = 2)
     private BigDecimal precioVenta;
 
+    /** Precio por mayor con IGV; null si el modelo no tiene (se vende siempre al precio normal). */
+    @Column(name = "precio_por_mayor", precision = 12, scale = 2)
+    private BigDecimal precioPorMayor;
+
     /** Catálogo 03 SUNAT. */
     @Column(name = "unidad_medida", nullable = false, length = 3)
     private String unidadMedida = UNIDAD_MEDIDA_UNIDAD;

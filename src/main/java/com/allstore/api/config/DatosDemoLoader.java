@@ -6,6 +6,7 @@ import com.allstore.api.cliente.service.ClienteService;
 import com.allstore.api.empresa.dto.EmpresaRequest;
 import com.allstore.api.empresa.dto.EstablecimientoRequest;
 import com.allstore.api.empresa.dto.SerieCreateRequest;
+import com.allstore.api.empresa.entity.Empresa;
 import com.allstore.api.empresa.entity.TipoComprobante;
 import com.allstore.api.empresa.entity.TipoEstablecimiento;
 import com.allstore.api.empresa.repository.EmpresaRepository;
@@ -129,7 +130,8 @@ public class DatosDemoLoader implements ApplicationRunner {
 
     private void cargar() {
         empresaService.guardar(new EmpresaRequest(RUC_DEMO, "EMPRESA DEMO S.A.C.", "AllStore Jeans (demo)",
-                "Jr. Gamarra 100, La Victoria", "150115", "014567890", "ventas@demo.allstore.pe"));
+                "Jr. Gamarra 100, La Victoria", "150115", "014567890", "ventas@demo.allstore.pe",
+                Empresa.MINIMO_PRENDAS_POR_MAYOR));
 
         Long tienda = establecimiento("0000", "Tienda principal", TipoEstablecimiento.TIENDA,
                 "Jr. Gamarra 100, La Victoria", "150115");
@@ -152,15 +154,15 @@ public class DatosDemoLoader implements ApplicationRunner {
         Map<String, Long> tallas = porNombre(tallaRepository.findAll(), Talla::getCodigo, Talla::getId);
         Map<String, Long> colores = porNombre(colorRepository.findAll(), Color::getNombre, Color::getId);
 
-        producto("MOM01", "Jean Mom Fit Clásico", categorias.get("Jean"), "89.90",
+        producto("MOM01", "Jean Mom Fit Clásico", categorias.get("Jean"), "89.90", "65.00",
                 ids(tallas, "26", "28", "30", "32"), ids(colores, "Azul", "Celeste"));
-        producto("SKN01", "Jean Skinny Tiro Alto", categorias.get("Jean"), "79.90",
+        producto("SKN01", "Jean Skinny Tiro Alto", categorias.get("Jean"), "79.90", "58.00",
                 ids(tallas, "26", "28", "30", "32"), ids(colores, "Azul", "Negro"));
-        producto("REC01", "Jean Recto Hombre", categorias.get("Jean"), "99.90",
+        producto("REC01", "Jean Recto Hombre", categorias.get("Jean"), "99.90", "72.00",
                 ids(tallas, "30", "32", "34", "36", "38"), ids(colores, "Azul", "Negro"));
-        producto("SHO01", "Short Denim Desflecado", categorias.get("Short"), "59.90",
+        producto("SHO01", "Short Denim Desflecado", categorias.get("Short"), "59.90", "42.00",
                 ids(tallas, "26", "28", "30"), ids(colores, "Celeste", "Blanco"));
-        producto("CAS01", "Casaca Denim Clásica", categorias.get("Casaca"), "149.90",
+        producto("CAS01", "Casaca Denim Clásica", categorias.get("Casaca"), "149.90", "110.00",
                 ids(tallas, "S", "M", "L", "XL"), ids(colores, "Azul"));
 
         cliente(TipoDocumentoIdentidad.DNI, "45678912", "Juan Pérez Rojas", null);
@@ -177,10 +179,10 @@ public class DatosDemoLoader implements ApplicationRunner {
         serieService.crear(new SerieCreateRequest(tipo, codigo, establecimientoId, 0L));
     }
 
-    private void producto(String codigo, String nombre, Long categoriaId, String precio,
+    private void producto(String codigo, String nombre, Long categoriaId, String precio, String precioPorMayor,
                           List<Long> tallaIds, List<Long> colorIds) {
         productoService.crear(new ProductoCreateRequest(codigo, nombre, null, categoriaId,
-                new BigDecimal(precio), tallaIds, colorIds));
+                new BigDecimal(precio), new BigDecimal(precioPorMayor), tallaIds, colorIds));
     }
 
     private void cliente(TipoDocumentoIdentidad tipo, String numero, String nombre, String email) {

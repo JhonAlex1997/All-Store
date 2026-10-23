@@ -115,6 +115,14 @@ public class Comprobante extends BaseEntity {
     @Column(length = 500)
     private String observacion;
 
+    /** Se cobró a precio por mayor (por llegar al mínimo de prendas o porque el cajero lo marcó). */
+    @Column(name = "por_mayor", nullable = false, updatable = false)
+    private boolean porMayor;
+
+    /** Precio por mayor dado a pedido del cajero aunque no se llegó al mínimo de prendas. */
+    @Column(name = "por_mayor_manual", nullable = false, updatable = false)
+    private boolean porMayorManual;
+
     /**
      * Solo notas: código del motivo (Catálogo 09 en la de crédito, Catálogo 10 en la de débito) y
      * su sustento. Se lee con getMotivoNotaCredito / getMotivoNotaDebito.

@@ -40,6 +40,9 @@ public class EmpresaService {
         empresa.setUbigeo(request.ubigeo());
         empresa.setTelefono(limpiar(request.telefono()));
         empresa.setEmail(limpiar(request.email()) == null ? null : request.email().trim().toLowerCase());
+        if (request.minimoPrendasPorMayor() != null) {
+            empresa.setMinimoPrendasPorMayor(request.minimoPrendasPorMayor());
+        }
         return EmpresaResponse.from(empresaRepository.save(empresa));
     }
 

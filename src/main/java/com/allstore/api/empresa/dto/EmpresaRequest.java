@@ -1,11 +1,18 @@
 package com.allstore.api.empresa.dto;
 
 import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
-/** El RUC se valida además con su dígito verificador en el servicio. */
+/**
+ * El RUC se valida además con su dígito verificador en el servicio.
+ *
+ * @param minimoPrendasPorMayor desde cuántas prendas una venta va a precio por mayor; vacío =
+ *                              se mantiene el actual (3 la primera vez)
+ */
 public record EmpresaRequest(
         @NotBlank(message = "El RUC es obligatorio")
         String ruc,
@@ -25,6 +32,9 @@ public record EmpresaRequest(
         String telefono,
         @Email(message = "El correo no es válido")
         @Size(max = 120, message = "El correo no puede superar 120 caracteres")
-        String email
+        String email,
+        @Min(value = 1, message = "El mínimo de prendas por mayor debe ser al menos 1")
+        @Max(value = 1000, message = "El mínimo de prendas por mayor no puede superar 1000")
+        Integer minimoPrendasPorMayor
 ) {
 }

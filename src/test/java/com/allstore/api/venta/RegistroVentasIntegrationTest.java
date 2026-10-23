@@ -47,7 +47,7 @@ class RegistroVentasIntegrationTest extends TiendaDePrueba {
     void preparar() throws Exception {
         if (empresaService.buscarEntidad().isEmpty()) {
             empresaService.guardar(new EmpresaRequest("20000000001", "EMPRESA PRUEBA SAC", null,
-                    "Jr. Prueba 1", "150115", null, null));
+                    "Jr. Prueba 1", "150115", null, null, null));
         }
         when(servicioEnvio.enviar(anyString(), any())).thenReturn(
                 new ServicioEnvioSunat.Respuesta(true, "0", "Aceptada", List.of(), new byte[]{1}));

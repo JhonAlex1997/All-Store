@@ -79,7 +79,7 @@ class ComprobantePdfTest {
                 List.of(new DatosImpresion.Pago("Efectivo", new BigDecimal("169.80"), null)),
                 new BigDecimal("30.20"), QR, "abc123=",
                 "Representación impresa de la Boleta de Venta Electrónica. Consulte su validez en www.sunat.gob.pe.",
-                null);
+                null, false);
     }
 
     private static String texto(byte[] pdf) throws Exception {

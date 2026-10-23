@@ -8,7 +8,11 @@ import jakarta.validation.constraints.Size;
 
 import java.math.BigDecimal;
 
-/** Edición de un producto. El código no se edita porque forma parte del SKU de sus variantes. */
+/**
+ * Edición de un producto. El código no se edita porque forma parte del SKU de sus variantes.
+ *
+ * @param precioPorMayor null = el modelo no tiene precio por mayor
+ */
 public record ProductoUpdateRequest(
         @NotBlank(message = "El nombre es obligatorio")
         @Size(max = 150, message = "El nombre no puede superar 150 caracteres")
@@ -21,6 +25,9 @@ public record ProductoUpdateRequest(
         @DecimalMin(value = "0.00", message = "El precio no puede ser negativo")
         @Digits(integer = 10, fraction = 2, message = "El precio admite como máximo 2 decimales")
         BigDecimal precioVenta,
+        @DecimalMin(value = "0.00", message = "El precio por mayor no puede ser negativo")
+        @Digits(integer = 10, fraction = 2, message = "El precio por mayor admite como máximo 2 decimales")
+        BigDecimal precioPorMayor,
         @NotNull(message = "Indica si el producto está activo")
         Boolean activo
 ) {

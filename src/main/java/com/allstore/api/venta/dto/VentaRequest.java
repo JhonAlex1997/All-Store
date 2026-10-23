@@ -13,6 +13,8 @@ import java.util.List;
  *
  * @param tipoComprobante NOTA_VENTA, BOLETA o FACTURA
  * @param clienteId       vacío = "Clientes varios"
+ * @param porMayor        marcarlo da el precio por mayor aunque no se llegue al mínimo de prendas;
+ *                        sin marcar, va por mayor solo si se llega al mínimo
  */
 public record VentaRequest(
         @NotNull(message = "El tipo de comprobante es obligatorio")
@@ -27,6 +29,7 @@ public record VentaRequest(
         List<@Valid VentaItemRequest> items,
         @NotEmpty(message = "Registra al menos un pago")
         @Size(max = 10, message = "Máximo 10 pagos por venta")
-        List<@Valid PagoRequest> pagos
+        List<@Valid PagoRequest> pagos,
+        Boolean porMayor
 ) {
 }

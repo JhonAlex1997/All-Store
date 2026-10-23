@@ -12,6 +12,7 @@ import java.util.List;
  * @param marcaDeAgua texto en diagonal (ej. "ANULADO" o "SIN VALIDEZ TRIBUTARIA"); null = ninguna
  * @param codigoQr    texto del QR de SUNAT; null si no aplica (nota de venta) o aún no se firmó
  * @param leyenda     pie obligatorio, ej. "Representación impresa de la Boleta de Venta Electrónica..."
+ * @param porMayor    se cobró a precio por mayor (se indica para que el cliente vea por qué)
  */
 public record DatosImpresion(
         String titulo,
@@ -37,7 +38,8 @@ public record DatosImpresion(
         String codigoQr,
         String hash,
         String leyenda,
-        String observacion
+        String observacion,
+        boolean porMayor
 ) {
     public record Emisor(String ruc, String razonSocial, String nombreComercial, String direccionFiscal,
                          String telefono, String email) {

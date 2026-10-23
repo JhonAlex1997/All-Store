@@ -152,7 +152,8 @@ public class ImpresionService {
                 v.sunat() != null ? v.sunat().codigoQr() : null,
                 v.sunat() != null ? v.sunat().hash() : null,
                 leyenda(v, titulo, electronico),
-                v.observacion()
+                v.observacion(),
+                v.porMayor()
         );
     }
 

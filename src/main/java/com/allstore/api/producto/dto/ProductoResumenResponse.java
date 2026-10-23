@@ -12,10 +12,11 @@ public record ProductoResumenResponse(
         Long categoriaId,
         String categoria,
         BigDecimal precioVenta,
+        BigDecimal precioPorMayor,
         boolean activo
 ) {
     public static ProductoResumenResponse from(Producto p) {
         return new ProductoResumenResponse(p.getId(), p.getCodigo(), p.getNombre(),
-                p.getCategoria().getId(), p.getCategoria().getNombre(), p.getPrecioVenta(), p.isActivo());
+                p.getCategoria().getId(), p.getCategoria().getNombre(), p.getPrecioVenta(), p.getPrecioPorMayor(), p.isActivo());
     }
 }

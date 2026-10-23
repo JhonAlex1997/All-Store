@@ -28,6 +28,8 @@ import java.time.OffsetDateTime;
 public class Empresa {
 
     public static final Long ID_UNICO = 1L;
+    /** Desde cuántas prendas una venta va a precio por mayor, si no se configuró otro valor. */
+    public static final int MINIMO_PRENDAS_POR_MAYOR = 3;
 
     @Id
     private Long id = ID_UNICO;
@@ -52,6 +54,10 @@ public class Empresa {
 
     @Column(length = 120)
     private String email;
+
+    /** Desde cuántas prendas (de cualquier modelo, sumando toda la venta) se cobra el precio por mayor. */
+    @Column(name = "minimo_prendas_por_mayor", nullable = false)
+    private int minimoPrendasPorMayor = MINIMO_PRENDAS_POR_MAYOR;
 
     @CreatedDate
     @Column(name = "created_at", nullable = false, updatable = false)

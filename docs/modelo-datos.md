@@ -1,6 +1,6 @@
 # Modelo de datos de AllStore
 
-23 tablas y 31 llaves foráneas (versión de base de datos V12). Todas las tablas, salvo las
+23 tablas y 31 llaves foráneas (versión de base de datos V13). Todas las tablas, salvo las
 de líneas (`comprobante_detalle`, `comprobante_pago`, `guia_remision_detalle`, `resumen_sunat_detalle`), tienen además `created_at`, `updated_at`,
 `created_by` y `updated_by` (auditoría), que no se repiten en los diagramas.
 
@@ -48,6 +48,7 @@ erDiagram
     varchar unidad_medida
     varchar tipo_afectacion_igv
     boolean activo
+    numeric precio_por_mayor
   }
   PRODUCTO_VARIANTE {
     bigint id PK
@@ -58,6 +59,7 @@ erDiagram
     varchar codigo_barras
     numeric precio_venta
     boolean activo
+    numeric precio_por_mayor
   }
   ESTABLECIMIENTO {
     bigint id PK
@@ -187,6 +189,8 @@ erDiagram
     varchar sustento
     bigint caja_sesion_id FK
     uuid codigo_consulta
+    boolean por_mayor
+    boolean por_mayor_manual
   }
   COMPROBANTE_DETALLE {
     bigint id PK
@@ -242,6 +246,7 @@ erDiagram
     varchar codigo_barras
     numeric precio_venta
     boolean activo
+    numeric precio_por_mayor
   }
 ```
 
@@ -294,6 +299,8 @@ erDiagram
     varchar sustento
     bigint caja_sesion_id FK
     uuid codigo_consulta
+    boolean por_mayor
+    boolean por_mayor_manual
   }
   RESUMEN_SUNAT {
     bigint id PK
@@ -399,6 +406,7 @@ erDiagram
     varchar codigo_barras
     numeric precio_venta
     boolean activo
+    numeric precio_por_mayor
   }
   ENVIO_CORREO {
     bigint id PK
@@ -426,6 +434,7 @@ erDiagram
     varchar ubigeo
     varchar telefono
     varchar email
+    int minimo_prendas_por_mayor
   }
   USUARIO {
     bigint id PK

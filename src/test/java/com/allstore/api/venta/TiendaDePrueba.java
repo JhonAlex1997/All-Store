@@ -85,7 +85,7 @@ abstract class TiendaDePrueba {
         serieNdFactura = serie(TipoComprobante.NOTA_DEBITO, "FD91");
 
         ProductoDetalleResponse jean = productoService.crear(new ProductoCreateRequest("PRUEBA-VTA", "Jean prueba", null,
-                1L, new BigDecimal("89.90"), List.of(3L, 4L), List.of(1L)));
+                1L, new BigDecimal("89.90"), null, List.of(3L, 4L), List.of(1L)));
         jeanA = jean.variantes().get(0).id();
         jeanB = jean.variantes().get(1).id();
         inventarioService.registrar(tienda, MotivoMovimiento.INVENTARIO_INICIAL,
@@ -105,7 +105,7 @@ abstract class TiendaDePrueba {
 
     protected VentaResponse vender(TipoComprobante tipo, Long serieId, Long clienteId, List<VentaItemRequest> items,
                                    List<PagoRequest> pagos) {
-        return ventaService.crear(new VentaRequest(tipo, serieId, clienteId, null, items, pagos));
+        return ventaService.crear(new VentaRequest(tipo, serieId, clienteId, null, items, pagos, null));
     }
 
     protected static VentaItemRequest item(Long varianteId, int cantidad, String descuento) {

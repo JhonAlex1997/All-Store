@@ -13,6 +13,8 @@ import java.util.List;
 /**
  * Alta de un producto. Si se envían tallas y colores se crean de una vez todas sus
  * combinaciones como variantes (ej. 2 colores x 5 tallas = 10 variantes).
+ *
+ * @param precioPorMayor opcional; sin él, el modelo se vende siempre al precio normal
  */
 public record ProductoCreateRequest(
         @NotBlank(message = "El código es obligatorio")
@@ -30,6 +32,9 @@ public record ProductoCreateRequest(
         @DecimalMin(value = "0.00", message = "El precio no puede ser negativo")
         @Digits(integer = 10, fraction = 2, message = "El precio admite como máximo 2 decimales")
         BigDecimal precioVenta,
+        @DecimalMin(value = "0.00", message = "El precio por mayor no puede ser negativo")
+        @Digits(integer = 10, fraction = 2, message = "El precio por mayor admite como máximo 2 decimales")
+        BigDecimal precioPorMayor,
         List<Long> tallaIds,
         List<Long> colorIds
 ) {

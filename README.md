@@ -108,6 +108,16 @@ en internet: con ella se arman los enlaces de descarga que recibe el cliente).
   ante SUNAT (ver "Anulación ante SUNAT"); fuera de plazo se corrigen con nota de crédito.
 - El kardex no se edita: cada entrada o salida queda con su motivo, documento, usuario y saldo.
 
+## Precio por mayor
+
+- Cada modelo puede tener su **precio por mayor** (`precioPorMayor` del producto) y cada variante
+  el suyo propio. Sin precio por mayor, el modelo se cobra siempre al precio normal.
+- Una venta va **por mayor** si suma el mínimo de prendas de la empresa (`minimoPrendasPorMayor`,
+  3 por defecto), de cualquier modelo, talla o color.
+- El cajero puede marcar `"porMayor": true` para darlo aunque sea 1 prenda: queda registrado como
+  manual (`porMayorManual`) con el usuario que hizo la venta.
+- El ticket y el A4 dicen "Precio: Por mayor". Al convertir una nota de venta se conserva.
+
 ## Notas de crédito
 
 - Sobre una boleta o factura vigente, con serie que empieza con su misma letra (BC01 para

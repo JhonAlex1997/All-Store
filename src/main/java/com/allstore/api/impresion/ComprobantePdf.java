@@ -93,6 +93,9 @@ public class ComprobantePdf {
 
         dosColumnas(t, "Fecha:", FECHA_HORA.format(d.fechaEmision()), normal, normal);
         dosColumnas(t, "Cajero:", d.cajero(), normal, normal);
+        if (d.porMayor()) {
+            dosColumnas(t, "Precio:", "Por mayor", normal, negrita);
+        }
         DatosImpresion.Cliente c = d.cliente();
         if (c.tipoDocumento() != null) {
             dosColumnas(t, c.tipoDocumento() + ":", c.numeroDocumento(), normal, normal);
@@ -204,6 +207,10 @@ public class ComprobantePdf {
             etiquetaValor(datos, "Hora:", HORA.format(d.fechaEmision()), negrita, normal);
             etiquetaValor(datos, "Dirección:", c.direccion() != null ? c.direccion() : "-", negrita, normal);
             etiquetaValor(datos, "Moneda:", "SOLES", negrita, normal);
+            if (d.porMayor()) {
+                etiquetaValor(datos, "Precio:", "Por mayor", negrita, normal);
+                etiquetaValor(datos, "", "", negrita, normal);
+            }
             if (d.referencia() != null) {
                 etiquetaValor(datos, "Modifica a:", d.referencia().documento(), negrita, normal);
                 etiquetaValor(datos, "Motivo:", d.referencia().motivo(), negrita, normal);

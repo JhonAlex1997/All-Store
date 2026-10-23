@@ -6,11 +6,14 @@ import jakarta.validation.constraints.NotNull;
 
 import java.math.BigDecimal;
 
-/** {@code precioVenta} en null hace que la variante vuelva a usar el precio del producto. */
+/** Precios en null hacen que la variante vuelva a usar los del producto. */
 public record VarianteUpdateRequest(
         @DecimalMin(value = "0.00", message = "El precio no puede ser negativo")
         @Digits(integer = 10, fraction = 2, message = "El precio admite como máximo 2 decimales")
         BigDecimal precioVenta,
+        @DecimalMin(value = "0.00", message = "El precio por mayor no puede ser negativo")
+        @Digits(integer = 10, fraction = 2, message = "El precio por mayor admite como máximo 2 decimales")
+        BigDecimal precioPorMayor,
         @NotNull(message = "Indica si la variante está activa")
         Boolean activo
 ) {

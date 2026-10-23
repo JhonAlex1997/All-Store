@@ -25,6 +25,8 @@ import java.util.List;
  * @param notasDebito       si es una boleta o factura, las notas de débito vigentes emitidas sobre ella
  * @param motivoNota        solo notas de crédito: motivo del Catálogo 09
  * @param motivoNotaDebito  solo notas de débito: motivo del Catálogo 10
+ * @param porMayor          se cobró a precio por mayor
+ * @param porMayorManual    el precio por mayor lo dio el cajero sin llegar al mínimo de prendas
  * @param vendedor          usuario que registró el comprobante
  * @param sunat             estado ante SUNAT, hash y QR (null en notas de venta, que no se envían)
  * @param bajaSunat         si se anuló un comprobante electrónico: su baja ante SUNAT y el estado
@@ -47,6 +49,8 @@ public record VentaResponse(
         BigDecimal totalIgv,
         BigDecimal total,
         BigDecimal vuelto,
+        boolean porMayor,
+        boolean porMayorManual,
         String vendedor,
         String comprobanteOrigen,
         String convertidoEn,
@@ -107,6 +111,8 @@ public record VentaResponse(
                 c.getTotalIgv(),
                 c.getTotal(),
                 c.getVuelto(),
+                c.isPorMayor(),
+                c.isPorMayorManual(),
                 c.getCreatedBy(),
                 c.getComprobanteOrigen() == null ? null : c.getComprobanteOrigen().getNumeroImpreso(),
                 convertidoEn,

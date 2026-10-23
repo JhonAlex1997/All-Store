@@ -80,6 +80,14 @@
       "value": ""
     },
     {
+      "key": "precioPorMayor",
+      "value": ""
+    },
+    {
+      "key": "montoMayor",
+      "value": ""
+    },
+    {
       "key": "montoDos",
       "value": ""
     },
@@ -911,7 +919,7 @@
             "method": "GET",
             "header": [],
             "url": "{{baseUrl}}/api/productos/variantes/codigo/MOM01-AZU-28",
-            "description": "Guarda varianteVentaId y su precio para inventario y ventas."
+            "description": "Guarda varianteVentaId, su precio normal y su precio por mayor para inventario y ventas."
           },
           "event": [
             {
@@ -922,7 +930,8 @@
                   "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
                   "const v = pm.response.json();",
                   "pm.collectionVariables.set(\"varianteVentaId\", v.id);",
-                  "pm.collectionVariables.set(\"precioVenta\", v.precioEfectivo);"
+                  "pm.collectionVariables.set(\"precioVenta\", v.precioEfectivo);",
+                  "pm.collectionVariables.set(\"precioPorMayor\", v.precioPorMayorEfectivo);"
                 ]
               }
             }
@@ -1434,6 +1443,88 @@
                   "const nd = pm.response.json();",
                   "pm.test(\"Separa el IGV del concepto\", () => pm.expect(nd.totalIgv).to.eql(1.8));",
                   "console.log(nd.numero + \" cobra S/ \" + nd.total);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Venta por mayor: 3 prendas",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/ventas",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tipoComprobante\": \"BOLETA\",\n  \"serieId\": {{serieBoletaId}},\n  \"items\": [{ \"varianteId\": {{varianteVentaId}}, \"cantidad\": 3 }],\n  \"pagos\": [{ \"metodo\": \"EFECTIVO\", \"monto\": {{montoMayor}} }]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Desde 3 prendas (de cualquier modelo, sumando toda la venta) se cobra el precio por mayor de cada modelo. El mínimo se configura en la empresa (minimoPrendasPorMayor)."
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.collectionVariables.set(\"montoMayor\", (Number(pm.collectionVariables.get(\"precioPorMayor\")) * 3).toFixed(2));"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 201\", () => pm.response.to.have.status(201));",
+                  "const v = pm.response.json();",
+                  "pm.test(\"A precio por mayor\", () => pm.expect(v.porMayor).to.eql(true));",
+                  "console.log(v.numero + \" por mayor: S/ \" + v.total);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Venta por mayor con el check: 1 prenda",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/ventas",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tipoComprobante\": \"BOLETA\",\n  \"serieId\": {{serieBoletaId}},\n  \"porMayor\": true,\n  \"items\": [{ \"varianteId\": {{varianteVentaId}}, \"cantidad\": 1 }],\n  \"pagos\": [{ \"metodo\": \"EFECTIVO\", \"monto\": {{precioPorMayor}} }]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "porMayor: true da el precio por mayor aunque no se llegue al mínimo; queda registrado como manual (porMayorManual) con el usuario que hizo la venta."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 201\", () => pm.response.to.have.status(201));",
+                  "const v = pm.response.json();",
+                  "pm.test(\"Por mayor a pedido del cajero\", () => pm.expect(v.porMayorManual).to.eql(true));"
                 ]
               }
             }

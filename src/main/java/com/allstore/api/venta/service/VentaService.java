@@ -8,8 +8,10 @@ import com.allstore.api.cliente.service.ClienteService;
 import com.allstore.api.common.dto.PageResponse;
 import com.allstore.api.common.exception.BusinessException;
 import com.allstore.api.config.JpaAuditingConfig;
+import com.allstore.api.empresa.entity.Empresa;
 import com.allstore.api.empresa.entity.Serie;
 import com.allstore.api.empresa.entity.TipoComprobante;
+import com.allstore.api.empresa.service.EmpresaService;
 import com.allstore.api.inventario.entity.MotivoMovimiento;
 import com.allstore.api.inventario.entity.MovimientoInventario;
 import com.allstore.api.inventario.service.InventarioService;
@@ -62,6 +64,7 @@ public class VentaService {
     private final ProductoService productoService;
     private final InventarioService inventarioService;
     private final CajaService cajaService;
+    private final EmpresaService empresaService;
 
     // ---------- Emitir ----------
 
@@ -90,6 +93,7 @@ public class VentaService {
         comprobante.setCajaSesion(caja);
         comprobante.asignarCliente(cliente);
         comprobante.setObservacion(limpiar(request.observacion()));
+        aplicarPrecioPorMayor(comprobante, request);
         agregarDetalles(comprobante, request.items());
         comprobante.recalcularTotales();
         if (comprobante.getTotal().signum() <= 0) {
@@ -138,6 +142,8 @@ public class VentaService {
         nuevo.asignarCliente(cliente);
         nuevo.setObservacion(nota.getObservacion());
         nuevo.setComprobanteOrigen(nota);
+        nuevo.setPorMayor(nota.isPorMayor());
+        nuevo.setPorMayorManual(nota.isPorMayorManual());
         nota.getDetalles().forEach(d -> nuevo.agregarDetalle(d.copiar()));
         nota.getPagos().forEach(p -> nuevo.agregarPago(p.copiar()));
         nuevo.recalcularTotales();
@@ -213,6 +219,19 @@ public class VentaService {
 
     // ---------- Reglas ----------
 
+    /**
+     * Precio por mayor: si la venta suma el mínimo de prendas de la empresa (de cualquier modelo,
+     * talla o color), o si el cajero lo marca aunque sean menos (queda registrado como manual).
+     */
+    private void aplicarPrecioPorMayor(Comprobante comprobante, VentaRequest request) {
+        int prendas = request.items().stream().mapToInt(VentaItemRequest::cantidad).sum();
+        int minimo = empresaService.buscarEntidad().map(Empresa::getMinimoPrendasPorMayor).orElse(Empresa.MINIMO_PRENDAS_POR_MAYOR);
+        boolean porCantidad = prendas >= minimo;
+        boolean marcado = Boolean.TRUE.equals(request.porMayor());
+        comprobante.setPorMayor(porCantidad || marcado);
+        comprobante.setPorMayorManual(marcado && !porCantidad);
+    }
+
     private void agregarDetalles(Comprobante comprobante, List<VentaItemRequest> items) {
         Set<Long> vistas = new HashSet<>();
         items.forEach(i -> {
@@ -226,7 +245,7 @@ public class VentaService {
             if (!variante.isActivo() || !variante.getProducto().isActivo()) {
                 throw new BusinessException("La prenda " + variante.getSku() + " está inactiva y no se puede vender");
             }
-            BigDecimal precio = variante.getPrecioEfectivo();
+            BigDecimal precio = comprobante.isPorMayor() ? variante.getPrecioPorMayorEfectivo() : variante.getPrecioEfectivo();
             BigDecimal descuento = item.descuento() == null ? BigDecimal.ZERO : item.descuento();
             if (descuento.compareTo(precio.multiply(BigDecimal.valueOf(item.cantidad()))) >= 0) {
                 throw new BusinessException("El descuento de " + variante.getSku() + " no puede ser igual o mayor que su importe");
