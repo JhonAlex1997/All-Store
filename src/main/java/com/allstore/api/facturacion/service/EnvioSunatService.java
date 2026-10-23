@@ -37,10 +37,13 @@ import java.math.RoundingMode;
 import java.nio.charset.StandardCharsets;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * Ciclo de vida del envío a SUNAT de los documentos electrónicos:
@@ -357,6 +360,16 @@ public class EnvioSunatService {
                 .map(e -> new SunatInfo(e.getEstado(), e.getHash(), codigoQr(comprobante, e),
                         e.getCodigoRespuesta(), e.getDescripcionRespuesta()))
                 .orElse(null);
+    }
+
+    /** Estado ante SUNAT de varios comprobantes a la vez (los que no son electrónicos no aparecen). */
+    @Transactional(readOnly = true)
+    public Map<Long, EstadoSunat> estados(Collection<Long> comprobanteIds) {
+        if (comprobanteIds.isEmpty()) {
+            return Map.of();
+        }
+        return envioRepository.deComprobantes(comprobanteIds).stream()
+                .collect(Collectors.toMap(e -> e.getComprobante().getId(), EnvioSunat::getEstado));
     }
 
     /** La baja del comprobante ante SUNAT y su estado (null si no se dio de baja). */

@@ -111,6 +111,9 @@ public class SecurityConfig {
                         // almacén en traslados) y el administrador
                         .requestMatchers("/api/guias/**").hasAnyRole(ADMIN, CAJERO, ALMACENERO)
 
+                        // Contabilidad (registro de ventas para el SIRE): solo administrador
+                        .requestMatchers("/api/contabilidad/**").hasRole(ADMIN)
+
                         // Facturación electrónica (envíos, XML, CDR): solo administrador
                         .requestMatchers("/api/sunat/**").hasRole(ADMIN)
 

@@ -10,6 +10,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.time.OffsetDateTime;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
@@ -20,6 +21,9 @@ public interface EnvioSunatRepository extends JpaRepository<EnvioSunat, Long> {
     Optional<EnvioSunat> findByResumenId(Long resumenId);
 
     Optional<EnvioSunat> findByGuiaId(Long guiaId);
+
+    @Query("select e from EnvioSunat e where e.comprobante.id in :comprobanteIds")
+    List<EnvioSunat> deComprobantes(@Param("comprobanteIds") Collection<Long> comprobanteIds);
 
     /**
      * Por enviar (PENDIENTE) o por consultar su ticket (EN_PROCESO), cuyo próximo intento ya

@@ -132,6 +132,10 @@
       "value": ""
     },
     {
+      "key": "periodo",
+      "value": ""
+    },
+    {
       "key": "serieGuiaAlmacenId",
       "value": ""
     },
@@ -2289,7 +2293,65 @@
       ]
     },
     {
-      "name": "11 Pruebas de seguridad",
+      "name": "11 Contabilidad (solo admin)",
+      "item": [
+        {
+          "name": "Registro de ventas del mes (RVIE)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/contabilidad/registro-ventas?periodo={{periodo}}",
+            "description": "Cada comprobante como se informa al SIRE, totales por tipo (base gravada e IGV del mes) y advertencias antes de cerrar: pendientes en SUNAT, bajas no aceptadas, notas de venta sin comprobante."
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.collectionVariables.set(\"periodo\", new Date(Date.now() - 5 * 3600 * 1000).toISOString().slice(0, 7));"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "const r = pm.response.json();",
+                  "console.log(r.periodo + \": \" + r.registros.length + \" comprobantes, total S/ \" + r.totales.total + \", IGV S/ \" + r.totales.igv);",
+                  "r.advertencias.forEach(a => console.log(\"  ! \" + a));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Archivo para el SIRE (reemplazo de la propuesta)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/contabilidad/registro-ventas/sire?periodo={{periodo}}",
+            "description": "ZIP con el TXT del Anexo 3 (RS 112-2021/SUNAT), con el nombre que exige SUNAT. Con &formato=TXT devuelve el texto plano para revisarlo o pasarlo por el validador PVSIRE."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Nombre según SUNAT\", () => pm.expect(pm.response.headers.get(\"Content-Disposition\")).to.include(\"LE\"));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "12 Pruebas de seguridad",
       "item": [
         {
           "name": "Sin token (debe dar 401)",

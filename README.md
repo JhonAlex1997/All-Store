@@ -20,8 +20,9 @@ producción (desde la recepción de materia prima hasta la venta final).
 | `guia` | Guía de remisión remitente electrónica: traslado entre locales (mueve stock) y entrega de ventas |
 | `impresion` | Representación impresa en PDF: ticket de 80 mm y A4, con QR, hash y leyenda de SUNAT; guías en A4 |
 | `entrega` | Entrega al cliente: correo con PDF, XML y constancia de SUNAT; enlace público de descarga; WhatsApp |
+| `contabilidad` | Registro de Ventas e Ingresos Electrónico (RVIE) del mes y su archivo para el SIRE |
 
-Pendiente: compras, producción, contabilidad. Frontend.
+Pendiente: compras, producción, resto de la contabilidad (registro de compras, asientos). Frontend.
 
 ## Levantar en local
 
@@ -276,6 +277,28 @@ backend para que el comprobante sea idéntico desde cualquier caja o reimpresió
 cuenta). `URL_PUBLICA` es la dirección del sistema en internet, con la que se arman los enlaces.
 En el perfil `dev` el correo no sale: se guarda como archivo `.eml` en `target/correos` (se abre
 con Outlook o Thunderbird).
+
+## Registro de ventas para el SIRE (RVIE)
+
+| Endpoint (solo ADMIN) | Para qué |
+| --- | --- |
+| `GET /api/contabilidad/registro-ventas?periodo=2026-10` | El registro del mes: cada comprobante, totales por tipo (base gravada e IGV: débito fiscal) y advertencias |
+| `GET /api/contabilidad/registro-ventas/sire?periodo=2026-10` | Archivo de reemplazo de la propuesta (`.zip`; `&formato=TXT` para el texto plano) |
+
+SUNAT arma cada mes una **propuesta** del registro con los comprobantes electrónicos que recibió.
+Con este registro se revisa antes de aceptarla en el SIRE (SOL > SIRE > Registro de Ventas), y si
+no coincide, se reemplaza subiendo el archivo.
+
+- Incluye facturas, boletas y notas de crédito y débito emitidas en el mes. La nota de venta no es
+  comprobante de pago: no va, pero se advierte si quedan notas de venta sin boleta ni factura.
+- Reglas del Anexo 3 (RS 112-2021/SUNAT, modificada por la RS 040-2022): notas de crédito en
+  negativo; dados de baja o rechazados por SUNAT en 0.00; boletas menores a S/ 700 sin datos del
+  cliente; la nota lleva el comprobante que modifica.
+- Advierte lo que conviene resolver antes de cerrar: comprobantes aún no aceptados por SUNAT,
+  anulados cuya baja SUNAT no aceptó y periodos que aún no terminan.
+- Nombre del archivo: `LE` + RUC + AAAAMM + `00` + `140400` (RVIE) + `02` (reemplazo) + `1112`.
+  Antes del primer envío conviene pasarlo por el validador oficial de SUNAT (**PVSIRE**): la norma
+  no precisa la codificación ni el fin de línea, y el archivo usa UTF-8 con fin de línea CRLF.
 
 ## Pruebas
 
