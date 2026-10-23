@@ -84,6 +84,10 @@
       "value": ""
     },
     {
+      "key": "claveVenta",
+      "value": ""
+    },
+    {
       "key": "montoMayor",
       "value": ""
     },
@@ -1156,6 +1160,10 @@
             "method": "POST",
             "header": [
               {
+                "key": "Idempotency-Key",
+                "value": "{{claveVenta}}"
+              },
+              {
                 "key": "Content-Type",
                 "value": "application/json"
               }
@@ -1170,7 +1178,7 @@
                 }
               }
             },
-            "description": "Sin clienteId = Clientes varios. El precio lo pone el servidor; los pagos deben sumar el total."
+            "description": "Sin clienteId = Clientes varios. El precio lo pone el servidor; los pagos deben sumar el total. La caja envía Idempotency-Key: un UUID nuevo por venta, el mismo si reintenta."
           },
           "event": [
             {
@@ -1179,7 +1187,8 @@
                 "type": "text/javascript",
                 "exec": [
                   "const precio = Number(pm.collectionVariables.get(\"precioVenta\"));",
-                  "pm.collectionVariables.set(\"montoDos\", (precio * 2).toFixed(2));"
+                  "pm.collectionVariables.set(\"montoDos\", (precio * 2).toFixed(2));",
+                  "pm.collectionVariables.set(\"claveVenta\", \"xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx\".replace(/[xy]/g, c => { const r = Math.random() * 16 | 0; return (c === \"x\" ? r : (r & 0x3 | 0x8)).toString(16); }));"
                 ]
               }
             },
@@ -1193,6 +1202,45 @@
                   "pm.collectionVariables.set(\"ventaId\", v.id);",
                   "console.log(v.numero + \" total S/ \" + v.total + \" IGV S/ \" + v.totalIgv + \" vuelto S/ \" + v.vuelto);",
                   "pm.test(\"Va a SUNAT con hash y QR\", () => pm.expect(!!(v.sunat && v.sunat.codigoQr)).to.eql(true));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Reintento de la misma boleta (misma Idempotency-Key)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Idempotency-Key",
+                "value": "{{claveVenta}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/ventas",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tipoComprobante\": \"BOLETA\",\n  \"serieId\": {{serieBoletaId}},\n  \"items\": [{ \"varianteId\": {{varianteVentaId}}, \"cantidad\": 2 }],\n  \"pagos\": [{ \"metodo\": \"EFECTIVO\", \"monto\": {{montoDos}}, \"montoRecibido\": 200 }]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Como si la respuesta anterior no hubiera llegado a la caja: devuelve la misma boleta, sin registrar otra venta ni descontar stock otra vez. La misma clave con otro contenido da 400."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 201\", () => pm.response.to.have.status(201));",
+                  "pm.test(\"Es la misma venta\", () => pm.expect(pm.response.json().id).to.eql(Number(pm.collectionVariables.get(\"ventaId\"))));"
                 ]
               }
             }

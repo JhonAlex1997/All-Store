@@ -28,6 +28,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -47,6 +48,20 @@ public class NotaCreditoService {
 
     @Transactional
     public VentaResponse emitir(Long comprobanteId, NotaCreditoRequest request) {
+        return emitir(comprobanteId, request, null);
+    }
+
+    /**
+     * @param clave Idempotency-Key de la caja (opcional): un reintento con la misma clave devuelve
+     *              el comprobante ya emitido en vez de emitir otro
+     */
+    @Transactional
+    public VentaResponse emitir(Long comprobanteId, NotaCreditoRequest request, String clave) {
+        SolicitudIdempotente solicitud = emision.solicitud(clave, "nota-credito", comprobanteId, request);
+        Optional<VentaResponse> atendida = emision.yaAtendida(solicitud);
+        if (atendida.isPresent()) {
+            return atendida.get();
+        }
         Comprobante origen = emision.obtener(comprobanteId);
         validarOrigen(origen);
         emision.exigirNoRechazado(origen);
@@ -85,7 +100,7 @@ public class NotaCreditoService {
                 MotivoMovimiento.DEVOLUCION_VENTA,
                 lineas.stream().map(d -> new InventarioService.Linea(d.getVariante().getId(), d.getCantidad())).toList(),
                 nota.getSustento());
-        emision.emitir(nota, serie);
+        emision.emitir(nota, serie, solicitud);
         emision.referenciar(movimientos, nota);
         return emision.respuesta(nota, null, List.of());
     }

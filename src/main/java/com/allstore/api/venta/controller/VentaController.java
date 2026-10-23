@@ -17,6 +17,7 @@ import com.allstore.api.venta.service.AnulacionService;
 import com.allstore.api.venta.service.ConsultaVentasService;
 import com.allstore.api.venta.service.NotaCreditoService;
 import com.allstore.api.venta.service.NotaDebitoService;
+import com.allstore.api.venta.service.SolicitudIdempotente;
 import com.allstore.api.venta.service.VentaService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -33,6 +34,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
@@ -85,17 +87,23 @@ public class VentaController {
                 .body(pdf.contenido());
     }
 
+    /**
+     * La caja debe enviar la cabecera Idempotency-Key (un UUID nuevo por venta, el mismo en cada
+     * reintento): si la respuesta no le llega y reintenta, recibe la venta ya registrada en vez de
+     * registrarla dos veces. Igual en conversión, notas y reemisión.
+     */
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public VentaResponse crear(@Valid @RequestBody VentaRequest request) {
-        return ventaService.crear(request);
+    public VentaResponse crear(@Valid @RequestBody VentaRequest request, @RequestHeader(name = SolicitudIdempotente.CABECERA, required = false) String clave) {
+        return ventaService.crear(request, clave);
     }
 
     /** Nota de venta → boleta o factura. */
     @PostMapping("/{id}/convertir")
     @ResponseStatus(HttpStatus.CREATED)
-    public VentaResponse convertir(@PathVariable Long id, @Valid @RequestBody ConvertirVentaRequest request) {
-        return ventaService.convertir(id, request);
+    public VentaResponse convertir(@PathVariable Long id, @Valid @RequestBody ConvertirVentaRequest request,
+                                   @RequestHeader(name = SolicitudIdempotente.CABECERA, required = false) String clave) {
+        return ventaService.convertir(id, request, clave);
     }
 
     /**
@@ -105,8 +113,9 @@ public class VentaController {
      */
     @PostMapping("/{id}/reemitir")
     @ResponseStatus(HttpStatus.CREATED)
-    public VentaResponse reemitir(@PathVariable Long id, @RequestBody(required = false) ReemitirRequest request) {
-        return ventaService.reemitir(id, request);
+    public VentaResponse reemitir(@PathVariable Long id, @RequestBody(required = false) ReemitirRequest request,
+                                  @RequestHeader(name = SolicitudIdempotente.CABECERA, required = false) String clave) {
+        return ventaService.reemitir(id, request, clave);
     }
 
     /**
@@ -115,8 +124,9 @@ public class VentaController {
      */
     @PostMapping("/{id}/notas-credito")
     @ResponseStatus(HttpStatus.CREATED)
-    public VentaResponse emitirNotaCredito(@PathVariable Long id, @Valid @RequestBody NotaCreditoRequest request) {
-        return notaCreditoService.emitir(id, request);
+    public VentaResponse emitirNotaCredito(@PathVariable Long id, @Valid @RequestBody NotaCreditoRequest request,
+                                           @RequestHeader(name = SolicitudIdempotente.CABECERA, required = false) String clave) {
+        return notaCreditoService.emitir(id, request, clave);
     }
 
     /**
@@ -125,8 +135,9 @@ public class VentaController {
      */
     @PostMapping("/{id}/notas-debito")
     @ResponseStatus(HttpStatus.CREATED)
-    public VentaResponse emitirNotaDebito(@PathVariable Long id, @Valid @RequestBody NotaDebitoRequest request) {
-        return notaDebitoService.emitir(id, request);
+    public VentaResponse emitirNotaDebito(@PathVariable Long id, @Valid @RequestBody NotaDebitoRequest request,
+                                          @RequestHeader(name = SolicitudIdempotente.CABECERA, required = false) String clave) {
+        return notaDebitoService.emitir(id, request, clave);
     }
 
     /**

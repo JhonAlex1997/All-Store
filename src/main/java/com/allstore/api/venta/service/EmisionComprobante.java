@@ -22,25 +22,81 @@ import com.allstore.api.venta.repository.ComprobanteRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
+import tools.jackson.databind.json.JsonMapper;
 
 import java.math.BigDecimal;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.time.OffsetDateTime;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HexFormat;
 import java.util.List;
+import java.util.Optional;
+import java.util.regex.Pattern;
 
 /**
- * Pasos comunes a todo comprobante (venta, conversión, notas de crédito y débito): validar la
- * serie, registrar los pagos, tomar el número, guardar y enlazar los movimientos de inventario
- * con el documento.
+ * Pasos comunes a todo comprobante (venta, conversión, notas de crédito y débito): reconocer los
+ * reintentos, validar la serie, registrar los pagos, tomar el número, guardar y enlazar los
+ * movimientos de inventario con el documento.
  */
 @Component
 @RequiredArgsConstructor
 public class EmisionComprobante {
 
     public static final String REFERENCIA_COMPROBANTE = "COMPROBANTE";
+    private static final Pattern CLAVE = Pattern.compile("[A-Za-z0-9_-]{8,64}");
 
     private final ComprobanteRepository comprobanteRepository;
     private final SerieService serieService;
     private final EnvioSunatService envioSunatService;
+    private final JsonMapper json;
+
+    /**
+     * La solicitud con su clave Idempotency-Key (o NINGUNA si la caja no la envió) y la huella de
+     * la operación y sus datos.
+     */
+    public SolicitudIdempotente solicitud(String clave, String operacion, Object... datos) {
+        if (!StringUtils.hasText(clave)) {
+            return SolicitudIdempotente.NINGUNA;
+        }
+        String limpia = clave.trim();
+        if (!CLAVE.matcher(limpia).matches()) {
+            throw new BusinessException("La cabecera " + SolicitudIdempotente.CABECERA + " debe tener de 8 a 64 caracteres "
+                    + "(letras, números, - o _); lo usual es un UUID nuevo por cada venta");
+        }
+        List<Object> contenido = new ArrayList<>();
+        contenido.add(operacion);
+        contenido.addAll(Arrays.asList(datos));
+        try {
+            byte[] sha = MessageDigest.getInstance("SHA-256").digest(json.writeValueAsBytes(contenido));
+            return new SolicitudIdempotente(limpia, HexFormat.of().formatHex(sha));
+        } catch (NoSuchAlgorithmException e) {
+            throw new IllegalStateException("SHA-256 no disponible", e);
+        }
+    }
+
+    /**
+     * Si la solicitud ya se atendió (reintento con la misma clave), el comprobante que se emitió
+     * entonces, para devolverlo en vez de emitir otro: así una venta nunca se registra dos veces
+     * aunque la respuesta no llegue a la caja o el cajero haga doble clic. Va al inicio de la
+     * transacción, antes de validar (el reintento de una conversión ya no la encontraría vigente).
+     * La misma clave con otro contenido es un error de la caja.
+     */
+    public Optional<VentaResponse> yaAtendida(SolicitudIdempotente solicitud) {
+        if (!solicitud.presente()) {
+            return Optional.empty();
+        }
+        comprobanteRepository.bloquearClave(solicitud.clave());
+        return comprobanteRepository.findByClaveIdempotencia(solicitud.clave()).map(previo -> {
+            if (!solicitud.huella().equals(previo.getHuellaSolicitud())) {
+                throw new BusinessException("La clave " + SolicitudIdempotente.CABECERA + " " + solicitud.clave()
+                        + " ya se usó para otra solicitud (" + previo.getTipoComprobante().getDescripcion() + " "
+                        + previo.getNumeroImpreso() + "); usa una clave nueva por cada venta");
+            }
+            return respuesta(previo, null, List.of());
+        });
+    }
 
     /** La serie debe ser del tipo pedido y estar activa, igual que su establecimiento. */
     public Serie serieParaEmitir(Long serieId, TipoComprobante tipo) {
@@ -64,6 +120,13 @@ public class EmisionComprobante {
      * registra su envío a SUNAT (con el XML ya firmado). Va al final de la transacción.
      */
     public void emitir(Comprobante comprobante, Serie serie) {
+        emitir(comprobante, serie, SolicitudIdempotente.NINGUNA);
+    }
+
+    /** Igual, guardando la clave de la solicitud para reconocer sus reintentos. */
+    public void emitir(Comprobante comprobante, Serie serie, SolicitudIdempotente solicitud) {
+        comprobante.setClaveIdempotencia(solicitud.clave());
+        comprobante.setHuellaSolicitud(solicitud.huella());
         NumeroComprobante numero = serieService.asignarSiguienteNumero(serie.getId(), comprobante.getTipoComprobante());
         comprobante.setSerie(numero.serie());
         comprobante.setCorrelativo(numero.correlativo());

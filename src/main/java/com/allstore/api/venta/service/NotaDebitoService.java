@@ -17,6 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Notas de débito: cobran un monto adicional sobre una boleta o factura (intereses por mora,
@@ -35,6 +36,20 @@ public class NotaDebitoService {
 
     @Transactional
     public VentaResponse emitir(Long comprobanteId, NotaDebitoRequest request) {
+        return emitir(comprobanteId, request, null);
+    }
+
+    /**
+     * @param clave Idempotency-Key de la caja (opcional): un reintento con la misma clave devuelve
+     *              el comprobante ya emitido en vez de emitir otro
+     */
+    @Transactional
+    public VentaResponse emitir(Long comprobanteId, NotaDebitoRequest request, String clave) {
+        SolicitudIdempotente solicitud = emision.solicitud(clave, "nota-debito", comprobanteId, request);
+        Optional<VentaResponse> atendida = emision.yaAtendida(solicitud);
+        if (atendida.isPresent()) {
+            return atendida.get();
+        }
         Comprobante origen = emision.obtener(comprobanteId);
         validarOrigen(origen);
         emision.exigirNoRechazado(origen);
@@ -59,7 +74,7 @@ public class NotaDebitoService {
         nota.recalcularTotales();
         emision.agregarPagos(nota, request.pagos());
 
-        emision.emitir(nota, serie);
+        emision.emitir(nota, serie, solicitud);
         return emision.respuesta(nota, null, List.of());
     }
 

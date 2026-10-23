@@ -107,6 +107,14 @@ public class Comprobante extends BaseEntity {
     @JoinColumn(name = "comprobante_origen_id", updatable = false)
     private Comprobante comprobanteOrigen;
 
+    /** Clave Idempotency-Key de la solicitud que lo emitió (para reconocer los reintentos). */
+    @Column(name = "clave_idempotencia", length = 64, updatable = false)
+    private String claveIdempotencia;
+
+    /** SHA-256 de lo que pidió esa solicitud. */
+    @Column(name = "huella_solicitud", length = 64, updatable = false)
+    private String huellaSolicitud;
+
     /** Comprobante rechazado por SUNAT al que este reemplaza (misma venta, con otro número). */
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "reemplaza_id", updatable = false)

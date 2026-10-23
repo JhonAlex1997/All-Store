@@ -35,6 +35,7 @@ import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 @Service
@@ -70,6 +71,20 @@ public class VentaService {
      */
     @Transactional
     public VentaResponse crear(VentaRequest request) {
+        return crear(request, null);
+    }
+
+    /**
+     * @param clave Idempotency-Key de la caja (opcional): un reintento con la misma clave devuelve
+     *              el comprobante ya emitido en vez de emitir otro
+     */
+    @Transactional
+    public VentaResponse crear(VentaRequest request, String clave) {
+        SolicitudIdempotente solicitud = emision.solicitud(clave, "venta", request);
+        Optional<VentaResponse> atendida = emision.yaAtendida(solicitud);
+        if (atendida.isPresent()) {
+            return atendida.get();
+        }
         TipoComprobante tipo = request.tipoComprobante();
         if (!TIPOS_VENTA.contains(tipo)) {
             throw new BusinessException("Una venta se emite como NOTA_VENTA, BOLETA o FACTURA");
@@ -98,7 +113,7 @@ public class VentaService {
                 serie.getEstablecimiento().getId(), MotivoMovimiento.VENTA,
                 request.items().stream().map(i -> new InventarioService.Linea(i.varianteId(), i.cantidad())).toList(),
                 null);
-        emision.emitir(comprobante, serie);
+        emision.emitir(comprobante, serie, solicitud);
         emision.referenciar(movimientos, comprobante);
         return emision.respuesta(comprobante, null, List.of());
     }
@@ -110,6 +125,20 @@ public class VentaService {
      */
     @Transactional
     public VentaResponse convertir(Long notaVentaId, ConvertirVentaRequest request) {
+        return convertir(notaVentaId, request, null);
+    }
+
+    /**
+     * @param clave Idempotency-Key de la caja (opcional): un reintento con la misma clave devuelve
+     *              el comprobante ya emitido en vez de emitir otro
+     */
+    @Transactional
+    public VentaResponse convertir(Long notaVentaId, ConvertirVentaRequest request, String clave) {
+        SolicitudIdempotente solicitud = emision.solicitud(clave, "convertir", notaVentaId, request);
+        Optional<VentaResponse> atendida = emision.yaAtendida(solicitud);
+        if (atendida.isPresent()) {
+            return atendida.get();
+        }
         Comprobante nota = emision.obtener(notaVentaId);
         if (nota.getTipoComprobante() != TipoComprobante.NOTA_VENTA) {
             throw new BusinessException("Solo una nota de venta se puede convertir en boleta o factura");
@@ -139,7 +168,7 @@ public class VentaService {
         nota.getDetalles().forEach(d -> nuevo.agregarDetalle(d.copiar()));
         nota.getPagos().forEach(p -> nuevo.agregarPago(p.copiar()));
         nuevo.recalcularTotales();
-        emision.emitir(nuevo, serie);
+        emision.emitir(nuevo, serie, solicitud);
         nota.setEstado(EstadoComprobante.CONVERTIDO);
         return emision.respuesta(nuevo, null, List.of());
     }
@@ -152,6 +181,20 @@ public class VentaService {
      */
     @Transactional
     public VentaResponse reemitir(Long id, ReemitirRequest request) {
+        return reemitir(id, request, null);
+    }
+
+    /**
+     * @param clave Idempotency-Key de la caja (opcional): un reintento con la misma clave devuelve
+     *              el comprobante ya emitido en vez de emitir otro
+     */
+    @Transactional
+    public VentaResponse reemitir(Long id, ReemitirRequest request, String clave) {
+        SolicitudIdempotente solicitud = emision.solicitud(clave, "reemitir", id, request);
+        Optional<VentaResponse> atendida = emision.yaAtendida(solicitud);
+        if (atendida.isPresent()) {
+            return atendida.get();
+        }
         Comprobante rechazado = emision.obtener(id);
         String numero = rechazado.getNumeroImpreso();
         TipoComprobante tipoOriginal = rechazado.getTipoComprobante();
@@ -215,7 +258,7 @@ public class VentaService {
         rechazado.getDetalles().forEach(d -> nuevo.agregarDetalle(d.copiar()));
         rechazado.getPagos().forEach(p -> nuevo.agregarPago(p.copiar()));
         nuevo.recalcularTotales();
-        emision.emitir(nuevo, serie);
+        emision.emitir(nuevo, serie, solicitud);
         rechazado.setEstado(EstadoComprobante.REEMPLAZADO);
         return emision.respuesta(nuevo, null, List.of());
     }

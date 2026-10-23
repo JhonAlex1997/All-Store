@@ -3,6 +3,7 @@ package com.allstore.api.seguridad.config;
 import com.allstore.api.seguridad.entity.Rol;
 import com.allstore.api.seguridad.repository.UsuarioRepository;
 import com.allstore.api.seguridad.service.JwtService;
+import com.allstore.api.venta.service.SolicitudIdempotente;
 import com.nimbusds.jose.jwk.source.ImmutableSecret;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
@@ -159,7 +160,8 @@ public class SecurityConfig {
         CorsConfiguration config = new CorsConfiguration();
         config.setAllowedOrigins(properties.corsOrigenes());
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
-        config.setAllowedHeaders(List.of("Authorization", "Content-Type"));
+        // Idempotency-Key: la caja la envía al emitir comprobantes para que un reintento no duplique la venta.
+        config.setAllowedHeaders(List.of("Authorization", "Content-Type", SolicitudIdempotente.CABECERA));
         config.setMaxAge(3600L);
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/api/**", config);

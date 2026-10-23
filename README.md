@@ -108,6 +108,21 @@ en internet: con ella se arman los enlaces de descarga que recibe el cliente).
   ante SUNAT (ver "Anulación ante SUNAT"); fuera de plazo se corrigen con nota de crédito.
 - El kardex no se edita: cada entrada o salida queda con su motivo, documento, usuario y saldo.
 
+### Reintentos sin duplicar (Idempotency-Key)
+
+Si la respuesta de una venta no llega a la caja (se cayó el wifi) y la caja reintenta, o el cajero
+hace doble clic, la venta no debe registrarse dos veces. Para eso la caja envía la cabecera
+`Idempotency-Key` con un **UUID nuevo por cada venta** y el **mismo en cada reintento**:
+
+- El reintento recibe el comprobante ya emitido (misma respuesta 201), sin volver a descontar stock,
+  cobrar en caja ni tomar otro número. Dos solicitudes simultáneas con la misma clave se ordenan:
+  la segunda espera a la primera y recibe su comprobante.
+- La misma clave con otro contenido responde 400: es un error de la caja (debe generar otra).
+- Vale para `POST /api/ventas`, `/convertir`, `/notas-credito`, `/notas-debito` y `/reemitir`. Sin la
+  cabecera todo funciona como siempre (cada solicitud emite).
+- La clave se guarda en el mismo comprobante y en la misma transacción: no puede quedar una venta
+  registrada sin su clave ni una clave sin su venta.
+
 ### Consultar ventas
 
 `GET /api/ventas` (paginado) y `GET /api/ventas/totales` aceptan los mismos filtros, todos

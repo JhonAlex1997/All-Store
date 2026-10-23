@@ -1,6 +1,6 @@
 # Modelo de datos de AllStore
 
-23 tablas y 32 llaves foráneas (versión de base de datos V14). Todas las tablas, salvo las
+23 tablas y 32 llaves foráneas (versión de base de datos V15). Todas las tablas, salvo las
 de líneas (`comprobante_detalle`, `comprobante_pago`, `guia_remision_detalle`, `resumen_sunat_detalle`), tienen además `created_at`, `updated_at`,
 `created_by` y `updated_by` (auditoría), que no se repiten en los diagramas.
 
@@ -193,6 +193,8 @@ erDiagram
     boolean por_mayor
     boolean por_mayor_manual
     bigint reemplaza_id FK
+    varchar clave_idempotencia
+    varchar huella_solicitud
   }
   COMPROBANTE_DETALLE {
     bigint id PK
@@ -305,6 +307,8 @@ erDiagram
     boolean por_mayor
     boolean por_mayor_manual
     bigint reemplaza_id FK
+    varchar clave_idempotencia
+    varchar huella_solicitud
   }
   RESUMEN_SUNAT {
     bigint id PK
