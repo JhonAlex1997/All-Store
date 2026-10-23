@@ -314,12 +314,34 @@ SUNAT_CERTIFICADO_RUTA=/ruta/certificado.pfx
 SUNAT_CERTIFICADO_CLAVE=...
 SUNAT_GRE_CLIENT_ID=...        (guías de remisión: credenciales de API del menú SOL)
 SUNAT_GRE_CLIENT_SECRET=...
+ALERTAS_CORREOS=dueno@...      (resumen de alertas; vacío = correo de la empresa)
 ```
 
 Verificado contra SUNAT beta: boletas (con DNI y a "Clientes varios"), facturas con varias líneas
 y descuentos, notas de crédito total y por ítem sobre boleta y factura, notas de débito (con
 conceptos gravados e inafectos), comunicaciones de baja (factura y notas) y resúmenes diarios de
 anulación de boletas y sus notas, todos aceptados.
+
+## Alertas para el administrador
+
+Para que la facturación electrónica no falle en silencio, `GET /api/alertas` (solo ADMIN) lista
+lo que hay que atender, primero lo crítico:
+
+| Alerta | Nivel |
+|---|---|
+| Comprobante **rechazado** por SUNAT sin reemitir ni anular | Crítica |
+| Envío que **agotó sus intentos** (ERROR) | Crítica |
+| Comprobante de días anteriores **sin aceptar**: avisa hasta cuándo lo recibe SUNAT | Advertencia; crítica si venció el plazo |
+| **Baja rechazada** sin reintentar: lo anulado sigue vigente para SUNAT | Crítica |
+| **Guía sin aceptar** cuyo traslado empieza hoy (crítica si ya empezó) | Advertencia |
+| **Certificado digital** por vencer (30 días antes), vencido o faltante | Advertencia / crítica |
+| Envío a SUNAT **desactivado** | Crítica |
+
+Las alertas se calculan al consultar: desaparecen solas cuando se resuelve lo que las causó.
+Además, a las 8:00 y a las 18:00 se envía un **resumen por correo** si hay alertas
+(`app.alertas.correos`, o el correo de la empresa); `POST /api/alertas/correo` lo envía en el acto.
+El plazo de envío es configurable (`app.alertas.dias-plazo-envio`, 3 por defecto): SUNAT indica 3
+días calendario para facturas y notas, y se usa el mismo para todo, porque avisar antes es lo prudente.
 
 ## Representación impresa
 

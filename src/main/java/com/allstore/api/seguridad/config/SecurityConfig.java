@@ -118,6 +118,9 @@ public class SecurityConfig {
                         // Facturación electrónica (envíos, XML, CDR): solo administrador
                         .requestMatchers("/api/sunat/**").hasRole(ADMIN)
 
+                        // Alertas (comprobantes rechazados, plazos de SUNAT, certificado): solo administrador
+                        .requestMatchers("/api/alertas/**").hasRole(ADMIN)
+
                         // Todo lo demás, cerrado
                         .anyRequest().denyAll())
                 .oauth2ResourceServer(oauth -> oauth

@@ -166,6 +166,15 @@ class SeguridadIntegrationTest {
     }
 
     @Test
+    void lasAlertasSonSoloDelAdmin() throws Exception {
+        mockMvc.perform(get("/api/alertas").header("Authorization", "Bearer " + login("t_cajero", PASSWORD)))
+                .andExpect(status().isForbidden());
+        mockMvc.perform(get("/api/alertas").header("Authorization", "Bearer " + login("t_admin", PASSWORD)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.criticas").isNumber());
+    }
+
+    @Test
     void movimientosDeInventarioSoloParaAlmacenYAdmin() throws Exception {
         String cajero = login("t_cajero", PASSWORD);
         String almacenero = login("t_almacen", PASSWORD);

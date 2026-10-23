@@ -1,5 +1,6 @@
 package com.allstore.api.entrega.service;
 
+import com.allstore.api.empresa.entity.Empresa;
 import com.allstore.api.entrega.config.EntregaProperties;
 import jakarta.mail.MessagingException;
 import jakarta.mail.Session;
@@ -8,6 +9,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -29,6 +31,17 @@ public class ServicioCorreo {
     public ServicioCorreo(EntregaProperties properties, ObjectProvider<JavaMailSender> smtp) {
         this.properties = properties;
         this.smtp = smtp;
+    }
+
+    /** "De:" configurado; si no, el correo de la empresa. */
+    public String remitente(Empresa empresa) {
+        if (StringUtils.hasText(properties.correo().remitente())) {
+            return properties.correo().remitente();
+        }
+        if (empresa != null && empresa.getEmail() != null) {
+            return empresa.getEmail();
+        }
+        throw new IllegalStateException("Falta el remitente de los correos (CORREO_REMITENTE o el correo de la empresa)");
     }
 
     public MimeMessage nuevoMensaje() {

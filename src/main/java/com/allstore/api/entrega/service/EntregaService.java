@@ -190,7 +190,7 @@ public class EntregaService {
                     a.nombre(), a.contenido(), a.nombre().endsWith(".zip") ? "application/zip" : "application/xml")));
 
             MimeMessage mensaje = servicioCorreo.nuevoMensaje();
-            correoComprobante.armar(mensaje, venta, empresa, envio.getDestinatario(), remitente(empresa),
+            correoComprobante.armar(mensaje, venta, empresa, envio.getDestinatario(), servicioCorreo.remitente(empresa),
                     enlace(c, "pdf"), adjuntos);
             servicioCorreo.enviar(mensaje, venta.numero() + "-" + envio.getId());
 
@@ -269,17 +269,6 @@ public class EntregaService {
         }
         String destino = telefono.length() == 9 && telefono.startsWith("9") ? "51" + telefono : "";
         return "https://wa.me/" + destino + "?text=" + URLEncoder.encode(texto, StandardCharsets.UTF_8).replace("+", "%20");
-    }
-
-    /** "De:" configurado; si no, el correo de la empresa. */
-    private String remitente(Empresa empresa) {
-        if (StringUtils.hasText(properties.correo().remitente())) {
-            return properties.correo().remitente();
-        }
-        if (empresa.getEmail() != null) {
-            return empresa.getEmail();
-        }
-        throw new IllegalStateException("Falta el remitente de los correos (CORREO_REMITENTE o el correo de la empresa)");
     }
 
     private Comprobante obtener(Long id) {

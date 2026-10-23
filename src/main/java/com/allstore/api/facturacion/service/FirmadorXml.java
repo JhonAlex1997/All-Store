@@ -31,9 +31,11 @@ import java.nio.file.Path;
 import java.security.KeyStore;
 import java.security.PrivateKey;
 import java.security.cert.X509Certificate;
+import java.time.Instant;
 import java.util.Base64;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Firma el XML con el certificado digital de la empresa (firma XMLDSig "enveloped" dentro de
@@ -79,6 +81,11 @@ public class FirmadorXml {
 
     public boolean disponible() {
         return clavePrivada != null;
+    }
+
+    /** Hasta cuándo vale el certificado (vacío si no hay): firmado con uno vencido, SUNAT lo rechaza. */
+    public Optional<Instant> vencimiento() {
+        return certificado == null ? Optional.empty() : Optional.of(certificado.getNotAfter().toInstant());
     }
 
     public XmlFirmado firmar(Document doc) {

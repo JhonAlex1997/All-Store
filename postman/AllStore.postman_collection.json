@@ -2153,6 +2153,48 @@
           ]
         },
         {
+          "name": "Alertas para el administrador",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/alertas",
+            "description": "Lo que hay que atender: comprobantes rechazados o que agotaron sus intentos, plazos de envío de SUNAT por vencer o vencidos, bajas rechazadas, guías cuyo traslado empieza sin estar aceptadas y el certificado digital por vencer. Críticas primero."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "const a = pm.response.json();",
+                  "console.log(a.criticas + \" críticas, \" + a.advertencias + \" advertencias\");"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Enviar ahora el resumen de alertas por correo",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": "{{baseUrl}}/api/alertas/correo",
+            "description": "Se envía solo a las 8:00 y 18:00 (app.alertas.horario) a app.alertas.correos o al correo de la empresa. Sin alertas no envía nada. En dev queda como .eml en target/correos."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
           "name": "Envíos pendientes",
           "request": {
             "method": "GET",
