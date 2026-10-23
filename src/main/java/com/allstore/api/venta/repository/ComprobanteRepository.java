@@ -2,6 +2,7 @@ package com.allstore.api.venta.repository;
 
 import com.allstore.api.empresa.entity.TipoComprobante;
 import com.allstore.api.venta.entity.Comprobante;
+import com.allstore.api.venta.entity.MetodoPago;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
@@ -39,6 +40,19 @@ public interface ComprobanteRepository extends JpaRepository<Comprobante, Long>,
               and c.estado = com.allstore.api.venta.entity.EstadoComprobante.EMITIDO
             """)
     CantidadYTotal notasDeVentaSinComprobante(@Param("desde") OffsetDateTime desde, @Param("hasta") OffsetDateTime hasta);
+
+    interface MetodoDeComprobante {
+        Long getComprobanteId();
+
+        MetodoPago getMetodo();
+    }
+
+    /** Métodos de pago de varios comprobantes a la vez (para las filas del listado). */
+    @Query("""
+            select p.comprobante.id as comprobanteId, p.metodo as metodo from ComprobantePago p
+            where p.comprobante.id in :ids order by p.id
+            """)
+    List<MetodoDeComprobante> metodosDePago(@Param("ids") Collection<Long> ids);
 
     /** Para el enlace público de descarga. */
     Optional<Comprobante> findByCodigoConsulta(UUID codigoConsulta);

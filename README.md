@@ -108,6 +108,28 @@ en internet: con ella se arman los enlaces de descarga que recibe el cliente).
   ante SUNAT (ver "Anulación ante SUNAT"); fuera de plazo se corrigen con nota de crédito.
 - El kardex no se edita: cada entrada o salida queda con su motivo, documento, usuario y saldo.
 
+### Consultar ventas
+
+`GET /api/ventas` (paginado) y `GET /api/ventas/totales` aceptan los mismos filtros, todos
+opcionales y combinables. Los de lista aceptan varios valores separados por coma.
+
+| Filtro | Ejemplo |
+|---|---|
+| `desde`, `hasta` | `desde=2026-10-01&hasta=2026-10-31` (fechas de Lima, ambas inclusive) |
+| `tipoComprobante` | `BOLETA,FACTURA` |
+| `estado` | `EMITIDO`, `ANULADO`, `CONVERTIDO` |
+| `metodoPago` | `YAPE,PLIN`: los que tienen al menos un pago por esos métodos |
+| `porMayor`, `porMayorManual` | `porMayorManual=true`: los que dio el cajero sin llegar al mínimo |
+| `estadoSunat` | `PENDIENTE,RECHAZADO,ERROR` (las notas de venta no se envían y no aparecen) |
+| `vendedor`, `clienteId`, `cajaSesionId`, `establecimientoId` | `vendedor=jperez` |
+| `totalDesde`, `totalHasta` | `totalDesde=100&totalHasta=300` |
+| `busqueda` | Número (`B001-15`), documento o parte del nombre del cliente |
+
+Los **totales** solo cuentan lo vigente: no los anulados ni las notas de venta ya convertidas
+(cuenta la boleta o factura que las reemplazó). Dan ventas, notas de crédito y de débito, el neto
+y lo **cobrado y devuelto por cada método**. Con `metodoPago=YAPE`, una venta mitad en efectivo y
+mitad por Yape suma completa en `totalVentas`, pero en `cobradoPorMetodo.YAPE` solo su parte.
+
 ## Precio por mayor
 
 - Cada modelo puede tener su **precio por mayor** (`precioPorMayor` del producto) y cada variante

@@ -1707,7 +1707,7 @@
             "method": "GET",
             "header": [],
             "url": "{{baseUrl}}/api/ventas?desde={{hoy}}&hasta={{hoy}}",
-            "description": "Fecha de Perú (UTC-5)."
+            "description": "Fecha de Perú (UTC-5). Cada fila trae sus métodos de pago, si fue por mayor y su estado ante SUNAT."
           },
           "event": [
             {
@@ -1725,6 +1725,109 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Ventas del día por Yape o Plin",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/ventas?desde={{hoy}}&hasta={{hoy}}&metodoPago=YAPE,PLIN",
+            "description": "Comprobantes con al menos un pago por esos métodos (también los de pago mixto). Las listas aceptan varios valores separados por coma."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Ventas por mayor dadas por el cajero",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/ventas?porMayorManual=true",
+            "description": "Las que salieron a precio por mayor sin llegar al mínimo de prendas (vendedor = quién la hizo)."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Solo manuales\", () => pm.response.json().content.forEach(v => pm.expect(v.porMayorManual).to.eql(true)));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Boletas y facturas pendientes o rechazadas por SUNAT",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/ventas?tipoComprobante=BOLETA,FACTURA&estadoSunat=PENDIENTE,RECHAZADO,ERROR",
+            "description": "Otros filtros: estado, establecimientoId, vendedor, clienteId, cajaSesionId, porMayor, totalDesde, totalHasta y busqueda (número o cliente)."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Totales del día",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/ventas/totales?desde={{hoy}}&hasta={{hoy}}",
+            "description": "Acepta los mismos filtros del listado. Solo cuenta lo vigente (sin anulados ni notas de venta ya convertidas). cobradoPorMetodo es lo que entró por cada método."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "const t = pm.response.json();",
+                  "pm.test(\"Neto = ventas - notas de crédito + notas de débito\", () => pm.expect(t.totalNeto).to.eql(Math.round((t.totalVentas - t.totalNotasCredito + t.totalNotasDebito) * 100) / 100));",
+                  "console.log(\"Ventas del día S/ \" + t.totalVentas + \" | por método \" + JSON.stringify(t.cobradoPorMetodo));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Filtro inválido (debe dar 400)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/ventas?metodoPago=BITCOIN"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 400\", () => pm.response.to.have.status(400));"
                 ]
               }
             }

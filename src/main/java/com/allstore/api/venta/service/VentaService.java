@@ -5,9 +5,7 @@ import com.allstore.api.caja.service.CajaService;
 import com.allstore.api.cliente.entity.Cliente;
 import com.allstore.api.cliente.entity.TipoDocumentoIdentidad;
 import com.allstore.api.cliente.service.ClienteService;
-import com.allstore.api.common.dto.PageResponse;
 import com.allstore.api.common.exception.BusinessException;
-import com.allstore.api.config.JpaAuditingConfig;
 import com.allstore.api.empresa.entity.Empresa;
 import com.allstore.api.empresa.entity.Serie;
 import com.allstore.api.empresa.entity.TipoComprobante;
@@ -21,28 +19,21 @@ import com.allstore.api.venta.dto.ConvertirVentaRequest;
 import com.allstore.api.venta.dto.VentaItemRequest;
 import com.allstore.api.venta.dto.VentaRequest;
 import com.allstore.api.venta.dto.VentaResponse;
-import com.allstore.api.venta.dto.VentaResumenResponse;
 import com.allstore.api.venta.entity.Comprobante;
 import com.allstore.api.venta.entity.ComprobanteDetalle;
 import com.allstore.api.venta.entity.EstadoComprobante;
 import com.allstore.api.venta.repository.ComprobanteRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.time.OffsetDateTime;
 import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 @Service
 @RequiredArgsConstructor
@@ -56,7 +47,6 @@ public class VentaService {
 
     private static final Set<TipoComprobante> TIPOS_VENTA =
             EnumSet.of(TipoComprobante.NOTA_VENTA, TipoComprobante.BOLETA, TipoComprobante.FACTURA);
-    private static final Pattern NUMERO = Pattern.compile("^([A-Z0-9]{4})-(\\d{1,8})$");
 
     private final ComprobanteRepository comprobanteRepository;
     private final EmisionComprobante emision;
@@ -174,47 +164,6 @@ public class VentaService {
             notasDebito = numeros(notas, TipoComprobante.NOTA_DEBITO);
         }
         return emision.respuesta(comprobante, convertidoEn, notasCredito, notasDebito);
-    }
-
-    /** La búsqueda acepta un número (B001-15 o B001-00000015), un documento o parte del nombre del cliente. */
-    @Transactional(readOnly = true)
-    public PageResponse<VentaResumenResponse> listar(TipoComprobante tipo, EstadoComprobante estado,
-                                                     Long establecimientoId, LocalDate desde, LocalDate hasta,
-                                                     String busqueda, Pageable pageable) {
-        Specification<Comprobante> spec = Specification.unrestricted();
-        if (tipo != null) {
-            spec = spec.and((root, q, cb) -> cb.equal(root.get("tipoComprobante"), tipo));
-        }
-        if (estado != null) {
-            spec = spec.and((root, q, cb) -> cb.equal(root.get("estado"), estado));
-        }
-        if (establecimientoId != null) {
-            spec = spec.and((root, q, cb) -> cb.equal(root.get("establecimiento").get("id"), establecimientoId));
-        }
-        if (desde != null) {
-            OffsetDateTime inicio = desde.atStartOfDay(JpaAuditingConfig.ZONA_LIMA).toOffsetDateTime();
-            spec = spec.and((root, q, cb) -> cb.greaterThanOrEqualTo(root.get("fechaEmision"), inicio));
-        }
-        if (hasta != null) {
-            OffsetDateTime fin = hasta.plusDays(1).atStartOfDay(JpaAuditingConfig.ZONA_LIMA).toOffsetDateTime();
-            spec = spec.and((root, q, cb) -> cb.lessThan(root.get("fechaEmision"), fin));
-        }
-        if (StringUtils.hasText(busqueda)) {
-            String texto = busqueda.trim().toUpperCase();
-            Matcher numero = NUMERO.matcher(texto);
-            if (numero.matches()) {
-                String serie = numero.group(1);
-                long correlativo = Long.parseLong(numero.group(2));
-                spec = spec.and((root, q, cb) -> cb.and(
-                        cb.equal(root.get("serie"), serie), cb.equal(root.get("correlativo"), correlativo)));
-            } else {
-                String patron = "%" + texto.toLowerCase() + "%";
-                spec = spec.and((root, q, cb) -> cb.or(
-                        cb.like(cb.lower(root.get("clienteNombre")), patron),
-                        cb.like(root.get("clienteNumeroDocumento"), patron)));
-            }
-        }
-        return PageResponse.of(comprobanteRepository.findAll(spec, pageable).map(VentaResumenResponse::from));
     }
 
     // ---------- Reglas ----------

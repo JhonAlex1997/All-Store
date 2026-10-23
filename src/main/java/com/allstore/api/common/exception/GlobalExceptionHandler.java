@@ -14,6 +14,7 @@ import org.springframework.web.method.annotation.MethodArgumentTypeMismatchExcep
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import java.time.OffsetDateTime;
+import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -49,8 +50,12 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ErrorResponse> handleValidation(MethodArgumentNotValidException ex, HttpServletRequest request) {
         Map<String, String> details = new LinkedHashMap<>();
+        // Un valor que no se pudo convertir (ej. un filtro metodoPago=BITCOIN) trae el mensaje
+        // técnico de Spring; se reemplaza por uno legible.
         ex.getBindingResult().getFieldErrors()
-                .forEach(error -> details.putIfAbsent(error.getField(), error.getDefaultMessage()));
+                .forEach(error -> details.putIfAbsent(error.getField(), error.isBindingFailure()
+                        ? "El valor '" + valorRechazado(error.getRejectedValue()) + "' no es válido para " + error.getField()
+                        : error.getDefaultMessage()));
 
         // El mensaje principal es el del primer campo inválido, para que el frontend pueda
         // mostrar directamente qué corregir sin recorrer "details".
@@ -92,5 +97,11 @@ public class GlobalExceptionHandler {
                 details
         );
         return ResponseEntity.status(status).body(body);
+    }
+
+    /** Un parámetro repetido (?metodoPago=YAPE&metodoPago=X) llega como arreglo. */
+    private static String valorRechazado(Object valor) {
+        return valor instanceof Object[] valores ? String.join(",", Arrays.stream(valores).map(String::valueOf).toList())
+                : String.valueOf(valor);
     }
 }
