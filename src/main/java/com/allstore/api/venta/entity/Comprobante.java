@@ -115,6 +115,13 @@ public class Comprobante extends BaseEntity {
     @Column(name = "huella_solicitud", length = 64, updatable = false)
     private String huellaSolicitud;
 
+    /** Clave Idempotency-Key con que se anuló (para reconocer los reintentos) y su huella. */
+    @Column(name = "clave_anulacion", length = 64)
+    private String claveAnulacion;
+
+    @Column(name = "huella_anulacion", length = 64)
+    private String huellaAnulacion;
+
     /** Comprobante rechazado por SUNAT al que este reemplaza (misma venta, con otro número). */
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "reemplaza_id", updatable = false)

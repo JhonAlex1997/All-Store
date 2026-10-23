@@ -7,6 +7,7 @@ import com.allstore.api.empresa.entity.TipoComprobante;
 import com.allstore.api.facturacion.entity.EnvioSunat;
 import com.allstore.api.facturacion.entity.EstadoSunat;
 import com.allstore.api.facturacion.service.EnvioSunatService;
+import com.allstore.api.seguridad.service.UsuarioEnSesion;
 import com.allstore.api.venta.dto.FiltroVentas;
 import com.allstore.api.venta.dto.TotalesVentasResponse;
 import com.allstore.api.venta.dto.VentaResumenResponse;
@@ -59,13 +60,20 @@ public class ConsultaVentasService {
 
     private final ComprobanteRepository comprobanteRepository;
     private final EnvioSunatService envioSunatService;
+    private final UsuarioEnSesion usuarioEnSesion;
 
     @PersistenceContext
     private EntityManager entityManager;
 
+    /**
+     * El cajero ve solo sus ventas, salvo que busque un número exacto (B001-15): así atiende una
+     * reimpresión o un cambio de talla con el ticket en la mano, sin ver cuánto vende la tienda.
+     */
     public PageResponse<VentaResumenResponse> listar(FiltroVentas filtro, Pageable pageable) {
         validar(filtro);
-        Specification<Comprobante> spec = (root, query, cb) -> predicado(filtro, root, query, cb);
+        FiltroVentas visible = usuarioEnSesion.veTodo() || esNumero(filtro.busqueda()) ? filtro
+                : filtro.delVendedor(usuarioEnSesion.nombre());
+        Specification<Comprobante> spec = (root, query, cb) -> predicado(visible, root, query, cb);
         Page<Comprobante> pagina = comprobanteRepository.findAll(spec, pageable);
         List<Long> ids = pagina.map(Comprobante::getId).getContent();
         Map<Long, List<MetodoPago>> metodos = metodosDePago(ids);
@@ -199,6 +207,10 @@ public class ConsultaVentasService {
         }
         String patron = "%" + texto.toLowerCase() + "%";
         return cb.or(cb.like(cb.lower(c.get("clienteNombre")), patron), cb.like(c.get("clienteNumeroDocumento"), patron));
+    }
+
+    private static boolean esNumero(String busqueda) {
+        return StringUtils.hasText(busqueda) && NUMERO.matcher(busqueda.trim().toUpperCase()).matches();
     }
 
     private static void validar(FiltroVentas f) {

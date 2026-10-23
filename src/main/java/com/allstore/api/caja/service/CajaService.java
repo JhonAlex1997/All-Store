@@ -62,6 +62,21 @@ public class CajaService {
 
     @Transactional
     public CajaResponse abrir(AbrirCajaRequest request) {
+        return abrir(request, null);
+    }
+
+    /**
+     * @param clave Idempotency-Key (opcional): un reintento con la misma clave devuelve el resultado
+     *              en vez de un error
+     */
+    @Transactional
+    public CajaResponse abrir(AbrirCajaRequest request, String clave) {
+        SolicitudIdempotente solicitud = idempotencia.solicitud(clave, "abrir-caja", request);
+        Optional<CajaSesion> previa = idempotencia.previo(solicitud, sesionRepository::findByClaveApertura,
+                CajaSesion::getHuellaApertura, s -> "apertura de caja del " + HORA.format(s.getFechaApertura()));
+        if (previa.isPresent()) {
+            return respuesta(previa.get());
+        }
         String usuario = usuario();
         sesionRepository.findByUsuarioAndEstado(usuario, EstadoCaja.ABIERTA).ifPresent(abierta -> {
             throw new BusinessException("Ya tienes una caja abierta en " + abierta.getEstablecimiento().getNombre()
@@ -72,6 +87,8 @@ public class CajaService {
             throw new BusinessException("El establecimiento " + establecimiento.getNombre() + " está inactivo");
         }
         CajaSesion sesion = new CajaSesion();
+        sesion.setClaveApertura(solicitud.clave());
+        sesion.setHuellaApertura(solicitud.huella());
         sesion.setEstablecimiento(establecimiento);
         sesion.setUsuario(usuario);
         sesion.setFechaApertura(OffsetDateTime.now(JpaAuditingConfig.ZONA_LIMA));
@@ -120,7 +137,24 @@ public class CajaService {
     /** Calcula el cuadre, lo guarda tal cual (ya no cambia) y cierra la caja. */
     @Transactional
     public CajaResponse cerrar(CerrarCajaRequest request) {
+        return cerrar(request, null);
+    }
+
+    /**
+     * @param clave Idempotency-Key (opcional): un reintento con la misma clave devuelve el resultado
+     *              en vez de un error
+     */
+    @Transactional
+    public CajaResponse cerrar(CerrarCajaRequest request, String clave) {
+        SolicitudIdempotente solicitud = idempotencia.solicitud(clave, "cerrar-caja", request);
+        Optional<CajaSesion> previa = idempotencia.previo(solicitud, sesionRepository::findByClaveCierre,
+                CajaSesion::getHuellaCierre, s -> "cierre de caja del " + HORA.format(s.getFechaCierre()));
+        if (previa.isPresent()) {
+            return respuesta(previa.get());
+        }
         CajaSesion sesion = bloquearMiCaja();
+        sesion.setClaveCierre(solicitud.clave());
+        sesion.setHuellaCierre(solicitud.huella());
         ResumenCaja resumen = calcular(sesion);
         BigDecimal contado = request.montoContado().setScale(2);
         sesion.setTotalVentas(resumen.totalVentas());

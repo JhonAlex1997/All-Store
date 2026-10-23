@@ -1,5 +1,7 @@
 package com.allstore.api.venta;
 
+import com.allstore.api.caja.dto.AbrirCajaRequest;
+import com.allstore.api.caja.dto.CerrarCajaRequest;
 import com.allstore.api.caja.dto.MovimientoCajaRequest;
 import com.allstore.api.caja.entity.TipoMovimientoCaja;
 import com.allstore.api.common.exception.BusinessException;
@@ -8,11 +10,13 @@ import com.allstore.api.inventario.dto.ItemCantidadRequest;
 import com.allstore.api.inventario.dto.MovimientoManualRequest;
 import com.allstore.api.inventario.dto.TrasladoRequest;
 import com.allstore.api.inventario.entity.MotivoMovimiento;
+import com.allstore.api.venta.dto.AnularVentaRequest;
 import com.allstore.api.venta.dto.ConvertirVentaRequest;
 import com.allstore.api.venta.dto.ItemDevolucionRequest;
 import com.allstore.api.venta.dto.NotaCreditoRequest;
 import com.allstore.api.venta.dto.VentaRequest;
 import com.allstore.api.venta.dto.VentaResponse;
+import com.allstore.api.venta.entity.EstadoComprobante;
 import com.allstore.api.venta.entity.MetodoPago;
 import com.allstore.api.venta.entity.MotivoNotaCredito;
 import com.allstore.api.common.idempotencia.SolicitudIdempotente;
@@ -152,6 +156,36 @@ class IdempotenciaIntegrationTest extends TiendaDePrueba {
         // La clave de un ajuste no sirve para un traslado distinto, ni al revés.
         assertThatThrownBy(() -> inventarioService.trasladar(alAlmacen, claveAjuste))
                 .isInstanceOf(BusinessException.class).hasMessageContaining("ya se usó");
+    }
+
+    @Test
+    void cerrarYAbrirCajaReintentadosDevuelvenLaMismaCaja() {
+        CerrarCajaRequest cierre = new CerrarCajaRequest(new BigDecimal("100.00"), "Cierre");
+        String claveCierre = UUID.randomUUID().toString();
+        var cerrada = cajaService.cerrar(cierre, claveCierre);
+        // Sin la clave sería "no tienes una caja abierta".
+        assertThat(cajaService.cerrar(cierre, claveCierre).id()).isEqualTo(cerrada.id());
+
+        AbrirCajaRequest apertura = new AbrirCajaRequest(tienda, new BigDecimal("80.00"));
+        String claveApertura = UUID.randomUUID().toString();
+        var abierta = cajaService.abrir(apertura, claveApertura);
+        assertThat(cajaService.abrir(apertura, claveApertura).id()).isEqualTo(abierta.id());
+        assertThatThrownBy(() -> cajaService.abrir(apertura, UUID.randomUUID().toString()))
+                .isInstanceOf(BusinessException.class).hasMessageContaining("Ya tienes una caja abierta");
+    }
+
+    @Test
+    void anularReintentadoDevuelveElAnuladoSinDevolverElStockDosVeces() {
+        VentaResponse nota = vender(TipoComprobante.NOTA_VENTA, serieNotaVenta, null, List.of(item(jeanA, 1, null)),
+                List.of(efectivo("89.90", null)));
+        AnularVentaRequest motivo = new AnularVentaRequest("El cliente desistió");
+        String clave = UUID.randomUUID().toString();
+
+        anulacionService.anular(nota.id(), motivo, clave);
+        VentaResponse reintento = anulacionService.anular(nota.id(), motivo, clave);
+
+        assertThat(reintento.estado()).isEqualTo(EstadoComprobante.ANULADO);
+        assertThat(stock(jeanA, tienda)).isEqualTo(5);
     }
 
     @Test

@@ -1,6 +1,6 @@
 # Modelo de datos de AllStore
 
-23 tablas y 32 llaves foráneas (versión de base de datos V16). Todas las tablas, salvo las
+23 tablas y 32 llaves foráneas (versión de base de datos V17). Todas las tablas, salvo las
 de líneas (`comprobante_detalle`, `comprobante_pago`, `guia_remision_detalle`, `resumen_sunat_detalle`), tienen además `created_at`, `updated_at`,
 `created_by` y `updated_by` (auditoría), que no se repiten en los diagramas.
 
@@ -143,6 +143,10 @@ erDiagram
     numeric efectivo_contado
     numeric diferencia
     varchar observacion_cierre
+    varchar clave_apertura
+    varchar huella_apertura
+    varchar clave_cierre
+    varchar huella_cierre
   }
   CAJA_MOVIMIENTO {
     bigint id PK
@@ -199,6 +203,8 @@ erDiagram
     bigint reemplaza_id FK
     varchar clave_idempotencia
     varchar huella_solicitud
+    varchar clave_anulacion
+    varchar huella_anulacion
   }
   COMPROBANTE_DETALLE {
     bigint id PK
@@ -313,6 +319,8 @@ erDiagram
     bigint reemplaza_id FK
     varchar clave_idempotencia
     varchar huella_solicitud
+    varchar clave_anulacion
+    varchar huella_anulacion
   }
   RESUMEN_SUNAT {
     bigint id PK

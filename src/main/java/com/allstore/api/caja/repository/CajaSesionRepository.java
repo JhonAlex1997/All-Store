@@ -24,6 +24,10 @@ public interface CajaSesionRepository extends JpaRepository<CajaSesion, Long>, J
     @EntityGraph(attributePaths = "establecimiento")
     Optional<CajaSesion> findByUsuarioAndEstado(String usuario, EstadoCaja estado);
 
+    Optional<CajaSesion> findByClaveApertura(String clave);
+
+    Optional<CajaSesion> findByClaveCierre(String clave);
+
     /**
      * La caja abierta del usuario, bloqueada hasta el fin de la transacción. Ventas, devoluciones,
      * movimientos y el cierre la bloquean: así no se puede cerrar una caja mientras se está

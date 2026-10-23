@@ -1,6 +1,8 @@
 package com.allstore.api.venta.service;
 
 import com.allstore.api.common.exception.BusinessException;
+import com.allstore.api.common.idempotencia.Idempotencia;
+import com.allstore.api.common.idempotencia.SolicitudIdempotente;
 import com.allstore.api.config.JpaAuditingConfig;
 import com.allstore.api.empresa.entity.TipoComprobante;
 import com.allstore.api.facturacion.service.BajaSunatService;
@@ -18,6 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.OffsetDateTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
@@ -45,9 +48,25 @@ public class AnulacionService {
     private final ComprobanteRepository comprobanteRepository;
     private final InventarioService inventarioService;
     private final BajaSunatService bajaSunatService;
+    private final Idempotencia idempotencia;
 
     @Transactional
     public VentaResponse anular(Long id, AnularVentaRequest request) {
+        return anular(id, request, null);
+    }
+
+    /**
+     * @param clave Idempotency-Key (opcional): un reintento con la misma clave devuelve el resultado
+     *              en vez de un error
+     */
+    @Transactional
+    public VentaResponse anular(Long id, AnularVentaRequest request, String clave) {
+        SolicitudIdempotente solicitud = idempotencia.solicitud(clave, "anular", id, request);
+        Optional<Comprobante> previo = idempotencia.previo(solicitud, comprobanteRepository::findByClaveAnulacion,
+                Comprobante::getHuellaAnulacion, c -> "anulación de " + c.getNumeroImpreso());
+        if (previo.isPresent()) {
+            return emision.respuesta(previo.get(), null, List.of());
+        }
         Comprobante comprobante = emision.obtener(id);
         validarVigente(comprobante);
         if (comprobante.getCajaSesion() != null && !comprobante.getCajaSesion().isAbierta()) {
@@ -63,6 +82,8 @@ public class AnulacionService {
         String motivo = request.motivo().trim();
         revertirMercaderia(comprobante, motivo);
         comprobante.setEstado(EstadoComprobante.ANULADO);
+        comprobante.setClaveAnulacion(solicitud.clave());
+        comprobante.setHuellaAnulacion(solicitud.huella());
         comprobante.setMotivoAnulacion(motivo);
         comprobante.setFechaAnulacion(OffsetDateTime.now(JpaAuditingConfig.ZONA_LIMA));
         if (darDeBaja) {

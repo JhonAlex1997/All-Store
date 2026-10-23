@@ -1,5 +1,6 @@
 package com.allstore.api.venta;
 
+import com.allstore.api.caja.dto.AbrirCajaRequest;
 import com.allstore.api.empresa.entity.TipoComprobante;
 import com.allstore.api.producto.dto.VarianteUpdateRequest;
 import com.allstore.api.venta.dto.AnularVentaRequest;
@@ -14,6 +15,8 @@ import com.allstore.api.venta.entity.MotivoNotaCredito;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.authentication.TestingAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
@@ -167,6 +170,26 @@ class ConsultaVentasIntegrationTest extends TiendaDePrueba {
                 .andExpect(jsonPath("$.totalVentas").value(299.90))
                 .andExpect(jsonPath("$.cobradoPorMetodo.YAPE").value(249.90))
                 .andExpect(jsonPath("$.cobradoPorMetodo.EFECTIVO").value(50.00));
+    }
+
+    @Test
+    void elCajeroVeSoloSusVentasSalvoQueBusqueUnNumeroExacto() throws Exception {
+        SecurityContextHolder.getContext().setAuthentication(new TestingAuthenticationToken("cajero1", null, "ROLE_CAJERO"));
+        try {
+            cajaService.abrir(new AbrirCajaRequest(tienda, new BigDecimal("50.00")));
+            String suya = vender(TipoComprobante.BOLETA, serieBoleta, null, List.of(item(jeanA, 1, null)),
+                    List.of(efectivo("89.90", null))).numero();
+
+            listar("").andExpect(jsonPath("$.content[*].numero", containsInAnyOrder(suya)));
+            // Pedir las de otro vendedor no cambia nada: el filtro lo pone el servidor.
+            listar("vendedor=sistema").andExpect(jsonPath("$.content[*].numero", containsInAnyOrder(suya)));
+            // Con el ticket en la mano (número exacto) encuentra la venta de otro, para reimprimirla o cambiarla.
+            listar("busqueda=" + facturaMixta).andExpect(jsonPath("$.content[*].numero", containsInAnyOrder(facturaMixta)));
+        } finally {
+            SecurityContextHolder.clearContext();
+        }
+        // El administrador (o un proceso sin sesión) ve todas.
+        listar("").andExpect(jsonPath("$.content", hasSize(9)));
     }
 
     @Test

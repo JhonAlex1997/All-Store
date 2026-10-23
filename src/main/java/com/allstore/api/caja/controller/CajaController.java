@@ -38,8 +38,8 @@ public class CajaController {
 
     @PostMapping("/abrir")
     @ResponseStatus(HttpStatus.CREATED)
-    public CajaResponse abrir(@Valid @RequestBody AbrirCajaRequest request) {
-        return cajaService.abrir(request);
+    public CajaResponse abrir(@Valid @RequestBody AbrirCajaRequest request, @RequestHeader(name = SolicitudIdempotente.CABECERA, required = false) String clave) {
+        return cajaService.abrir(request, clave);
     }
 
     /** Mi caja abierta con el cuadre al momento. */
@@ -56,8 +56,8 @@ public class CajaController {
     }
 
     @PostMapping("/cerrar")
-    public CajaResponse cerrar(@Valid @RequestBody CerrarCajaRequest request) {
-        return cajaService.cerrar(request);
+    public CajaResponse cerrar(@Valid @RequestBody CerrarCajaRequest request, @RequestHeader(name = SolicitudIdempotente.CABECERA, required = false) String clave) {
+        return cajaService.cerrar(request, clave);
     }
 
     /** Historial de cajas (solo ADMIN, ver SecurityConfig). */

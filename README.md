@@ -72,7 +72,7 @@ Toda la API exige sesión, salvo `POST /api/auth/login` y `/actuator/health`.
 | Rol | Puede |
 | --- | --- |
 | `ADMIN` | Todo, incluido anular ventas y administrar usuarios, empresa y series |
-| `CAJERO` | Abrir y cerrar su caja, vender, emitir notas de crédito y débito y guías de remisión, registrar clientes; consultar catálogo y stock |
+| `CAJERO` | Abrir y cerrar su caja, vender, emitir notas de crédito y débito y guías de remisión, registrar clientes; consultar catálogo y stock. Ve **solo sus ventas** (con el número exacto encuentra cualquiera) y no ve los totales del negocio |
 | `ALMACENERO` | Catálogo de productos, ajustes e inventario, traslados y guías de remisión; consultar lo demás (no ve ventas) |
 
 La matriz completa está en `SecurityConfig`. Lo que no está permitido ahí, se niega.
@@ -122,7 +122,10 @@ hace doble clic, la venta no debe registrarse dos veces. Para eso la caja envía
   - comprobantes: `POST /api/ventas`, `/convertir`, `/notas-credito`, `/notas-debito` y `/reemitir`;
   - movimientos de caja: `POST /api/caja/movimientos`;
   - guías de remisión: `POST /api/guias` (la de traslado mueve stock);
-  - inventario: `POST /api/inventario/movimientos` (ajustes) y `/traslados`.
+  - inventario: `POST /api/inventario/movimientos` (ajustes) y `/traslados`;
+  - abrir y cerrar caja (`POST /api/caja/abrir`, `/cerrar`) y anular (`POST /api/ventas/{id}/anular`):
+    el reintento recibe la caja o el comprobante en vez del error "ya tienes una caja abierta" o
+    "ya está anulado".
 
   Sin la cabecera todo funciona como siempre (cada solicitud registra).
 - La clave se guarda en lo que se crea y en la misma transacción: no puede quedar una venta
@@ -132,6 +135,11 @@ hace doble clic, la venta no debe registrarse dos veces. Para eso la caja envía
 
 `GET /api/ventas` (paginado) y `GET /api/ventas/totales` aceptan los mismos filtros, todos
 opcionales y combinables. Los de lista aceptan varios valores separados por coma.
+
+**Qué ve cada rol.** El administrador ve todo. El cajero lista **solo sus ventas** (el servidor
+fija `vendedor`, aunque pida otro), salvo que busque un número exacto (`busqueda=B001-15`): así
+atiende una reimpresión o un cambio de talla con el ticket en la mano. Los **totales** son los
+ingresos del negocio y son solo del administrador.
 
 | Filtro | Ejemplo |
 |---|---|

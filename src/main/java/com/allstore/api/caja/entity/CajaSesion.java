@@ -73,6 +73,20 @@ public class CajaSesion extends BaseEntity {
     @Column(name = "observacion_cierre", length = 250)
     private String observacionCierre;
 
+    /** Clave Idempotency-Key con que se abrió (para reconocer los reintentos) y su huella. */
+    @Column(name = "clave_apertura", length = 64, updatable = false)
+    private String claveApertura;
+
+    @Column(name = "huella_apertura", length = 64, updatable = false)
+    private String huellaApertura;
+
+    /** Clave Idempotency-Key con que se cerró y su huella. */
+    @Column(name = "clave_cierre", length = 64)
+    private String claveCierre;
+
+    @Column(name = "huella_cierre", length = 64)
+    private String huellaCierre;
+
     public boolean isAbierta() {
         return estado == EstadoCaja.ABIERTA;
     }

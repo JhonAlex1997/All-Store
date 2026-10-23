@@ -92,6 +92,10 @@
       "value": ""
     },
     {
+      "key": "numeroVenta",
+      "value": ""
+    },
+    {
       "key": "montoMayor",
       "value": ""
     },
@@ -1204,6 +1208,7 @@
                   "pm.test(\"Responde 201\", () => pm.response.to.have.status(201));",
                   "const v = pm.response.json();",
                   "pm.collectionVariables.set(\"ventaId\", v.id);",
+                  "pm.collectionVariables.set(\"numeroVenta\", v.numero);",
                   "console.log(v.numero + \" total S/ \" + v.total + \" IGV S/ \" + v.totalIgv + \" vuelto S/ \" + v.vuelto);",
                   "pm.test(\"Va a SUNAT con hash y QR\", () => pm.expect(!!(v.sunat && v.sunat.codigoQr)).to.eql(true));"
                 ]
@@ -2892,6 +2897,97 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Cajero no ve los totales del negocio (debe dar 403)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/ventas/totales",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenCajero}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 403\", () => pm.response.to.have.status(403));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Cajero lista solo sus ventas",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/ventas",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenCajero}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "description": "Las ventas de esta colección las hizo el admin: el cajero no las ve en el listado."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Solo las suyas\", () => pm.response.json().content.forEach(v => pm.expect(v.vendedor).to.eql(\"cajero\")));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Cajero encuentra una venta por su número exacto",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/ventas?busqueda={{numeroVenta}}",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenCajero}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "description": "Con el ticket en la mano encuentra cualquier venta, para reimprimirla o hacer un cambio de talla."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"La encuentra\", () => pm.expect(pm.response.json().content.length).to.eql(1));"
                 ]
               }
             }

@@ -102,6 +102,8 @@ public class SecurityConfig {
 
                         // Ventas y notas de crédito: caja y administrador; anular solo administrador
                         .requestMatchers(HttpMethod.POST, "/api/ventas/*/anular").hasRole(ADMIN)
+                        // Los totales son los ingresos del negocio; el cajero lista solo sus ventas (ConsultaVentasService)
+                        .requestMatchers(HttpMethod.GET, "/api/ventas/totales").hasRole(ADMIN)
                         .requestMatchers("/api/ventas/**").hasAnyRole(ADMIN, CAJERO)
 
                         // Caja: cada cajero abre, mueve y cierra la suya; el historial solo administrador

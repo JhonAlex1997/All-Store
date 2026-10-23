@@ -42,4 +42,9 @@ public record FiltroVentas(
         BigDecimal totalHasta,
         String busqueda
 ) {
+    /** Los mismos filtros, solo con las ventas de ese usuario. */
+    public FiltroVentas delVendedor(String usuario) {
+        return new FiltroVentas(tipoComprobante, estado, establecimientoId, desde, hasta, metodoPago, porMayor,
+                porMayorManual, usuario, clienteId, cajaSesionId, estadoSunat, totalDesde, totalHasta, busqueda);
+    }
 }

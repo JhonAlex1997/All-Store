@@ -59,6 +59,8 @@ public interface ComprobanteRepository extends JpaRepository<Comprobante, Long>,
 
     Optional<Comprobante> findByClaveIdempotencia(String clave);
 
+    Optional<Comprobante> findByClaveAnulacion(String clave);
+
     /** El comprobante emitido en lugar de uno que SUNAT rechazó. */
     Optional<Comprobante> findByReemplazaAId(Long rechazadoId);
 

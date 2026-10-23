@@ -54,7 +54,8 @@ public class VentaController {
 
     /**
      * Ej: GET /api/ventas?desde=2026-10-01&hasta=2026-10-31&tipoComprobante=BOLETA,FACTURA&metodoPago=YAPE
-     * (todos los filtros en {@link FiltroVentas}).
+     * (todos los filtros en {@link FiltroVentas}). El cajero ve solo sus ventas; buscando el número
+     * exacto (busqueda=B001-15) encuentra cualquiera, para reimprimirla o hacer un cambio.
      */
     @GetMapping
     public PageResponse<VentaResumenResponse> listar(
@@ -63,7 +64,10 @@ public class VentaController {
         return consultaVentasService.listar(filtro, pageable);
     }
 
-    /** Cantidades, montos y lo cobrado por método de las ventas que cumplen los mismos filtros del listado. */
+    /**
+     * Cantidades, montos y lo cobrado por método de las ventas que cumplen los mismos filtros del
+     * listado. Solo ADMIN (ver SecurityConfig): son los ingresos del negocio.
+     */
     @GetMapping("/totales")
     public TotalesVentasResponse totales(@ParameterObject FiltroVentas filtro) {
         return consultaVentasService.totales(filtro);
@@ -145,7 +149,7 @@ public class VentaController {
      * o nota, además la da de baja ante SUNAT (dentro del plazo y si SUNAT ya la aceptó).
      */
     @PostMapping("/{id}/anular")
-    public VentaResponse anular(@PathVariable Long id, @Valid @RequestBody AnularVentaRequest request) {
-        return anulacionService.anular(id, request);
+    public VentaResponse anular(@PathVariable Long id, @Valid @RequestBody AnularVentaRequest request, @RequestHeader(name = SolicitudIdempotente.CABECERA, required = false) String clave) {
+        return anulacionService.anular(id, request, clave);
     }
 }
