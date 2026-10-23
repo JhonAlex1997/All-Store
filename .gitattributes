@@ -1,2 +1,16 @@
-/mvnw text eol=lf
+# Saltos de línea: LF en el repositorio y en la copia de trabajo, en cualquier sistema. Evita los
+# avisos "LF will be replaced by CRLF" de Git en Windows y los diffs de solo saltos de línea.
+* text=auto eol=lf
+
+# Scripts de Windows: CRLF.
 *.cmd text eol=crlf
+*.bat text eol=crlf
+
+# Binarios: nunca se convierten.
+*.p12 binary
+*.pfx binary
+*.pdf binary
+*.png binary
+*.jpg binary
+*.zip binary
+*.jar binary
