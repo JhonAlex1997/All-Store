@@ -74,7 +74,7 @@ public class ConsultaVentasService {
                 metodos.getOrDefault(c.getId(), List.of()), estados.get(c.getId()))));
     }
 
-    /** Solo cuenta lo vigente: ni los anulados ni las notas de venta ya convertidas en boleta o factura. */
+    /** Solo cuenta lo vigente (EMITIDO): ni anulados, ni notas de venta convertidas, ni rechazados ya reemitidos. */
     public TotalesVentasResponse totales(FiltroVentas filtro) {
         validar(filtro);
         CriteriaBuilder cb = entityManager.getCriteriaBuilder();

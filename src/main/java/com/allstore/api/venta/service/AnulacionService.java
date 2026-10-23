@@ -27,6 +27,8 @@ import java.util.stream.Collectors;
  *   <li>Factura, boleta y sus notas: además se dan de baja ante SUNAT (comunicación de baja o
  *       resumen diario, ver {@link BajaSunatService}), si SUNAT ya los aceptó y dentro del plazo.
  *       Cuando no procede, el comprobante se corrige con una nota de crédito.</li>
+ *   <li>Lo que SUNAT rechazó se anula solo en el sistema: para SUNAT no existe y no hay nada que
+ *       dar de baja (si el cliente se queda con la mercadería, se reemite en vez de anular).</li>
  * </ul>
  * En todos los casos se revierte la mercadería (vuelve al stock lo vendido; sale de nuevo lo que
  * había entrado con una nota de crédito) y el comprobante deja de contar en su caja. Esa caja debe
@@ -54,15 +56,16 @@ public class AnulacionService {
                     ? "Conviértela en boleta y emite una nota de crédito" : "Corrígelo con una nota de crédito"));
         }
         boolean electronico = comprobante.getTipoComprobante().isElectronico();
+        boolean darDeBaja = electronico && !emision.rechazadoPorSunat(comprobante);
         if (electronico) {
-            validarBaja(comprobante);
+            validarElectronico(comprobante, darDeBaja);
         }
         String motivo = request.motivo().trim();
         revertirMercaderia(comprobante, motivo);
         comprobante.setEstado(EstadoComprobante.ANULADO);
         comprobante.setMotivoAnulacion(motivo);
         comprobante.setFechaAnulacion(OffsetDateTime.now(JpaAuditingConfig.ZONA_LIMA));
-        if (electronico) {
+        if (darDeBaja) {
             bajaSunatService.registrar(comprobante, motivo);
         }
         return emision.respuesta(comprobante, null, List.of());
@@ -73,22 +76,24 @@ public class AnulacionService {
             case ANULADO -> throw new BusinessException("El comprobante " + comprobante.getNumeroImpreso() + " ya está anulado");
             case CONVERTIDO -> throw new BusinessException("La nota de venta " + comprobante.getNumeroImpreso()
                     + " ya se convirtió en boleta o factura; es ese comprobante el que se debe corregir");
+            case REEMPLAZADO -> throw new BusinessException("SUNAT rechazó " + comprobante.getNumeroImpreso()
+                    + " y ya se reemitió con otro número; es ese comprobante el que se debe corregir");
             case EMITIDO -> {
             }
         }
     }
 
     /**
-     * Reglas propias de la venta para dar de baja; las de SUNAT (aceptación y plazo) las valida
+     * Reglas propias de la venta; las de SUNAT para la baja (aceptación y plazo) las valida
      * BajaSunatService.
      */
-    private void validarBaja(Comprobante comprobante) {
+    private void validarElectronico(Comprobante comprobante, boolean darDeBaja) {
         String numero = comprobante.getNumeroImpreso();
         Comprobante origen = comprobante.getComprobanteOrigen();
         if (origen != null && origen.getTipoComprobante() == TipoComprobante.NOTA_VENTA) {
             // La mercadería y el cobro son de la nota de venta: anular solo la boleta los dejaría sueltos.
             throw new BusinessException(numero + " proviene de la nota de venta " + origen.getNumeroImpreso()
-                    + ": corrígelo con una nota de crédito");
+                    + (darDeBaja ? ": corrígelo con una nota de crédito" : ": reemítelo con otro número"));
         }
         List<Comprobante> notas = comprobanteRepository.notasVigentesDe(comprobante.getId());
         if (!notas.isEmpty()) {
@@ -96,7 +101,9 @@ public class AnulacionService {
                     + notas.stream().map(Comprobante::getNumeroImpreso).collect(Collectors.joining(", "))
                     + "); anúlalas primero");
         }
-        bajaSunatService.validar(comprobante);
+        if (darDeBaja) {
+            bajaSunatService.validar(comprobante);
+        }
     }
 
     /** Lo vendido vuelve al stock; lo devuelto con una nota de crédito sale otra vez. La nota de débito no movió mercadería. */

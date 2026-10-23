@@ -10,6 +10,7 @@ import com.allstore.api.empresa.service.EmpresaService;
 import com.allstore.api.empresa.service.EstablecimientoService;
 import com.allstore.api.facturacion.config.EntornoSunat;
 import com.allstore.api.facturacion.config.SunatProperties;
+import com.allstore.api.facturacion.entity.EstadoSunat;
 import com.allstore.api.facturacion.service.MontoEnLetras;
 import com.allstore.api.guia.dto.GuiaRemisionResponse;
 import com.allstore.api.guia.entity.ModalidadTransporte;
@@ -170,10 +171,13 @@ public class ImpresionService {
         return null;
     }
 
-    /** Lo anulado y lo emitido en el entorno de pruebas se marca para que nadie lo tome por válido. */
+    /** Lo anulado, lo rechazado y lo emitido en el entorno de pruebas se marca para que nadie lo tome por válido. */
     private String marcaDeAgua(VentaResponse v, boolean electronico) {
         if (v.estado() == EstadoComprobante.ANULADO) {
             return "ANULADO";
+        }
+        if (v.sunat() != null && v.sunat().estado() == EstadoSunat.RECHAZADO) {
+            return "RECHAZADO POR SUNAT";
         }
         if (electronico && sunatProperties.entorno() == EntornoSunat.BETA) {
             return "PRUEBA - SIN VALIDEZ TRIBUTARIA";

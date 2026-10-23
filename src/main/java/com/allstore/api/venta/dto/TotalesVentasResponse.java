@@ -6,8 +6,9 @@ import java.math.BigDecimal;
 import java.util.Map;
 
 /**
- * Totales de las ventas que cumplen los filtros. Solo cuenta lo vigente: no los anulados ni las
- * notas de venta ya convertidas (cuenta la boleta o factura que las reemplazó).
+ * Totales de las ventas que cumplen los filtros. Solo cuenta lo vigente: no los anulados, ni las
+ * notas de venta ya convertidas, ni los rechazados por SUNAT ya reemitidos (cuenta el comprobante
+ * que los reemplazó).
  *
  * @param totalVentas      notas de venta, boletas y facturas
  * @param totalNeto        ventas − notas de crédito + notas de débito

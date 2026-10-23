@@ -101,16 +101,20 @@ public class RegistroVentasService {
      */
     private Registro registro(Comprobante c, EstadoSunat estadoSunat, List<String> advertencias, List<String> pendientes) {
         Situacion situacion;
-        if (c.getEstado() == EstadoComprobante.ANULADO) {
+        if (estadoSunat == EstadoSunat.RECHAZADO) {
+            // Para SUNAT no existe: no hubo baja que esperar. Solo falta algo si sigue sin reemplazo ni anulación.
+            situacion = Situacion.RECHAZADO_SUNAT;
+            if (c.getEstado() == EstadoComprobante.EMITIDO) {
+                advertencias.add("SUNAT rechazó " + c.getNumeroImpreso() + ": se informa en 0.00 y esa venta necesita "
+                        + "un comprobante válido (reemítelo o anúlalo)");
+            }
+        } else if (c.getEstado() == EstadoComprobante.ANULADO) {
             situacion = Situacion.ANULADO;
             BajaSunatInfo baja = envioSunatService.infoBaja(c);
             if (baja == null || (baja.estado() != EstadoSunat.ACEPTADO && baja.estado() != EstadoSunat.OBSERVADO)) {
                 advertencias.add(c.getNumeroImpreso() + " está anulado pero SUNAT aún no acepta su baja ("
                         + (baja == null ? "sin baja" : baja.numero() + " " + baja.estado()) + "): para SUNAT sigue vigente");
             }
-        } else if (estadoSunat == EstadoSunat.RECHAZADO) {
-            situacion = Situacion.RECHAZADO_SUNAT;
-            advertencias.add("SUNAT rechazó " + c.getNumeroImpreso() + ": se informa en 0.00 y esa venta necesita un comprobante válido");
         } else if (estadoSunat == EstadoSunat.ACEPTADO || estadoSunat == EstadoSunat.OBSERVADO) {
             situacion = Situacion.ACEPTADO;
         } else {

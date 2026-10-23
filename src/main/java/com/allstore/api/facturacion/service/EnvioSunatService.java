@@ -196,7 +196,7 @@ public class EnvioSunatService {
             case ACEPTADO, OBSERVADO -> throw new BusinessException("SUNAT ya aceptó " + envio.getDocumento());
             case RECHAZADO -> throw new BusinessException("SUNAT rechazó " + envio.getDocumento()
                     + ": no se puede reenviar con el mismo número"
-                    + (envio.getComprobante() != null ? "; emite un comprobante nuevo" : ""));
+                    + (envio.getComprobante() != null ? "; reemítelo con otro número o anúlalo" : ""));
             case PENDIENTE, EN_PROCESO, ERROR -> {
             }
         }

@@ -57,6 +57,9 @@ public interface ComprobanteRepository extends JpaRepository<Comprobante, Long>,
     /** Para el enlace público de descarga. */
     Optional<Comprobante> findByCodigoConsulta(UUID codigoConsulta);
 
+    /** El comprobante emitido en lugar de uno que SUNAT rechazó. */
+    Optional<Comprobante> findByReemplazaAId(Long rechazadoId);
+
     /** El comprobante que se emitió a partir de otro (ej. la boleta de una nota de venta). */
     Optional<Comprobante> findFirstByComprobanteOrigenIdOrderByIdDesc(Long comprobanteOrigenId);
 

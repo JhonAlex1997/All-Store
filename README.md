@@ -140,6 +140,25 @@ mitad por Yape suma completa en `totalVentas`, pero en `cobradoPorMetodo.YAPE` s
   manual (`porMayorManual`) con el usuario que hizo la venta.
 - El ticket y el A4 dicen "Precio: Por mayor". Al convertir una nota de venta se conserva.
 
+## Comprobantes rechazados por SUNAT
+
+Un comprobante **rechazado** (CDR con código 2000-3999) no tiene validez y su número ya no se
+puede usar: no se reenvía, no se da de baja ni admite notas. Hay dos salidas:
+
+- **Reemitir** (`POST /api/ventas/{id}/reemitir`): el cliente se queda con la mercadería. Sale un
+  comprobante nuevo con el siguiente número, con las mismas prendas, precios y pagos, sin volver a
+  mover stock ni caja; el rechazado queda `REEMPLAZADO` y cada uno apunta al otro (`reemplazaA`,
+  `reemplazadoPor`). El cuerpo es opcional: una boleta o factura puede cambiar de cliente
+  (`clienteId`, también el mismo con sus datos ya corregidos) o de tipo (`tipoComprobante` y
+  `serieId`), ej. una factura rechazada por el RUC del cliente que pasa a boleta. Una nota se
+  reemite con su misma serie y cliente.
+- **Anular** (`POST /api/ventas/{id}/anular`, solo ADMIN): se deshace la venta solo en el sistema
+  (vuelve el stock y se devuelve el dinero); ante SUNAT no hay nada que dar de baja.
+
+Las **excepciones** (códigos 0100-1999: SUNAT no registró el documento) no son rechazo: se
+reintentan con el mismo número, solas o desde el panel de SUNAT. El PDF de un rechazado lleva la
+marca "RECHAZADO POR SUNAT" y no se entrega al cliente.
+
 ## Notas de crédito
 
 - Sobre una boleta o factura vigente, con serie que empieza con su misma letra (BC01 para

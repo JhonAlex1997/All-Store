@@ -10,12 +10,14 @@ import com.allstore.api.empresa.entity.Empresa;
 import com.allstore.api.empresa.entity.Serie;
 import com.allstore.api.empresa.entity.TipoComprobante;
 import com.allstore.api.empresa.service.EmpresaService;
+import com.allstore.api.facturacion.dto.SunatInfo;
 import com.allstore.api.inventario.entity.MotivoMovimiento;
 import com.allstore.api.inventario.entity.MovimientoInventario;
 import com.allstore.api.inventario.service.InventarioService;
 import com.allstore.api.producto.entity.ProductoVariante;
 import com.allstore.api.producto.service.ProductoService;
 import com.allstore.api.venta.dto.ConvertirVentaRequest;
+import com.allstore.api.venta.dto.ReemitirRequest;
 import com.allstore.api.venta.dto.VentaItemRequest;
 import com.allstore.api.venta.dto.VentaRequest;
 import com.allstore.api.venta.dto.VentaResponse;
@@ -142,6 +144,101 @@ public class VentaService {
         return emision.respuesta(nuevo, null, List.of());
     }
 
+    /**
+     * Comprobante nuevo en lugar de uno que SUNAT rechazó: el rechazado no tiene validez y su
+     * número ya no se puede usar. Es la misma venta: copia prendas, precios y pagos sin volver a
+     * mover stock ni caja (siguen siendo los del rechazado, que queda REEMPLAZADO). Una boleta o
+     * factura puede cambiar de cliente o de tipo, que suele ser el motivo del rechazo.
+     */
+    @Transactional
+    public VentaResponse reemitir(Long id, ReemitirRequest request) {
+        Comprobante rechazado = emision.obtener(id);
+        String numero = rechazado.getNumeroImpreso();
+        TipoComprobante tipoOriginal = rechazado.getTipoComprobante();
+        if (!tipoOriginal.isElectronico()) {
+            throw new BusinessException("Solo se reemite una boleta, factura o nota que SUNAT rechazó; "
+                    + numero + " es un documento interno");
+        }
+        exigirEmitido(rechazado);
+        exigirRechazado(rechazado);
+        ReemitirRequest datos = request != null ? request : ReemitirRequest.SIN_CAMBIOS;
+        boolean esNota = tipoOriginal == TipoComprobante.NOTA_CREDITO || tipoOriginal == TipoComprobante.NOTA_DEBITO;
+
+        Comprobante nuevo = new Comprobante();
+        Serie serie;
+        if (esNota) {
+            if (!datos.sinCambios()) {
+                throw new BusinessException("Una nota se reemite con su misma serie y el cliente del comprobante que modifica");
+            }
+            Comprobante modificado = rechazado.getComprobanteOrigen();
+            if (modificado.getEstado() != EstadoComprobante.EMITIDO) {
+                throw new BusinessException("El comprobante que modifica la nota, " + modificado.getNumeroImpreso()
+                        + ", ya no está vigente");
+            }
+            emision.exigirNoRechazado(modificado);
+            nuevo.setTipoComprobante(tipoOriginal);
+            serie = emision.serieParaEmitir(rechazado.getSerieRef().getId(), tipoOriginal);
+            nuevo.copiarClienteDe(rechazado);
+            nuevo.setMotivoNota(rechazado.getMotivoNota());
+            nuevo.setSustento(rechazado.getSustento());
+        } else {
+            TipoComprobante tipo = datos.tipoComprobante() != null ? datos.tipoComprobante() : tipoOriginal;
+            if (tipo != TipoComprobante.BOLETA && tipo != TipoComprobante.FACTURA) {
+                throw new BusinessException("Una venta se reemite como BOLETA o FACTURA");
+            }
+            if (datos.serieId() == null && tipo != tipoOriginal) {
+                throw new BusinessException("Indica la serie de " + tipo.getDescripcion().toLowerCase() + " para reemitir "
+                        + numero);
+            }
+            serie = emision.serieParaEmitir(datos.serieId() != null ? datos.serieId() : rechazado.getSerieRef().getId(), tipo);
+            if (!serie.getEstablecimiento().getId().equals(rechazado.getEstablecimiento().getId())) {
+                throw new BusinessException("La serie " + serie.getCodigo() + " es de otro establecimiento; usa una de "
+                        + rechazado.getEstablecimiento().getNombre() + ", donde se hizo la venta");
+            }
+            Cliente cliente = clienteParaVenta(datos.clienteId() != null ? datos.clienteId() : rechazado.getCliente().getId());
+            validarCliente(tipo, cliente, rechazado.getTotal());
+            List<Comprobante> notas = comprobanteRepository.notasVigentesDe(id);
+            if (!notas.isEmpty()) {
+                throw new BusinessException(numero + " tiene notas vigentes (" + String.join(", ",
+                        notas.stream().map(Comprobante::getNumeroImpreso).toList()) + "); anúlalas primero");
+            }
+            nuevo.setTipoComprobante(tipo);
+            nuevo.asignarCliente(cliente);
+        }
+        nuevo.setSerieRef(serie);
+        nuevo.setEstablecimiento(rechazado.getEstablecimiento());
+        nuevo.setComprobanteOrigen(rechazado.getComprobanteOrigen());
+        nuevo.setReemplazaA(rechazado);
+        nuevo.setObservacion(rechazado.getObservacion());
+        nuevo.setPorMayor(rechazado.isPorMayor());
+        nuevo.setPorMayorManual(rechazado.isPorMayorManual());
+        rechazado.getDetalles().forEach(d -> nuevo.agregarDetalle(d.copiar()));
+        rechazado.getPagos().forEach(p -> nuevo.agregarPago(p.copiar()));
+        nuevo.recalcularTotales();
+        emision.emitir(nuevo, serie);
+        rechazado.setEstado(EstadoComprobante.REEMPLAZADO);
+        return emision.respuesta(nuevo, null, List.of());
+    }
+
+    /** Solo lo que SUNAT rechazó pierde su número; lo demás se reenvía o se corrige con una nota. */
+    private void exigirRechazado(Comprobante comprobante) {
+        String numero = comprobante.getNumeroImpreso();
+        SunatInfo sunat = emision.sunat(comprobante);
+        if (sunat == null) {
+            throw new BusinessException(numero + " no tiene envío a SUNAT");
+        }
+        switch (sunat.estado()) {
+            case RECHAZADO -> {
+            }
+            case ACEPTADO, OBSERVADO -> throw new BusinessException("SUNAT aceptó " + numero
+                    + ": es válido. Para corregirlo usa una nota de crédito o anúlalo");
+            case PENDIENTE, EN_PROCESO -> throw new BusinessException("SUNAT aún no responde por " + numero
+                    + ": espera su respuesta o envíalo ahora desde el panel de SUNAT");
+            case ERROR -> throw new BusinessException("No se pudo enviar " + numero + " a SUNAT; reenvíalo desde el "
+                    + "panel de SUNAT, con el mismo número (SUNAT no lo registró)");
+        }
+    }
+
     // ---------- Consultar ----------
 
     /**
@@ -250,6 +347,8 @@ public class VentaService {
             case ANULADO -> throw new BusinessException("El comprobante " + comprobante.getNumeroImpreso() + " ya está anulado");
             case CONVERTIDO -> throw new BusinessException("La nota de venta " + comprobante.getNumeroImpreso()
                     + " ya se convirtió en boleta o factura; es ese comprobante el que se debe corregir");
+            case REEMPLAZADO -> throw new BusinessException("SUNAT rechazó " + comprobante.getNumeroImpreso()
+                    + " y ya se reemitió con otro número; es ese comprobante el que se debe corregir");
             case EMITIDO -> {
             }
         }

@@ -217,6 +217,8 @@ public class EntregaService {
             case ANULADO -> throw new BusinessException(c.getNumeroImpreso() + " está anulado");
             case CONVERTIDO -> throw new BusinessException("La nota de venta " + c.getNumeroImpreso()
                     + " ya se convirtió en boleta o factura; envía ese comprobante");
+            case REEMPLAZADO -> throw new BusinessException("SUNAT rechazó " + c.getNumeroImpreso()
+                    + " y se reemitió con otro número; envía ese comprobante");
             case EMITIDO -> {
             }
         }

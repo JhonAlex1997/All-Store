@@ -8,6 +8,8 @@ import com.allstore.api.empresa.entity.Serie;
 import com.allstore.api.empresa.entity.TipoComprobante;
 import com.allstore.api.empresa.service.SerieService;
 import com.allstore.api.facturacion.dto.BajaSunatInfo;
+import com.allstore.api.facturacion.dto.SunatInfo;
+import com.allstore.api.facturacion.entity.EstadoSunat;
 import com.allstore.api.facturacion.service.EnvioSunatService;
 import com.allstore.api.inventario.entity.MovimientoInventario;
 import com.allstore.api.venta.dto.PagoRequest;
@@ -79,8 +81,30 @@ public class EmisionComprobante {
                                    List<String> notasDebito) {
         BajaSunatInfo baja = comprobante.getEstado() == EstadoComprobante.ANULADO
                 && comprobante.getTipoComprobante().isElectronico() ? envioSunatService.infoBaja(comprobante) : null;
-        return VentaResponse.from(comprobante, convertidoEn, notasCredito, notasDebito,
+        String reemplazadoPor = comprobante.getEstado() == EstadoComprobante.REEMPLAZADO
+                ? comprobanteRepository.findByReemplazaAId(comprobante.getId()).map(Comprobante::getNumeroImpreso).orElse(null)
+                : null;
+        return VentaResponse.from(comprobante, convertidoEn, reemplazadoPor, notasCredito, notasDebito,
                 envioSunatService.info(comprobante), baja);
+    }
+
+    /** Estado del envío a SUNAT; null si no es electrónico. */
+    public SunatInfo sunat(Comprobante comprobante) {
+        return envioSunatService.info(comprobante);
+    }
+
+    /** SUNAT rechazó el comprobante: no tiene validez (se reemite con otro número o se anula). */
+    public boolean rechazadoPorSunat(Comprobante comprobante) {
+        SunatInfo sunat = sunat(comprobante);
+        return sunat != null && sunat.estado() == EstadoSunat.RECHAZADO;
+    }
+
+    /** Una nota no puede modificar un comprobante que para SUNAT no existe: también la rechazaría. */
+    public void exigirNoRechazado(Comprobante origen) {
+        if (rechazadoPorSunat(origen)) {
+            throw new BusinessException("SUNAT rechazó " + origen.getNumeroImpreso()
+                    + ": no tiene validez y no admite notas. Reemítelo con otro número o anúlalo");
+        }
     }
 
     /** Los pagos deben sumar exactamente el total. Solo el efectivo admite vuelto. */

@@ -21,6 +21,8 @@ import java.util.List;
  * @param comprobanteOrigen número del documento del que proviene (la nota de venta convertida, o
  *                          el comprobante que modifica una nota de crédito)
  * @param convertidoEn      si es una nota de venta convertida, el número de la boleta o factura
+ * @param reemplazaA        si se emitió en lugar de uno que SUNAT rechazó, el número de ese
+ * @param reemplazadoPor    si SUNAT lo rechazó y se reemitió, el número del comprobante nuevo
  * @param notasCredito      si es una boleta o factura, las notas de crédito vigentes emitidas sobre ella
  * @param notasDebito       si es una boleta o factura, las notas de débito vigentes emitidas sobre ella
  * @param motivoNota        solo notas de crédito: motivo del Catálogo 09
@@ -54,6 +56,8 @@ public record VentaResponse(
         String vendedor,
         String comprobanteOrigen,
         String convertidoEn,
+        String reemplazaA,
+        String reemplazadoPor,
         List<String> notasCredito,
         List<String> notasDebito,
         MotivoNotaCredito motivoNota,
@@ -90,7 +94,7 @@ public record VentaResponse(
         }
     }
 
-    public static VentaResponse from(Comprobante c, String convertidoEn, List<String> notasCredito,
+    public static VentaResponse from(Comprobante c, String convertidoEn, String reemplazadoPor, List<String> notasCredito,
                                      List<String> notasDebito, SunatInfo sunat, BajaSunatInfo bajaSunat) {
         return new VentaResponse(
                 c.getId(),
@@ -116,6 +120,8 @@ public record VentaResponse(
                 c.getCreatedBy(),
                 c.getComprobanteOrigen() == null ? null : c.getComprobanteOrigen().getNumeroImpreso(),
                 convertidoEn,
+                c.getReemplazaA() == null ? null : c.getReemplazaA().getNumeroImpreso(),
+                reemplazadoPor,
                 notasCredito,
                 notasDebito,
                 c.getMotivoNotaCredito(),

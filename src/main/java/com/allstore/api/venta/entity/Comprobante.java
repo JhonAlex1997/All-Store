@@ -18,6 +18,7 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
+import jakarta.persistence.OneToOne;
 import jakarta.persistence.OrderBy;
 import jakarta.persistence.Table;
 import lombok.Getter;
@@ -105,6 +106,11 @@ public class Comprobante extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "comprobante_origen_id", updatable = false)
     private Comprobante comprobanteOrigen;
+
+    /** Comprobante rechazado por SUNAT al que este reemplaza (misma venta, con otro número). */
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "reemplaza_id", updatable = false)
+    private Comprobante reemplazaA;
 
     @Column(name = "motivo_anulacion", length = 250)
     private String motivoAnulacion;

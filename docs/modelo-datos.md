@@ -1,6 +1,6 @@
 # Modelo de datos de AllStore
 
-23 tablas y 31 llaves foráneas (versión de base de datos V13). Todas las tablas, salvo las
+23 tablas y 32 llaves foráneas (versión de base de datos V14). Todas las tablas, salvo las
 de líneas (`comprobante_detalle`, `comprobante_pago`, `guia_remision_detalle`, `resumen_sunat_detalle`), tienen además `created_at`, `updated_at`,
 `created_by` y `updated_by` (auditoría), que no se repiten en los diagramas.
 
@@ -103,6 +103,7 @@ erDiagram
   ESTABLECIMIENTO ||--o{ COMPROBANTE : "emite"
   CLIENTE ||--o{ COMPROBANTE : "recibe"
   COMPROBANTE |o--o{ COMPROBANTE : "origen"
+  COMPROBANTE |o--o| COMPROBANTE : "reemplaza"
   COMPROBANTE ||--|{ COMPROBANTE_DETALLE : "lineas"
   PRODUCTO_VARIANTE |o--o{ COMPROBANTE_DETALLE : "vendida"
   COMPROBANTE ||--|{ COMPROBANTE_PAGO : "pagos"
@@ -191,6 +192,7 @@ erDiagram
     uuid codigo_consulta
     boolean por_mayor
     boolean por_mayor_manual
+    bigint reemplaza_id FK
   }
   COMPROBANTE_DETALLE {
     bigint id PK
@@ -258,6 +260,7 @@ erDiagram
   SERIE ||--o{ COMPROBANTE : "da numero"
   ESTABLECIMIENTO ||--o{ COMPROBANTE : "emite"
   COMPROBANTE |o--o{ COMPROBANTE : "origen"
+  COMPROBANTE |o--o| COMPROBANTE : "reemplaza"
   COMPROBANTE ||--o| ENVIO_SUNAT : "se envia"
   RESUMEN_SUNAT ||--|{ RESUMEN_SUNAT_DETALLE : "incluye"
   COMPROBANTE ||--o{ RESUMEN_SUNAT_DETALLE : "se da de baja"
@@ -301,6 +304,7 @@ erDiagram
     uuid codigo_consulta
     boolean por_mayor
     boolean por_mayor_manual
+    bigint reemplaza_id FK
   }
   RESUMEN_SUNAT {
     bigint id PK

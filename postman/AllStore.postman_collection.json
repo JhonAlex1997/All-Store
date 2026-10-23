@@ -2014,6 +2014,40 @@
           ]
         },
         {
+          "name": "Reemitir un comprobante que SUNAT no rechazó (debe dar 400)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/ventas/{{ventaId}}/reemitir",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tipoComprobante\": \"BOLETA\",\n  \"serieId\": {{serieBoletaId}}\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Solo un comprobante RECHAZADO por SUNAT se reemite: sale uno nuevo con el siguiente número para la misma venta (sin mover stock ni caja) y el rechazado queda REEMPLAZADO. El cuerpo es opcional: tipoComprobante (factura ↔ boleta), serieId y clienteId (otro cliente o el mismo ya corregido)."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ]
+        },
+        {
           "name": "Envíos pendientes",
           "request": {
             "method": "GET",

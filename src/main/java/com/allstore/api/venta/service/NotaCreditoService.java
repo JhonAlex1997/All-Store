@@ -49,6 +49,7 @@ public class NotaCreditoService {
     public VentaResponse emitir(Long comprobanteId, NotaCreditoRequest request) {
         Comprobante origen = emision.obtener(comprobanteId);
         validarOrigen(origen);
+        emision.exigirNoRechazado(origen);
         Serie serie = emision.serieParaEmitir(request.serieId(), TipoComprobante.NOTA_CREDITO);
         // SUNAT: la serie de la nota empieza con la misma letra que el comprobante que modifica.
         if (serie.getCodigo().charAt(0) != origen.getSerie().charAt(0)) {

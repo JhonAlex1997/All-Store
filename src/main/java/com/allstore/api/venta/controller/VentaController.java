@@ -8,6 +8,7 @@ import com.allstore.api.venta.dto.ConvertirVentaRequest;
 import com.allstore.api.venta.dto.FiltroVentas;
 import com.allstore.api.venta.dto.NotaCreditoRequest;
 import com.allstore.api.venta.dto.NotaDebitoRequest;
+import com.allstore.api.venta.dto.ReemitirRequest;
 import com.allstore.api.venta.dto.TotalesVentasResponse;
 import com.allstore.api.venta.dto.VentaRequest;
 import com.allstore.api.venta.dto.VentaResponse;
@@ -95,6 +96,17 @@ public class VentaController {
     @ResponseStatus(HttpStatus.CREATED)
     public VentaResponse convertir(@PathVariable Long id, @Valid @RequestBody ConvertirVentaRequest request) {
         return ventaService.convertir(id, request);
+    }
+
+    /**
+     * Comprobante nuevo (siguiente número) en lugar de uno que SUNAT rechazó, para la misma venta.
+     * El cuerpo es opcional; ej. una factura rechazada por el RUC del cliente que pasa a boleta:
+     * {"tipoComprobante": "BOLETA", "serieId": 2, "clienteId": 8}
+     */
+    @PostMapping("/{id}/reemitir")
+    @ResponseStatus(HttpStatus.CREATED)
+    public VentaResponse reemitir(@PathVariable Long id, @RequestBody(required = false) ReemitirRequest request) {
+        return ventaService.reemitir(id, request);
     }
 
     /**
