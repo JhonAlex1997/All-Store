@@ -12,6 +12,7 @@ import org.springframework.util.StringUtils;
  * @param habilitado       si el proceso en segundo plano envía los documentos pendientes
  * @param entorno          BETA (pruebas) o PRODUCCION
  * @param url              para usar otra dirección del servicio de comprobantes (vacía = la del entorno)
+ * @param urlConsulta      para usar otra dirección del servicio de consulta de constancias (vacía = la del entorno)
  * @param usuarioSol       usuario secundario SOL con permiso de envío (sin el RUC delante)
  * @param claveSol         clave de ese usuario
  * @param certificadoRuta  archivo .p12/.pfx del certificado digital con el que se firma
@@ -25,6 +26,7 @@ public record SunatProperties(
         @DefaultValue("false") boolean habilitado,
         @DefaultValue("BETA") EntornoSunat entorno,
         String url,
+        String urlConsulta,
         String usuarioSol,
         String claveSol,
         String certificadoRuta,
@@ -47,6 +49,15 @@ public record SunatProperties(
 
     public String urlEfectiva() {
         return StringUtils.hasText(url) ? url : entorno.getUrlFacturacion();
+    }
+
+    public String urlConsultaEfectiva() {
+        return StringUtils.hasText(urlConsulta) ? urlConsulta : entorno.getUrlConsulta();
+    }
+
+    /** En beta SUNAT no ofrece el servicio de consulta de constancias. */
+    public boolean consultaDisponible() {
+        return StringUtils.hasText(urlConsultaEfectiva());
     }
 
     public boolean tieneCertificado() {

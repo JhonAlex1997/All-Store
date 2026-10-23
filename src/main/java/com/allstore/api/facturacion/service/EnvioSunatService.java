@@ -55,6 +55,8 @@ import java.util.stream.Collectors;
  *   <li>Comprobantes: SUNAT responde en el acto y queda ACEPTADO, OBSERVADO o RECHAZADO, con su
  *       constancia (CDR). Resúmenes (bajas) y guías de remisión: SUNAT entrega un ticket, el envío
  *       queda EN_PROCESO y el mismo proceso consulta el ticket hasta tener la constancia.</li>
+ *   <li>Si se pierde la respuesta de un envío que SUNAT sí registró, el reenvío responde 1033: en
+ *       vez de reenviar se pide la constancia al servicio de consulta (ver recuperarConstancia).</li>
  * </ol>
  * La venta nunca espera a SUNAT ni falla por SUNAT.
  */
@@ -70,6 +72,8 @@ public class EnvioSunatService {
     private static final int SEGUNDOS_PRIMERA_CONSULTA = 20;
     /** Sin acceso configurado a la API de guías, se vuelve a revisar cada hora (sin gastar intentos). */
     private static final int MINUTOS_SIN_CONFIGURACION = 60;
+    /** "El comprobante fue registrado previamente con otros datos": SUNAT ya tiene ese número. */
+    private static final String YA_REGISTRADO = "1033";
 
     private final EnvioSunatRepository envioRepository;
     private final ResumenSunatRepository resumenRepository;
@@ -207,6 +211,15 @@ public class EnvioSunatService {
             }
             envio.setEstado(EstadoSunat.EN_PROCESO);
         } else {
+            if (regenerarXml && yaRegistrado(envio)) {
+                throw new BusinessException("SUNAT ya tiene registrado " + envio.getDocumento()
+                        + ": no se regenera su XML (cambiaría el hash); se recupera su constancia al enviarlo");
+            }
+            if (regenerarXml && ultimoEnvioSinRespuesta(envio)) {
+                // SUNAT pudo haberlo recibido: con otro XML ya no coincidiría con lo que SUNAT tiene.
+                throw new BusinessException("El último envío de " + envio.getDocumento() + " quedó sin respuesta y pudo "
+                        + "haber llegado a SUNAT: reenvíalo sin regenerar el XML (si SUNAT ya lo tiene, se recupera su constancia)");
+            }
             envio.setEstado(EstadoSunat.PENDIENTE);
             if (regenerarXml) {
                 envio.setXmlFirmado(null);
@@ -240,6 +253,10 @@ public class EnvioSunatService {
             return;
         }
         envio.setIntentos(envio.getIntentos() + 1);
+        if (yaRegistrado(envio)) {
+            recuperarConstancia(envio);
+            return;
+        }
         envio.setFechaEnvio(ahora());
         byte[] xml = envio.getXmlFirmado().getBytes(StandardCharsets.UTF_8);
         try {
@@ -316,10 +333,91 @@ public class EnvioSunatService {
             envio.setEstado(EstadoSunat.RECHAZADO);
             envio.setProximoIntento(null);
             log.warn("SUNAT rechazó {}: {} {}", envio.getNombreArchivo(), respuesta.codigo(), respuesta.descripcion());
+        } else if (yaRegistrado(envio)) {
+            log.warn("SUNAT ya tiene registrado {} ({}): se pide su constancia", envio.getNombreArchivo(), respuesta.codigo());
+            recuperarConstancia(envio);
         } else {
             log.warn("SUNAT devolvió error para {}: {} {}", envio.getNombreArchivo(), respuesta.codigo(), respuesta.descripcion());
             programarReintento(envio);
         }
+    }
+
+    private static boolean ultimoEnvioSinRespuesta(EnvioSunat envio) {
+        return envio.getFechaEnvio() != null
+                && (envio.getFechaRespuesta() == null || envio.getFechaRespuesta().isBefore(envio.getFechaEnvio()));
+    }
+
+    /** SUNAT respondió 1033 a este comprobante: reenviarlo no sirve nunca, hay que pedir su constancia. */
+    private static boolean yaRegistrado(EnvioSunat envio) {
+        return envio.getComprobante() != null && YA_REGISTRADO.equals(envio.getCodigoRespuesta());
+    }
+
+    /**
+     * El comprobante ya está en SUNAT, típicamente porque se perdió la respuesta del primer envío
+     * (corte de internet, tiempo de espera) y el reintento respondió 1033. Se pide su constancia al
+     * servicio de consulta y se aplica como si hubiera llegado con el envío: queda ACEPTADO (o
+     * RECHAZADO, si eso dice la constancia). Si no se puede, se reintenta la consulta (no el envío).
+     *
+     * <p>Antes se comprueba que la constancia sea de este comprobante (mismo número y mismo
+     * cliente): si ese número lo usó otro documento (ej. una base restaurada de un respaldo o la
+     * misma serie usada en otro sistema), este nunca será válido con ese número y queda RECHAZADO,
+     * para reemitirlo con otro o anularlo.
+     */
+    private void recuperarConstancia(EnvioSunat envio) {
+        String yaRegistrado = "SUNAT ya tiene registrado " + envio.getDocumento() + " (1033)";
+        if (!properties.consultaDisponible()) {
+            envio.setEstado(EstadoSunat.ERROR);
+            envio.setProximoIntento(null);
+            envio.setDescripcionRespuesta(yaRegistrado + ", pero en " + properties.entorno() + " no hay servicio para "
+                    + "recuperar su constancia: revisa su estado en la consulta de comprobantes de SUNAT");
+            return;
+        }
+        Comprobante comprobante = envio.getComprobante();
+        try {
+            ServicioEnvioSunat.Respuesta consulta = servicio.consultarCdr(envio.getNombreArchivo().substring(0, 11),
+                    comprobante.getTipoComprobante().getCodigo(), comprobante.getSerie(), comprobante.getCorrelativo());
+            if (consulta.cdrRecibido()) {
+                String diferencia = diferenciaCon(comprobante, consulta.cdr());
+                if (diferencia != null) {
+                    envio.setEstado(EstadoSunat.RECHAZADO);
+                    envio.setProximoIntento(null);
+                    envio.setDescripcionRespuesta(recortar("SUNAT ya tiene el número " + comprobante.getNumeroImpreso()
+                            + " registrado para otro documento (" + diferencia + "): este no puede usarlo. Reemítelo con "
+                            + "otro número o anúlalo", 1000));
+                    log.warn("La constancia de {} es de otro documento: {}", envio.getNombreArchivo(), diferencia);
+                    return;
+                }
+                aplicar(envio, consulta);
+                envio.setDescripcionRespuesta(recortar(envio.getDescripcionRespuesta()
+                        + " (constancia recuperada de SUNAT: el primer envío sí había llegado)", 1000));
+                return;
+            }
+            envio.setDescripcionRespuesta(recortar(yaRegistrado + ", pero su consulta no entrega la constancia: "
+                    + consulta.codigo() + " " + consulta.descripcion(), 1000));
+        } catch (IOException e) {
+            log.warn("Sin comunicación con SUNAT para recuperar la constancia de {}: {}", envio.getNombreArchivo(), e.getMessage());
+            envio.setDescripcionRespuesta(yaRegistrado + "; no se pudo obtener su constancia: " + e.getMessage());
+        }
+        programarReintento(envio);
+    }
+
+    /**
+     * Qué no cuadra entre la constancia y el comprobante; null si es el mismo. Del cliente se compara
+     * solo el número: SUNAT no siempre repite el tipo de documento tal como se envió.
+     */
+    private static String diferenciaCon(Comprobante comprobante, byte[] cdr) throws IOException {
+        CdrSunat.Identificacion constancia = CdrSunat.identificacion(cdr);
+        String numero = comprobante.getSerie() + "-" + comprobante.getCorrelativo();
+        if (constancia.referencia() != null && !constancia.referencia().equals(numero)) {
+            return "la constancia es de " + constancia.referencia();
+        }
+        if (constancia.receptor() != null) {
+            String documento = constancia.receptor().substring(constancia.receptor().lastIndexOf('-') + 1);
+            if (!documento.equals(comprobante.getClienteNumeroDocumento())) {
+                return "es del cliente " + documento + ", no de " + comprobante.getClienteNumeroDocumento();
+            }
+        }
+        return null;
     }
 
     /** Espera creciente entre intentos (1, 2, 4, 8, 16, 32 y 60 minutos); al máximo, ERROR. */

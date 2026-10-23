@@ -55,6 +55,26 @@ final class CdrSunat {
     }
 
     /**
+     * Cómo identifica la constancia al documento que responde.
+     *
+     * @param referencia serie y número sin ceros a la izquierda (ej. B001-1)
+     * @param receptor   documento del cliente como lo escribe SUNAT ("tipo-numero"); null si no viene
+     */
+    record Identificacion(String referencia, String receptor) {
+    }
+
+    static Identificacion identificacion(byte[] cdrZip) throws IOException {
+        Document cdr = parsear(new String(descomprimir(cdrZip), StandardCharsets.UTF_8));
+        String receptor = null;
+        NodeList receptores = cdr.getElementsByTagNameNS(XmlUbl.NS_CAC, "RecipientParty");
+        if (receptores.getLength() > 0) {
+            NodeList ids = ((Element) receptores.item(0)).getElementsByTagNameNS(XmlUbl.NS_CBC, "ID");
+            receptor = ids.getLength() == 0 ? null : ids.item(0).getTextContent().trim();
+        }
+        return new Identificacion(textoDeRespuesta(cdr, "ReferenceID"), receptor);
+    }
+
+    /**
      * Enlace de consulta que SUNAT incluye en la constancia de la guía de remisión: es el
      * contenido del código QR de su representación impresa.
      */

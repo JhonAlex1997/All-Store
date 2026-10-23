@@ -60,7 +60,7 @@ class ClienteRestGreTest {
         servidor.createContext("/api/contribuyente/gem/comprobantes/" + ARCHIVO, this::envio);
         servidor.start();
         String base = "http://127.0.0.1:" + servidor.getAddress().getPort();
-        cliente = new ClienteRestGre(new SunatProperties(true, EntornoSunat.PRODUCCION, null, "MODDATOS", "moddatos", null,
+        cliente = new ClienteRestGre(new SunatProperties(true, EntornoSunat.PRODUCCION, null, null, "MODDATOS", "moddatos", null,
                 null, 30000, 8, new SunatProperties.Gre("mi-cliente", "secreto", base + "/seguridad", base + "/api")), json);
     }
 

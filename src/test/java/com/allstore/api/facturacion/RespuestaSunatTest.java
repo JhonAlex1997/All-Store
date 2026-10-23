@@ -19,7 +19,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 class RespuestaSunatTest {
 
     private final ClienteSoapSunat cliente = new ClienteSoapSunat(
-            new SunatProperties(true, EntornoSunat.BETA, null, "MODDATOS", "moddatos", null, null, 30000, 8, null));
+            new SunatProperties(true, EntornoSunat.BETA, null, null, "MODDATOS", "moddatos", null, null, 30000, 8, null));
 
     @Test
     void cdrAceptadoConObservaciones() throws Exception {
@@ -77,7 +77,41 @@ class RespuestaSunatTest {
         assertThat(estado.respuesta().descripcion()).contains("RA-20261022-1");
     }
 
+    @Test
+    void consultaDeConstanciaQueLaEntrega() throws Exception {
+        String cdr = Base64.getEncoder().encodeToString(zipCdr("0", "La Factura numero F001-7, ha sido aceptada", ""));
+
+        ServicioEnvioSunat.Respuesta r = interpretarConsulta(respuestaConsulta("0004", "La constancia existe", cdr));
+
+        assertThat(r.cdrRecibido()).isTrue();
+        assertThat(r.codigoNumerico()).isZero();
+        assertThat(r.descripcion()).contains("F001-7");
+    }
+
+    @Test
+    void consultaDeConstanciaSinElla() throws Exception {
+        ServicioEnvioSunat.Respuesta r = interpretarConsulta(
+                respuestaConsulta("0011", "El comprobante de pago electronico no existe", null));
+
+        assertThat(r.cdrRecibido()).isFalse();
+        assertThat(r.codigo()).isEqualTo("0011");
+        assertThat(r.descripcion()).contains("no existe");
+    }
+
     // ---------- Ayudas ----------
+
+    private ServicioEnvioSunat.Respuesta interpretarConsulta(String cuerpo) throws Exception {
+        Method m = ClienteSoapSunat.class.getDeclaredMethod("interpretarConsulta", String.class);
+        m.setAccessible(true);
+        return (ServicioEnvioSunat.Respuesta) m.invoke(cliente, cuerpo);
+    }
+
+    /** Respuesta SOAP de getStatusCdr (billConsultService), con el esquema que publica SUNAT. */
+    private static String respuestaConsulta(String codigo, String mensaje, String contenido) {
+        return """
+                <S:Envelope xmlns:S="http://schemas.xmlsoap.org/soap/envelope/"><S:Body>                <ns2:getStatusCdrResponse xmlns:ns2="http://service.sunat.gob.pe"><statusCdr>%s                <statusCode>%s</statusCode><statusMessage>%s</statusMessage></statusCdr>                </ns2:getStatusCdrResponse></S:Body></S:Envelope>"""
+                .formatted(contenido == null ? "" : "<content>" + contenido + "</content>", codigo, mensaje);
+    }
 
     private ServicioEnvioSunat.Respuesta interpretar(String cuerpo) throws Exception {
         Method m = ClienteSoapSunat.class.getDeclaredMethod("interpretar", String.class);

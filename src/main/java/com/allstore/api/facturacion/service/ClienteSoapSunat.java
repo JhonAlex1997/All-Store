@@ -27,6 +27,8 @@ import java.util.regex.Pattern;
  *   <li>sendSummary (comunicación de baja, resumen diario): responde con un ticket.</li>
  *   <li>getStatus: estado del ticket; 98 = en proceso, 0 o 99 = terminado, con su CDR.</li>
  * </ul>
+ * Y por el servicio de consulta "billConsultService" (solo producción), getStatusCdr: la
+ * constancia de un comprobante ya registrado, por su RUC, tipo, serie y número.
  */
 @Component
 @RequiredArgsConstructor
@@ -39,12 +41,12 @@ public class ClienteSoapSunat implements ServicioEnvioSunat {
 
     @Override
     public Respuesta enviar(String nombreArchivo, byte[] xmlFirmado) throws IOException {
-        return interpretar(llamar("sendBill", nombreArchivo, operacionConArchivo("sendBill", nombreArchivo, xmlFirmado)));
+        return interpretar(llamar("sendBill", rucDe(nombreArchivo), operacionConArchivo("sendBill", nombreArchivo, xmlFirmado)));
     }
 
     @Override
     public Ticket enviarResumen(String nombreArchivo, byte[] xmlFirmado) throws IOException {
-        String cuerpo = llamar("sendSummary", nombreArchivo, operacionConArchivo("sendSummary", nombreArchivo, xmlFirmado));
+        String cuerpo = llamar("sendSummary", rucDe(nombreArchivo), operacionConArchivo("sendSummary", nombreArchivo, xmlFirmado));
         Document soap = CdrSunat.parsear(cuerpo);
         String ticket = texto(soap, "ticket");
         if (ticket != null && !ticket.isBlank()) {
@@ -56,7 +58,15 @@ public class ClienteSoapSunat implements ServicioEnvioSunat {
     @Override
     public EstadoTicket consultarTicket(String nombreArchivo, String ticket) throws IOException {
         String operacion = "<ser:getStatus><ticket>" + escapar(ticket) + "</ticket></ser:getStatus>";
-        return interpretarEstado(llamar("getStatus", nombreArchivo, operacion));
+        return interpretarEstado(llamar("getStatus", rucDe(nombreArchivo), operacion));
+    }
+
+    @Override
+    public Respuesta consultarCdr(String ruc, String tipoComprobante, String serie, long numero) throws IOException {
+        String operacion = ("<ser:getStatusCdr><rucComprobante>%s</rucComprobante><tipoComprobante>%s</tipoComprobante>"
+                + "<serieComprobante>%s</serieComprobante><numeroComprobante>%d</numeroComprobante></ser:getStatusCdr>")
+                .formatted(escapar(ruc), escapar(tipoComprobante), escapar(serie), numero);
+        return interpretarConsulta(llamar(properties.urlConsultaEfectiva(), "getStatusCdr", ruc, operacion));
     }
 
     private static String operacionConArchivo(String operacion, String nombreArchivo, byte[] xmlFirmado) throws IOException {
@@ -65,13 +75,17 @@ public class ClienteSoapSunat implements ServicioEnvioSunat {
                 .formatted(operacion, nombreArchivo, zip, operacion);
     }
 
+    private String llamar(String operacion, String ruc, String cuerpoOperacion) throws IOException {
+        return llamar(properties.urlEfectiva(), operacion, ruc, cuerpoOperacion);
+    }
+
     /** Llama a una operación del servicio y devuelve el cuerpo de la respuesta (con o sin excepción SOAP). */
-    private String llamar(String operacion, String nombreArchivo, String cuerpoOperacion) throws IOException {
-        HttpRequest peticion = HttpRequest.newBuilder(URI.create(properties.urlEfectiva()))
+    private String llamar(String url, String operacion, String ruc, String cuerpoOperacion) throws IOException {
+        HttpRequest peticion = HttpRequest.newBuilder(URI.create(url))
                 .timeout(Duration.ofSeconds(60))
                 .header("Content-Type", "text/xml; charset=utf-8")
                 .header("SOAPAction", "urn:" + operacion)
-                .POST(HttpRequest.BodyPublishers.ofString(sobre(nombreArchivo.substring(0, 11), cuerpoOperacion),
+                .POST(HttpRequest.BodyPublishers.ofString(sobre(ruc, cuerpoOperacion),
                         StandardCharsets.UTF_8))
                 .build();
         HttpResponse<String> respuesta;
@@ -128,6 +142,29 @@ public class ClienteSoapSunat implements ServicioEnvioSunat {
                     "SUNAT respondió el estado " + estado.trim() + " sin constancia", List.of(), null));
         }
         return EstadoTicket.terminado(leerCdr(contenido));
+    }
+
+    /**
+     * Respuesta de getStatusCdr: statusCode y statusMessage, y en content la constancia si SUNAT la
+     * tiene. Sin constancia se devuelve lo que dijo SUNAT (ej. que el comprobante no existe).
+     */
+    Respuesta interpretarConsulta(String cuerpo) throws IOException {
+        Document soap = CdrSunat.parsear(cuerpo);
+        String estado = texto(soap, "statusCode");
+        if (estado == null) {
+            return excepcion(soap, cuerpo);
+        }
+        String contenido = texto(soap, "content");
+        if (contenido == null || contenido.isBlank()) {
+            String mensaje = texto(soap, "statusMessage");
+            return new Respuesta(false, estado.trim(), mensaje == null ? "Sin constancia" : mensaje.trim(), List.of(), null);
+        }
+        return leerCdr(contenido);
+    }
+
+    /** El nombre del archivo empieza con el RUC del emisor (ej. 20000000001-01-F001-1). */
+    private static String rucDe(String nombreArchivo) {
+        return nombreArchivo.substring(0, 11);
     }
 
     /** Constancia (CDR): zip en base64 con el XML ApplicationResponse. */

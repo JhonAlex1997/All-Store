@@ -82,6 +82,17 @@ class FacturacionIntegrationTest extends TiendaDePrueba {
     }
 
     @Test
+    void yaRegistradoEnBetaQuedaEnErrorPorqueNoHayConsultaDeConstancias() throws Exception {
+        when(servicioEnvio.enviar(anyString(), any())).thenReturn(new ServicioEnvioSunat.Respuesta(false, "1033",
+                "El comprobante fue registrado previamente con otros datos", List.of(), null));
+
+        var envio = envioSunatService.enviarAhora(boleta().id(), false);
+
+        assertThat(envio.estado()).isEqualTo(EstadoSunat.ERROR);
+        assertThat(envio.descripcionRespuesta()).contains("ya tiene registrado", "en BETA no hay servicio");
+    }
+
+    @Test
     void sinComunicacionQuedaPendienteParaReintentar() throws Exception {
         when(servicioEnvio.enviar(anyString(), any())).thenThrow(new IOException("Connection refused"));
 

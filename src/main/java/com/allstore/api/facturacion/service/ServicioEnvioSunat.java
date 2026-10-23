@@ -30,6 +30,14 @@ public interface ServicioEnvioSunat {
     EstadoTicket consultarTicket(String nombreArchivo, String ticket) throws IOException;
 
     /**
+     * Constancia de un comprobante que SUNAT ya registró (servicio de consulta, getStatusCdr): para
+     * cuando se perdió la respuesta del envío y el reenvío responde 1033. Solo en producción.
+     *
+     * @return la constancia leída (cdrRecibido = true), o lo que respondió SUNAT si no la entrega
+     */
+    Respuesta consultarCdr(String ruc, String tipoComprobante, String serie, long numero) throws IOException;
+
+    /**
      * @param cdrRecibido true si SUNAT procesó el documento y devolvió su constancia (CDR);
      *                    false si respondió con una excepción (el documento no se registró)
      * @param codigo      0 = aceptado; 2000-3999 = rechazado; menor a 2000 = error en el envío

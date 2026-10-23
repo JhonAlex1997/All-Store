@@ -50,7 +50,7 @@ class XmlUblFirmaTest {
 
     private final GeneradorXmlUbl generador = new GeneradorXmlUbl();
     private final GeneradorResumenXml generadorResumen = new GeneradorResumenXml();
-    private final FirmadorXml firmador = new FirmadorXml(new SunatProperties(false, EntornoSunat.BETA, null, null, null,
+    private final FirmadorXml firmador = new FirmadorXml(new SunatProperties(false, EntornoSunat.BETA, null, null, null, null,
             "config/sunat/certificado-beta-prueba.p12", "prueba-beta", 30000, 8, null));
 
     @Test

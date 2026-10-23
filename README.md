@@ -159,6 +159,15 @@ Las **excepciones** (códigos 0100-1999: SUNAT no registró el documento) no son
 reintentan con el mismo número, solas o desde el panel de SUNAT. El PDF de un rechazado lleva la
 marca "RECHAZADO POR SUNAT" y no se entrega al cliente.
 
+**Respuesta perdida (1033).** Si SUNAT registró un comprobante pero su respuesta no llegó (corte de
+internet, tiempo de espera), el reintento responde 1033 ("registrado previamente"). Reenviarlo no
+lo arregla nunca: el sistema pide la constancia al servicio de consulta de SUNAT
+(`billConsultService`, solo en producción) y la aplica como si hubiera llegado con el envío.
+Antes comprueba que sea de este comprobante (mismo número y cliente); si ese número lo tiene otro
+documento (ej. una base restaurada de un respaldo), queda RECHAZADO para reemitirlo. En beta no
+existe ese servicio y queda en ERROR con la explicación. Para no llegar a ese caso, no se permite
+regenerar el XML de un envío que quedó sin respuesta: SUNAT pudo haberlo recibido.
+
 ## Notas de crédito
 
 - Sobre una boleta o factura vigente, con serie que empieza con su misma letra (BC01 para

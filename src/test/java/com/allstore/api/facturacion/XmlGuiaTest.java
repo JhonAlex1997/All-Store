@@ -46,7 +46,7 @@ class XmlGuiaTest {
     private static final String NS_CAC = "urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2";
 
     private final GeneradorGuiaXml generador = new GeneradorGuiaXml();
-    private final FirmadorXml firmador = new FirmadorXml(new SunatProperties(false, EntornoSunat.BETA, null, null, null,
+    private final FirmadorXml firmador = new FirmadorXml(new SunatProperties(false, EntornoSunat.BETA, null, null, null, null,
             "config/sunat/certificado-beta-prueba.p12", "prueba-beta", 30000, 8, null));
 
     @Test
