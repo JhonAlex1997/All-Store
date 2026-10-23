@@ -1,6 +1,6 @@
 # Modelo de datos de AllStore
 
-23 tablas y 32 llaves foráneas (versión de base de datos V15). Todas las tablas, salvo las
+23 tablas y 32 llaves foráneas (versión de base de datos V16). Todas las tablas, salvo las
 de líneas (`comprobante_detalle`, `comprobante_pago`, `guia_remision_detalle`, `resumen_sunat_detalle`), tienen además `created_at`, `updated_at`,
 `created_by` y `updated_by` (auditoría), que no se repiten en los diagramas.
 
@@ -88,6 +88,8 @@ erDiagram
     bigint referencia_id
     varchar documento
     varchar observacion
+    varchar clave_idempotencia
+    varchar huella_solicitud
   }
 ```
 
@@ -148,6 +150,8 @@ erDiagram
     varchar tipo
     numeric monto
     varchar concepto
+    varchar clave_idempotencia
+    varchar huella_solicitud
   }
   CLIENTE {
     bigint id PK
@@ -394,6 +398,8 @@ erDiagram
     varchar conductor_licencia
     varchar vehiculo_placa
     varchar observacion
+    varchar clave_idempotencia
+    varchar huella_solicitud
   }
   GUIA_REMISION_DETALLE {
     bigint id PK

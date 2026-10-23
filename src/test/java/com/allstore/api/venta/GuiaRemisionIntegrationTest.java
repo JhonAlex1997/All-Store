@@ -24,6 +24,7 @@ import org.springframework.data.domain.PageRequest;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -128,6 +129,19 @@ class GuiaRemisionIntegrationTest extends TiendaDePrueba {
         GuiaRemisionResponse guia = guiaService.emitir(conConductor);
         assertThat(guia.conductor().licencia()).isEqualTo("Q45678912");
         assertThat(guia.placa()).isEqualTo("ABC123");
+    }
+
+    @Test
+    void elReintentoDeUnaGuiaNoTrasladaDosVeces() {
+        GuiaRemisionRequest alAlmacen = traslado(List.of(new ItemCantidadRequest(jeanB, 4)));
+        String clave = UUID.randomUUID().toString();
+
+        GuiaRemisionResponse guia = guiaService.emitir(alAlmacen, clave);
+
+        assertThat(guiaService.emitir(alAlmacen, clave).id()).isEqualTo(guia.id());
+        assertThat(stock(jeanB, tienda)).isEqualTo(6);
+        assertThat(stock(jeanB, almacen)).isEqualTo(4);
+        assertThat(guiaService.emitir(traslado(List.of(new ItemCantidadRequest(jeanB, 1)))).numero()).isEqualTo("T991-00000002");
     }
 
     @Test

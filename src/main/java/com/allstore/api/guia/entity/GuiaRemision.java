@@ -35,6 +35,14 @@ import java.util.List;
 @Table(name = "guia_remision")
 public class GuiaRemision extends BaseEntity {
 
+    /** Clave Idempotency-Key de la solicitud que la emitió (para reconocer los reintentos). */
+    @Column(name = "clave_idempotencia", length = 64, updatable = false)
+    private String claveIdempotencia;
+
+    /** SHA-256 de lo que pidió esa solicitud. */
+    @Column(name = "huella_solicitud", length = 64, updatable = false)
+    private String huellaSolicitud;
+
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "serie_id", updatable = false)
     private Serie serieRef;

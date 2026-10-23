@@ -1,6 +1,7 @@
 package com.allstore.api.inventario.controller;
 
 import com.allstore.api.common.dto.PageResponse;
+import com.allstore.api.common.idempotencia.SolicitudIdempotente;
 import com.allstore.api.inventario.dto.MovimientoManualRequest;
 import com.allstore.api.inventario.dto.MovimientoResponse;
 import com.allstore.api.inventario.dto.StockEstablecimientoResponse;
@@ -18,6 +19,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
@@ -63,13 +65,13 @@ public class InventarioController {
     /** Inventario inicial o ajuste por conteo (sobrante, faltante, merma). */
     @PostMapping("/movimientos")
     @ResponseStatus(HttpStatus.CREATED)
-    public List<MovimientoResponse> registrarMovimiento(@Valid @RequestBody MovimientoManualRequest request) {
-        return inventarioService.registrarManual(request);
+    public List<MovimientoResponse> registrarMovimiento(@Valid @RequestBody MovimientoManualRequest request, @RequestHeader(name = SolicitudIdempotente.CABECERA, required = false) String clave) {
+        return inventarioService.registrarManual(request, clave);
     }
 
     @PostMapping("/traslados")
     @ResponseStatus(HttpStatus.CREATED)
-    public List<MovimientoResponse> trasladar(@Valid @RequestBody TrasladoRequest request) {
-        return inventarioService.trasladar(request);
+    public List<MovimientoResponse> trasladar(@Valid @RequestBody TrasladoRequest request, @RequestHeader(name = SolicitudIdempotente.CABECERA, required = false) String clave) {
+        return inventarioService.trasladar(request, clave);
     }
 }

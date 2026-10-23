@@ -8,8 +8,11 @@ import org.springframework.data.repository.query.Param;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Optional;
 
 public interface CajaMovimientoRepository extends JpaRepository<CajaMovimiento, Long> {
+
+    Optional<CajaMovimiento> findByClaveIdempotencia(String clave);
 
     List<CajaMovimiento> findByCajaSesionIdOrderById(Long cajaSesionId);
 

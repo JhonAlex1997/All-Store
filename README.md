@@ -118,9 +118,14 @@ hace doble clic, la venta no debe registrarse dos veces. Para eso la caja envía
   cobrar en caja ni tomar otro número. Dos solicitudes simultáneas con la misma clave se ordenan:
   la segunda espera a la primera y recibe su comprobante.
 - La misma clave con otro contenido responde 400: es un error de la caja (debe generar otra).
-- Vale para `POST /api/ventas`, `/convertir`, `/notas-credito`, `/notas-debito` y `/reemitir`. Sin la
-  cabecera todo funciona como siempre (cada solicitud emite).
-- La clave se guarda en el mismo comprobante y en la misma transacción: no puede quedar una venta
+- Vale para todo lo que mueve dinero o mercadería:
+  - comprobantes: `POST /api/ventas`, `/convertir`, `/notas-credito`, `/notas-debito` y `/reemitir`;
+  - movimientos de caja: `POST /api/caja/movimientos`;
+  - guías de remisión: `POST /api/guias` (la de traslado mueve stock);
+  - inventario: `POST /api/inventario/movimientos` (ajustes) y `/traslados`.
+
+  Sin la cabecera todo funciona como siempre (cada solicitud registra).
+- La clave se guarda en lo que se crea y en la misma transacción: no puede quedar una venta
   registrada sin su clave ni una clave sin su venta.
 
 ### Consultar ventas

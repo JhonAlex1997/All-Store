@@ -88,6 +88,10 @@
       "value": ""
     },
     {
+      "key": "claveEgreso",
+      "value": ""
+    },
+    {
       "key": "montoMayor",
       "value": ""
     },
@@ -1915,6 +1919,10 @@
             "method": "POST",
             "header": [
               {
+                "key": "Idempotency-Key",
+                "value": "{{claveEgreso}}"
+              },
+              {
                 "key": "Content-Type",
                 "value": "application/json"
               }
@@ -1928,7 +1936,56 @@
                   "language": "json"
                 }
               }
+            },
+            "description": "Con Idempotency-Key, como las ventas: un reintento no registra el egreso dos veces."
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.collectionVariables.set(\"claveEgreso\", \"xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx\".replace(/[xy]/g, c => { const r = Math.random() * 16 | 0; return (c === \"x\" ? r : (r & 0x3 | 0x8)).toString(16); }));"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 201\", () => pm.response.to.have.status(201));",
+                  "pm.collectionVariables.set(\"efectivoEsperado\", pm.response.json().resumen.efectivoEsperado);"
+                ]
+              }
             }
+          ]
+        },
+        {
+          "name": "Reintento del mismo egreso (misma Idempotency-Key)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Idempotency-Key",
+                "value": "{{claveEgreso}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/caja/movimientos",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tipo\": \"EGRESO\",\n  \"monto\": 10.0,\n  \"concepto\": \"Taxi para llevar mercadería\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Devuelve la caja sin un segundo egreso: el efectivo esperado no cambia. Igual en guías y en ajustes y traslados de inventario."
           },
           "event": [
             {
@@ -1937,7 +1994,7 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test(\"Responde 201\", () => pm.response.to.have.status(201));",
-                  "pm.collectionVariables.set(\"efectivoEsperado\", pm.response.json().resumen.efectivoEsperado);"
+                  "pm.test(\"El egreso no se duplicó\", () => pm.expect(pm.response.json().resumen.efectivoEsperado).to.eql(Number(pm.collectionVariables.get(\"efectivoEsperado\"))));"
                 ]
               }
             }

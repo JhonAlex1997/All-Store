@@ -57,13 +57,6 @@ public interface ComprobanteRepository extends JpaRepository<Comprobante, Long>,
     /** Para el enlace público de descarga. */
     Optional<Comprobante> findByCodigoConsulta(UUID codigoConsulta);
 
-    /**
-     * Bloquea la clave Idempotency-Key hasta el final de la transacción: si llegan dos solicitudes
-     * con la misma clave a la vez (doble clic), la segunda espera a que la primera termine y la ve.
-     */
-    @Query(value = "select 1 from pg_advisory_xact_lock(hashtext('idempotencia:' || :clave))", nativeQuery = true)
-    Integer bloquearClave(@Param("clave") String clave);
-
     Optional<Comprobante> findByClaveIdempotencia(String clave);
 
     /** El comprobante emitido en lugar de uno que SUNAT rechazó. */

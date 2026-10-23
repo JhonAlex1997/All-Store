@@ -17,7 +17,7 @@ import com.allstore.api.venta.service.AnulacionService;
 import com.allstore.api.venta.service.ConsultaVentasService;
 import com.allstore.api.venta.service.NotaCreditoService;
 import com.allstore.api.venta.service.NotaDebitoService;
-import com.allstore.api.venta.service.SolicitudIdempotente;
+import com.allstore.api.common.idempotencia.SolicitudIdempotente;
 import com.allstore.api.venta.service.VentaService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;

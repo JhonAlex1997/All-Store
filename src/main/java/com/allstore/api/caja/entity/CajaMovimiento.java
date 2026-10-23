@@ -33,4 +33,12 @@ public class CajaMovimiento extends BaseEntity {
 
     @Column(nullable = false, length = 250, updatable = false)
     private String concepto;
+
+    /** Clave Idempotency-Key de la solicitud que lo registró (para reconocer los reintentos). */
+    @Column(name = "clave_idempotencia", length = 64, updatable = false)
+    private String claveIdempotencia;
+
+    /** SHA-256 de lo que pidió esa solicitud. */
+    @Column(name = "huella_solicitud", length = 64, updatable = false)
+    private String huellaSolicitud;
 }

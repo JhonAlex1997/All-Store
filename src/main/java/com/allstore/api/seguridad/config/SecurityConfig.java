@@ -3,7 +3,7 @@ package com.allstore.api.seguridad.config;
 import com.allstore.api.seguridad.entity.Rol;
 import com.allstore.api.seguridad.repository.UsuarioRepository;
 import com.allstore.api.seguridad.service.JwtService;
-import com.allstore.api.venta.service.SolicitudIdempotente;
+import com.allstore.api.common.idempotencia.SolicitudIdempotente;
 import com.nimbusds.jose.jwk.source.ImmutableSecret;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;

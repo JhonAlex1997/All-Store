@@ -3,6 +3,8 @@ package com.allstore.api.guia.service;
 import com.allstore.api.cliente.entity.TipoDocumentoIdentidad;
 import com.allstore.api.common.dto.PageResponse;
 import com.allstore.api.common.exception.BusinessException;
+import com.allstore.api.common.idempotencia.Idempotencia;
+import com.allstore.api.common.idempotencia.SolicitudIdempotente;
 import com.allstore.api.common.exception.ResourceNotFoundException;
 import com.allstore.api.config.JpaAuditingConfig;
 import com.allstore.api.empresa.dto.NumeroComprobante;
@@ -43,6 +45,7 @@ import java.time.OffsetDateTime;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -73,9 +76,26 @@ public class GuiaRemisionService {
     private final InventarioService inventarioService;
     private final ProductoService productoService;
     private final EnvioSunatService envioSunatService;
+    private final Idempotencia idempotencia;
 
     @Transactional
     public GuiaRemisionResponse emitir(GuiaRemisionRequest request) {
+        return emitir(request, null);
+    }
+
+    /**
+     * @param clave Idempotency-Key (opcional): un reintento con la misma clave devuelve lo ya
+     *              registrado en vez de registrarlo otra vez
+     *              (una guía de traslado mueve stock)
+     */
+    @Transactional
+    public GuiaRemisionResponse emitir(GuiaRemisionRequest request, String clave) {
+        SolicitudIdempotente solicitud = idempotencia.solicitud(clave, "guia", request);
+        Optional<GuiaRemision> previa = idempotencia.previo(solicitud, guiaRepository::findByClaveIdempotencia,
+                GuiaRemision::getHuellaSolicitud, g -> "guía " + g.getNumeroImpreso());
+        if (previa.isPresent()) {
+            return GuiaRemisionResponse.from(previa.get(), envioSunatService.infoGuia(previa.get()));
+        }
         Serie serie = emisionComprobante.serieParaEmitir(request.serieId(), TipoComprobante.GUIA_REMISION_REMITENTE);
         Establecimiento origen = serie.getEstablecimiento();
         LocalDate hoy = LocalDate.now(JpaAuditingConfig.ZONA_LIMA);
@@ -85,6 +105,8 @@ public class GuiaRemisionService {
         }
 
         GuiaRemision guia = new GuiaRemision();
+        guia.setClaveIdempotencia(solicitud.clave());
+        guia.setHuellaSolicitud(solicitud.huella());
         guia.setSerieRef(serie);
         guia.setEstablecimiento(origen);
         guia.setFechaTraslado(fechaTraslado);

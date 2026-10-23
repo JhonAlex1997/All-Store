@@ -12,6 +12,9 @@ import java.util.List;
 
 public interface MovimientoInventarioRepository extends JpaRepository<MovimientoInventario, Long> {
 
+    /** Los movimientos de un ajuste o traslado, por la clave Idempotency-Key con que se pidió. */
+    List<MovimientoInventario> findByClaveIdempotenciaOrderById(String clave);
+
     /** Kardex: del más reciente al más antiguo. */
     @Query(value = """
             select m from MovimientoInventario m

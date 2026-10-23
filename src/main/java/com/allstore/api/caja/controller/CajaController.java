@@ -8,6 +8,7 @@ import com.allstore.api.caja.dto.MovimientoCajaRequest;
 import com.allstore.api.caja.entity.EstadoCaja;
 import com.allstore.api.caja.service.CajaService;
 import com.allstore.api.common.dto.PageResponse;
+import com.allstore.api.common.idempotencia.SolicitudIdempotente;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springdoc.core.annotations.ParameterObject;
@@ -20,6 +21,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
@@ -49,8 +51,8 @@ public class CajaController {
     /** Ingreso o egreso de efectivo que no es venta (ej. pago de un taxi). */
     @PostMapping("/movimientos")
     @ResponseStatus(HttpStatus.CREATED)
-    public CajaResponse registrarMovimiento(@Valid @RequestBody MovimientoCajaRequest request) {
-        return cajaService.registrarMovimiento(request);
+    public CajaResponse registrarMovimiento(@Valid @RequestBody MovimientoCajaRequest request, @RequestHeader(name = SolicitudIdempotente.CABECERA, required = false) String clave) {
+        return cajaService.registrarMovimiento(request, clave);
     }
 
     @PostMapping("/cerrar")

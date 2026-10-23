@@ -6,6 +6,7 @@ import com.allstore.api.cliente.entity.Cliente;
 import com.allstore.api.cliente.entity.TipoDocumentoIdentidad;
 import com.allstore.api.cliente.service.ClienteService;
 import com.allstore.api.common.exception.BusinessException;
+import com.allstore.api.common.idempotencia.SolicitudIdempotente;
 import com.allstore.api.empresa.entity.Empresa;
 import com.allstore.api.empresa.entity.Serie;
 import com.allstore.api.empresa.entity.TipoComprobante;

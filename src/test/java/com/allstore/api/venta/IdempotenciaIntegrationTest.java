@@ -1,7 +1,13 @@
 package com.allstore.api.venta;
 
+import com.allstore.api.caja.dto.MovimientoCajaRequest;
+import com.allstore.api.caja.entity.TipoMovimientoCaja;
 import com.allstore.api.common.exception.BusinessException;
 import com.allstore.api.empresa.entity.TipoComprobante;
+import com.allstore.api.inventario.dto.ItemCantidadRequest;
+import com.allstore.api.inventario.dto.MovimientoManualRequest;
+import com.allstore.api.inventario.dto.TrasladoRequest;
+import com.allstore.api.inventario.entity.MotivoMovimiento;
 import com.allstore.api.venta.dto.ConvertirVentaRequest;
 import com.allstore.api.venta.dto.ItemDevolucionRequest;
 import com.allstore.api.venta.dto.NotaCreditoRequest;
@@ -9,7 +15,7 @@ import com.allstore.api.venta.dto.VentaRequest;
 import com.allstore.api.venta.dto.VentaResponse;
 import com.allstore.api.venta.entity.MetodoPago;
 import com.allstore.api.venta.entity.MotivoNotaCredito;
-import com.allstore.api.venta.service.SolicitudIdempotente;
+import com.allstore.api.common.idempotencia.SolicitudIdempotente;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
@@ -17,6 +23,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 
@@ -31,8 +38,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
- * Reintentos con la misma clave Idempotency-Key: devuelven el comprobante ya emitido, sin volver a
- * mover stock, caja ni numeración. (Dos solicitudes simultáneas, el doble clic, se prueban con la
+ * Reintentos con la misma clave Idempotency-Key: devuelven lo ya registrado (comprobante, movimiento
+ * de caja, ajuste o traslado de inventario), sin volver a mover stock, caja ni numeración. (Dos solicitudes simultáneas, el doble clic, se prueban con la
  * aplicación en dev: aquí todo corre en una sola transacción.)
  */
 class IdempotenciaIntegrationTest extends TiendaDePrueba {
@@ -107,6 +114,44 @@ class IdempotenciaIntegrationTest extends TiendaDePrueba {
         assertThat(ventaService.convertir(nota.id(), aBoleta, clave).id()).isEqualTo(boleta.id());
         assertThatThrownBy(() -> ventaService.convertir(nota.id(), aBoleta, UUID.randomUUID().toString()))
                 .isInstanceOf(BusinessException.class);
+    }
+
+    @Test
+    void elReintentoDeUnEgresoDeCajaNoLoRegistraDosVeces() {
+        MovimientoCajaRequest taxi = new MovimientoCajaRequest(TipoMovimientoCaja.EGRESO, new BigDecimal("15.00"), "Taxi");
+        String clave = UUID.randomUUID().toString();
+
+        cajaService.registrarMovimiento(taxi, clave);
+        var caja = cajaService.registrarMovimiento(taxi, clave);
+
+        assertThat(caja.movimientos()).hasSize(1);
+        assertThat(caja.resumen().totalEgresos()).isEqualByComparingTo("15.00");
+        assertThat(caja.resumen().efectivoEsperado()).isEqualByComparingTo("85.00");
+        assertThatThrownBy(() -> cajaService.registrarMovimiento(
+                new MovimientoCajaRequest(TipoMovimientoCaja.EGRESO, new BigDecimal("20.00"), "Taxi"), clave))
+                .isInstanceOf(BusinessException.class)
+                .hasMessageContaining("movimiento de caja \"Taxi\"");
+    }
+
+    @Test
+    void elReintentoDeUnAjusteOTrasladoDeInventarioNoMueveElStockDosVeces() {
+        MovimientoManualRequest sobrante = new MovimientoManualRequest(tienda, MotivoMovimiento.AJUSTE_ENTRADA, "Conteo",
+                List.of(new ItemCantidadRequest(jeanA, 2)));
+        String claveAjuste = UUID.randomUUID().toString();
+        var ajuste = inventarioService.registrarManual(sobrante, claveAjuste);
+        assertThat(inventarioService.registrarManual(sobrante, claveAjuste)).isEqualTo(ajuste);
+        assertThat(stock(jeanA, tienda)).isEqualTo(7);
+
+        TrasladoRequest alAlmacen = new TrasladoRequest(tienda, almacen, null, List.of(new ItemCantidadRequest(jeanB, 3)));
+        String claveTraslado = UUID.randomUUID().toString();
+        var traslado = inventarioService.trasladar(alAlmacen, claveTraslado);
+        assertThat(inventarioService.trasladar(alAlmacen, claveTraslado)).isEqualTo(traslado);
+        assertThat(stock(jeanB, tienda)).isEqualTo(7);
+        assertThat(stock(jeanB, almacen)).isEqualTo(3);
+
+        // La clave de un ajuste no sirve para un traslado distinto, ni al revés.
+        assertThatThrownBy(() -> inventarioService.trasladar(alAlmacen, claveAjuste))
+                .isInstanceOf(BusinessException.class).hasMessageContaining("ya se usó");
     }
 
     @Test

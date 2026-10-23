@@ -1,6 +1,7 @@
 package com.allstore.api.inventario.entity;
 
 import com.allstore.api.common.entity.BaseEntity;
+import com.allstore.api.common.idempotencia.SolicitudIdempotente;
 import com.allstore.api.empresa.entity.Establecimiento;
 import com.allstore.api.producto.entity.ProductoVariante;
 import jakarta.persistence.Column;
@@ -60,6 +61,14 @@ public class MovimientoInventario extends BaseEntity {
     @Column(length = 250, updatable = false)
     private String observacion;
 
+    /** Clave Idempotency-Key de la solicitud que lo registró (todos los de un mismo ajuste o traslado la comparten) (para reconocer los reintentos). */
+    @Column(name = "clave_idempotencia", length = 64)
+    private String claveIdempotencia;
+
+    /** SHA-256 de lo que pidió esa solicitud. */
+    @Column(name = "huella_solicitud", length = 64)
+    private String huellaSolicitud;
+
     public MovimientoInventario(Stock stock, MotivoMovimiento motivo, int cantidad, String observacion) {
         this.variante = stock.getVariante();
         this.establecimiento = stock.getEstablecimiento();
@@ -79,5 +88,11 @@ public class MovimientoInventario extends BaseEntity {
         this.referenciaTipo = tipo;
         this.referenciaId = id;
         this.documento = documento;
+    }
+
+    /** Lo deja identificado con la solicitud que lo registró; se completa después de crearlo, como la referencia. */
+    public void identificarSolicitud(SolicitudIdempotente solicitud) {
+        this.claveIdempotencia = solicitud.clave();
+        this.huellaSolicitud = solicitud.huella();
     }
 }

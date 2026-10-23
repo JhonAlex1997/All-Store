@@ -15,6 +15,8 @@ import com.allstore.api.caja.repository.CajaSesionRepository;
 import com.allstore.api.caja.repository.ResumenCajaRepository;
 import com.allstore.api.common.dto.PageResponse;
 import com.allstore.api.common.exception.BusinessException;
+import com.allstore.api.common.idempotencia.Idempotencia;
+import com.allstore.api.common.idempotencia.SolicitudIdempotente;
 import com.allstore.api.common.exception.ResourceNotFoundException;
 import com.allstore.api.config.JpaAuditingConfig;
 import com.allstore.api.empresa.entity.Establecimiento;
@@ -38,6 +40,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.EnumMap;
 import java.util.EnumSet;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 @Service
@@ -55,6 +58,7 @@ public class CajaService {
     private final ResumenCajaRepository resumenRepository;
     private final EstablecimientoService establecimientoService;
     private final AuditorAware<String> usuarioActual;
+    private final Idempotencia idempotencia;
 
     @Transactional
     public CajaResponse abrir(AbrirCajaRequest request) {
@@ -86,8 +90,25 @@ public class CajaService {
 
     @Transactional
     public CajaResponse registrarMovimiento(MovimientoCajaRequest request) {
+        return registrarMovimiento(request, null);
+    }
+
+    /**
+     * @param clave Idempotency-Key (opcional): un reintento con la misma clave devuelve lo ya
+     *              registrado en vez de registrarlo otra vez
+     */
+    @Transactional
+    public CajaResponse registrarMovimiento(MovimientoCajaRequest request, String clave) {
+        SolicitudIdempotente solicitud = idempotencia.solicitud(clave, "movimiento-caja", request);
+        Optional<CajaMovimiento> previo = idempotencia.previo(solicitud, movimientoRepository::findByClaveIdempotencia,
+                CajaMovimiento::getHuellaSolicitud, m -> "movimiento de caja \"" + m.getConcepto() + "\"");
+        if (previo.isPresent()) {
+            return respuesta(previo.get().getCajaSesion());
+        }
         CajaSesion sesion = bloquearMiCaja();
         CajaMovimiento movimiento = new CajaMovimiento();
+        movimiento.setClaveIdempotencia(solicitud.clave());
+        movimiento.setHuellaSolicitud(solicitud.huella());
         movimiento.setCajaSesion(sesion);
         movimiento.setTipo(request.tipo());
         movimiento.setMonto(request.monto().setScale(2));

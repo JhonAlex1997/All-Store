@@ -2,6 +2,8 @@ package com.allstore.api.inventario.service;
 
 import com.allstore.api.common.dto.PageResponse;
 import com.allstore.api.common.exception.BusinessException;
+import com.allstore.api.common.idempotencia.Idempotencia;
+import com.allstore.api.common.idempotencia.SolicitudIdempotente;
 import com.allstore.api.config.JpaAuditingConfig;
 import com.allstore.api.empresa.entity.Establecimiento;
 import com.allstore.api.empresa.service.EstablecimientoService;
@@ -31,6 +33,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 /**
@@ -50,6 +53,7 @@ public class InventarioService {
     private final EstablecimientoService establecimientoService;
     private final ProductoService productoService;
     private final AuditorAware<String> usuarioActual;
+    private final Idempotencia idempotencia;
 
     /** Una prenda y su cantidad, como la piden ventas y ajustes. */
     public record Linea(Long varianteId, int cantidad) {
@@ -93,12 +97,27 @@ public class InventarioService {
     /** Inventario inicial o ajuste tras un conteo físico. */
     @Transactional
     public List<MovimientoResponse> registrarManual(MovimientoManualRequest request) {
+        return registrarManual(request, null);
+    }
+
+    /**
+     * @param clave Idempotency-Key (opcional): un reintento con la misma clave devuelve lo ya
+     *              registrado en vez de registrarlo otra vez
+     */
+    @Transactional
+    public List<MovimientoResponse> registrarManual(MovimientoManualRequest request, String clave) {
+        SolicitudIdempotente solicitud = idempotencia.solicitud(clave, "ajuste-inventario", request);
+        Optional<List<MovimientoInventario>> previos = previos(solicitud);
+        if (previos.isPresent()) {
+            return previos.get().stream().map(MovimientoResponse::from).toList();
+        }
         if (!request.motivo().isManual()) {
             throw new BusinessException("El motivo " + request.motivo() + " lo genera el sistema; para un ajuste usa "
                     + "INVENTARIO_INICIAL, AJUSTE_ENTRADA o AJUSTE_SALIDA");
         }
         List<MovimientoInventario> movimientos = registrar(request.establecimientoId(), request.motivo(),
                 aLineas(request.items()), limpiar(request.observacion()));
+        movimientos.forEach(m -> m.identificarSolicitud(solicitud));
         return movimientos.stream().map(MovimientoResponse::from).toList();
     }
 
@@ -108,14 +127,39 @@ public class InventarioService {
      */
     @Transactional
     public List<MovimientoResponse> trasladar(TrasladoRequest request) {
+        return trasladar(request, null);
+    }
+
+    /**
+     * @param clave Idempotency-Key (opcional): un reintento con la misma clave devuelve lo ya
+     *              registrado en vez de registrarlo otra vez
+     */
+    @Transactional
+    public List<MovimientoResponse> trasladar(TrasladoRequest request, String clave) {
+        SolicitudIdempotente solicitud = idempotencia.solicitud(clave, "traslado", request);
+        Optional<List<MovimientoInventario>> previos = previos(solicitud);
+        if (previos.isPresent()) {
+            return previos.get().stream().map(MovimientoResponse::from).toList();
+        }
         List<MovimientoInventario> movimientos = moverEntreLocales(request.origenId(), request.destinoId(),
                 aLineas(request.items()), limpiar(request.observacion()));
         // Todos los movimientos del traslado comparten la misma referencia para poder agruparlos.
         Long grupo = movimientos.getFirst().getId();
         String documento = "Traslado " + establecimientoService.obtener(request.origenId()).getNombre() + " -> "
                 + establecimientoService.obtener(request.destinoId()).getNombre();
-        movimientos.forEach(m -> m.referenciar(REFERENCIA_TRASLADO, grupo, documento));
+        movimientos.forEach(m -> {
+            m.referenciar(REFERENCIA_TRASLADO, grupo, documento);
+            m.identificarSolicitud(solicitud);
+        });
         return movimientos.stream().map(MovimientoResponse::from).toList();
+    }
+
+    /** Los movimientos que registró antes esta misma solicitud (un reintento), si los hay. */
+    private Optional<List<MovimientoInventario>> previos(SolicitudIdempotente solicitud) {
+        return idempotencia.previo(solicitud,
+                c -> Optional.of(movimientoRepository.findByClaveIdempotenciaOrderById(c)).filter(l -> !l.isEmpty()),
+                l -> l.getFirst().getHuellaSolicitud(),
+                l -> l.getFirst().getMotivo().getDescripcion().toLowerCase() + " del " + l.getFirst().getCreatedAt().toLocalDate());
     }
 
     /**
