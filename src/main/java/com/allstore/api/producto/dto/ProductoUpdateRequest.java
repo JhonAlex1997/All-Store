@@ -1,5 +1,6 @@
 package com.allstore.api.producto.dto;
 
+import com.allstore.api.common.validacion.TextoSeguro;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Digits;
 import jakarta.validation.constraints.NotBlank;
@@ -16,8 +17,10 @@ import java.math.BigDecimal;
 public record ProductoUpdateRequest(
         @NotBlank(message = "El nombre es obligatorio")
         @Size(max = 150, message = "El nombre no puede superar 150 caracteres")
+        @TextoSeguro
         String nombre,
         @Size(max = 500, message = "La descripción no puede superar 500 caracteres")
+        @TextoSeguro
         String descripcion,
         @NotNull(message = "La categoría es obligatoria")
         Long categoriaId,

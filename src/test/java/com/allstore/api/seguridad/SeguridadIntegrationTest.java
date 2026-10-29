@@ -21,6 +21,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -174,6 +175,65 @@ class SeguridadIntegrationTest {
                 .andExpect(status().isOk());
         mockMvc.perform(get("/api/ventas/totales").header("Authorization", "Bearer " + login("t_admin", PASSWORD)))
                 .andExpect(status().isOk());
+    }
+
+    @Test
+    void cerrarSesionInvalidaElTokenEnElServidor() throws Exception {
+        String token = login("t_cajero", PASSWORD);
+        mockMvc.perform(post("/api/auth/cerrar-sesion").header("Authorization", "Bearer " + token))
+                .andExpect(status().isNoContent());
+        // El mismo token, aunque no haya vencido, ya no sirve.
+        mockMvc.perform(get("/api/auth/me").header("Authorization", "Bearer " + token))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void losDatosDeClientesSonDeCajaYAdminYElCajeroSoloBusca() throws Exception {
+        mockMvc.perform(get("/api/clientes").header("Authorization", "Bearer " + login("t_almacen", PASSWORD)))
+                .andExpect(status().isForbidden());
+        String cajero = login("t_cajero", PASSWORD);
+        // Sin búsqueda no puede listar toda la clientela.
+        mockMvc.perform(get("/api/clientes?size=200").header("Authorization", "Bearer " + cajero))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value(org.hamcrest.Matchers.containsString("al menos 3")));
+        mockMvc.perform(get("/api/clientes?busqueda=var&size=200").header("Authorization", "Bearer " + cajero))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.size").value(20));
+        mockMvc.perform(get("/api/clientes?size=200").header("Authorization", "Bearer " + login("t_admin", PASSWORD)))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void contrasenaDeMasDe72BytesEsUnErrorDeValidacionNoInterno() throws Exception {
+        String admin = login("t_admin", PASSWORD);
+        String larga = "a" + "ñ".repeat(40) + "1";
+        mockMvc.perform(post("/api/usuarios").header("Authorization", "Bearer " + admin)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"username\":\"t_largo\",\"nombre\":\"Largo\",\"rol\":\"CAJERO\",\"passwordTemporal\":\"" + larga + "\"}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value(org.hamcrest.Matchers.containsString("demasiado larga")));
+        intentarLogin("t_admin", larga).andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void unCuerpoEnormeSeRechazaSinLeerlo() throws Exception {
+        byte[] enorme = ("{\"nombre\":\"" + "A".repeat(2 * 1024 * 1024) + "\"}").getBytes();
+        mockMvc.perform(post("/api/clientes").header("Authorization", "Bearer " + login("t_cajero", PASSWORD))
+                        .contentType(MediaType.APPLICATION_JSON).content(enorme))
+                .andExpect(status().isPayloadTooLarge());
+    }
+
+    @Test
+    void lasRespuestasLlevanCabecerasDeSeguridad() throws Exception {
+        mockMvc.perform(get("/api/productos").header("Authorization", "Bearer " + login("t_cajero", PASSWORD)))
+                .andExpect(header().string("Referrer-Policy", "no-referrer"))
+                .andExpect(header().string("Content-Security-Policy", "default-src 'none'; frame-ancestors 'none'"))
+                .andExpect(header().string("X-Content-Type-Options", "nosniff"))
+                .andExpect(header().string("X-Frame-Options", "DENY"));
+        // El PDF público se ve en el navegador: sin la CSP de la API, pero sin Referer ni marcos.
+        mockMvc.perform(get("/api/publico/comprobantes/00000000-0000-0000-0000-000000000000/pdf"))
+                .andExpect(header().doesNotExist("Content-Security-Policy"))
+                .andExpect(header().string("Referrer-Policy", "no-referrer"));
     }
 
     @Test

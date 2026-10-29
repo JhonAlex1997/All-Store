@@ -33,6 +33,7 @@ public class NotaDebitoService {
     static final String UNIDAD_SERVICIO = "ZZ";
 
     private final EmisionComprobante emision;
+    private final VisibilidadComprobante visibilidad;
     private final CajaService cajaService;
 
     @Transactional
@@ -53,6 +54,7 @@ public class NotaDebitoService {
         }
         Comprobante origen = emision.obtener(comprobanteId);
         validarOrigen(origen);
+        visibilidad.exigirVisible(origen);
         emision.exigirNoRechazado(origen);
         Serie serie = emision.serieParaEmitir(request.serieId(), TipoComprobante.NOTA_DEBITO);
         // SUNAT: la serie de la nota empieza con la misma letra que el comprobante que modifica.

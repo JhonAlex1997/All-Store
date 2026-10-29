@@ -34,3 +34,11 @@ build/
 
 ### Configuración local con secretos ###
 .env
+
+### Certificados y claves: nunca al repositorio (el certificado real de SUNAT es un secreto) ###
+*.p12
+*.pfx
+*.pem
+*.key
+*.jks
+!config/sunat/certificado-beta-prueba.p12

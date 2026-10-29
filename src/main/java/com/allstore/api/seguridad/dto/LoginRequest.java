@@ -1,5 +1,6 @@
 package com.allstore.api.seguridad.dto;
 
+import com.allstore.api.common.validacion.BytesMaximos;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
@@ -9,6 +10,7 @@ public record LoginRequest(
         String username,
         @NotBlank(message = "La contraseña es obligatoria")
         @Size(max = 72, message = "Usuario o contraseña incorrectos")
+        @BytesMaximos(value = PoliticaPassword.MAXIMO_BYTES, message = "Usuario o contraseña incorrectos")
         String password
 ) {
     /** Evita que la contraseña aparezca en logs si alguien imprime el objeto. */

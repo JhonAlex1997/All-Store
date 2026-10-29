@@ -22,6 +22,7 @@ import com.allstore.api.venta.entity.Comprobante;
 import com.allstore.api.venta.entity.EstadoComprobante;
 import com.allstore.api.venta.repository.ComprobanteRepository;
 import com.allstore.api.venta.service.VentaService;
+import com.allstore.api.venta.service.VisibilidadComprobante;
 import jakarta.mail.internet.MimeMessage;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.event.EventListener;
@@ -56,6 +57,9 @@ import java.util.UUID;
 @Service
 public class EntregaService {
 
+    /** Correos que un usuario puede mandar de un mismo comprobante en 24 horas (los automáticos no cuentan). */
+    static final int MAXIMO_CORREOS_MANUALES_POR_DIA = 5;
+
     private static final int LOTE = 20;
     private static final String RUTA_PUBLICA = "/api/publico/comprobantes/";
 
@@ -68,12 +72,15 @@ public class EntregaService {
     private final ServicioCorreo servicioCorreo;
     private final CorreoComprobante correoComprobante;
     private final EntregaProperties properties;
+    private final VisibilidadComprobante visibilidad;
     private final TransactionTemplate transaccionPropia;
 
     public EntregaService(EnvioCorreoRepository envioRepository, ComprobanteRepository comprobanteRepository,
                           VentaService ventaService, ImpresionService impresionService, EnvioSunatService envioSunatService,
                           EmpresaService empresaService, ServicioCorreo servicioCorreo, CorreoComprobante correoComprobante,
-                          EntregaProperties properties, PlatformTransactionManager transactionManager) {
+                          EntregaProperties properties, PlatformTransactionManager transactionManager,
+                          VisibilidadComprobante visibilidad) {
+        this.visibilidad = visibilidad;
         this.envioRepository = envioRepository;
         this.comprobanteRepository = comprobanteRepository;
         this.ventaService = ventaService;
@@ -93,6 +100,7 @@ public class EntregaService {
     @Transactional(readOnly = true)
     public EntregaResponse entrega(Long comprobanteId) {
         Comprobante c = obtener(comprobanteId);
+        visibilidad.exigirVisible(c);
         SunatInfo sunat = envioSunatService.info(c);
         boolean tieneXml = sunat != null && sunat.hash() != null;
         boolean tieneCdr = sunat != null && (sunat.estado() == EstadoSunat.ACEPTADO || sunat.estado() == EstadoSunat.OBSERVADO);
@@ -118,7 +126,15 @@ public class EntregaService {
             throw new BusinessException("El envío de comprobantes por correo no está configurado (app.entrega.correo.modo)");
         }
         Comprobante c = obtener(comprobanteId);
+        visibilidad.exigirVisible(c);
         validarEntregable(c);
+        long hoy = envioRepository.countByComprobanteIdAndAutomaticoFalseAndCreatedAtAfter(comprobanteId,
+                OffsetDateTime.now(JpaAuditingConfig.ZONA_LIMA).minusDays(1));
+        if (hoy >= MAXIMO_CORREOS_MANUALES_POR_DIA) {
+            // Evita usar el correo de la tienda para enviar comprobantes en masa a cualquier dirección.
+            throw new BusinessException(c.getNumeroImpreso() + " ya se envió " + hoy + " veces por correo en las últimas 24 "
+                    + "horas; es el máximo. Compártelo por el enlace o por WhatsApp");
+        }
         String destinatario = StringUtils.hasText(email) ? email.trim().toLowerCase() : c.getCliente().getEmail();
         if (!StringUtils.hasText(destinatario)) {
             throw new BusinessException("El cliente " + c.getClienteNombre() + " no tiene correo registrado; indica a qué correo enviarlo");

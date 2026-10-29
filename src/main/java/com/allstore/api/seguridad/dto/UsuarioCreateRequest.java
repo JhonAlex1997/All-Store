@@ -1,5 +1,6 @@
 package com.allstore.api.seguridad.dto;
 
+import com.allstore.api.common.validacion.BytesMaximos;
 import com.allstore.api.seguridad.entity.Rol;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -23,6 +24,7 @@ public record UsuarioCreateRequest(
         @NotBlank(message = "La contraseña temporal es obligatoria")
         @Size(min = PoliticaPassword.MINIMO, max = PoliticaPassword.MAXIMO, message = PoliticaPassword.MENSAJE_LONGITUD)
         @Pattern(regexp = PoliticaPassword.PATRON, message = PoliticaPassword.MENSAJE_PATRON)
+        @BytesMaximos(value = PoliticaPassword.MAXIMO_BYTES, message = PoliticaPassword.MENSAJE_BYTES)
         String passwordTemporal
 ) {
     @Override

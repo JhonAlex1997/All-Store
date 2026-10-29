@@ -54,6 +54,7 @@ public class VentaService {
 
     private final ComprobanteRepository comprobanteRepository;
     private final EmisionComprobante emision;
+    private final VisibilidadComprobante visibilidad;
     private final ClienteService clienteService;
     private final ProductoService productoService;
     private final InventarioService inventarioService;
@@ -141,6 +142,7 @@ public class VentaService {
             return atendida.get();
         }
         Comprobante nota = emision.obtener(notaVentaId);
+        visibilidad.exigirVisible(nota);
         if (nota.getTipoComprobante() != TipoComprobante.NOTA_VENTA) {
             throw new BusinessException("Solo una nota de venta se puede convertir en boleta o factura");
         }
@@ -197,6 +199,7 @@ public class VentaService {
             return atendida.get();
         }
         Comprobante rechazado = emision.obtener(id);
+        visibilidad.exigirVisible(rechazado);
         String numero = rechazado.getNumeroImpreso();
         TipoComprobante tipoOriginal = rechazado.getTipoComprobante();
         if (!tipoOriginal.isElectronico()) {
@@ -292,6 +295,7 @@ public class VentaService {
     @Transactional(readOnly = true)
     public VentaResponse obtenerDetalle(Long id) {
         Comprobante comprobante = emision.obtener(id);
+        visibilidad.exigirVisible(comprobante);
         String convertidoEn = null;
         List<String> notasCredito = List.of();
         List<String> notasDebito = List.of();

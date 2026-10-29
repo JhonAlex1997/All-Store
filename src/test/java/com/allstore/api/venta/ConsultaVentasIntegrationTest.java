@@ -1,6 +1,7 @@
 package com.allstore.api.venta;
 
 import com.allstore.api.caja.dto.AbrirCajaRequest;
+import com.allstore.api.caja.dto.CerrarCajaRequest;
 import com.allstore.api.empresa.entity.TipoComprobante;
 import com.allstore.api.producto.dto.VarianteUpdateRequest;
 import com.allstore.api.venta.dto.AnularVentaRequest;
@@ -185,6 +186,10 @@ class ConsultaVentasIntegrationTest extends TiendaDePrueba {
             listar("vendedor=sistema").andExpect(jsonPath("$.content[*].numero", containsInAnyOrder(suya)));
             // Con el ticket en la mano (número exacto) encuentra la venta de otro, para reimprimirla o cambiarla.
             listar("busqueda=" + facturaMixta).andExpect(jsonPath("$.content[*].numero", containsInAnyOrder(facturaMixta)));
+            // Sin caja abierta en ese local, recorrer los números no sirve para ver ventas ajenas.
+            cajaService.cerrar(new CerrarCajaRequest(new BigDecimal("139.90"), null));
+            listar("busqueda=" + facturaMixta).andExpect(jsonPath("$.content", hasSize(0)));
+            listar("busqueda=" + suya).andExpect(jsonPath("$.content[*].numero", containsInAnyOrder(suya)));
         } finally {
             SecurityContextHolder.clearContext();
         }

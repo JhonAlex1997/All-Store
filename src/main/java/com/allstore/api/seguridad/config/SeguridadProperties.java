@@ -12,6 +12,11 @@ import java.util.List;
  * @param jwtSecret            clave para firmar los tokens (HS256); mínimo 32 bytes
  * @param expiracionMinutos    duración de una sesión antes de volver a ingresar
  * @param corsOrigenes         orígenes del frontend autorizados a llamar a la API
+ * @param intentosLoginPorIp   ingresos fallidos que se toleran desde una misma IP en la ventana; al
+ *                             llegar, esa IP espera (protege del password spraying: una clave contra
+ *                             muchos usuarios, que el bloqueo por usuario no detecta)
+ * @param ventanaLoginMinutos  ventana de esos intentos
+ * @param maximoCuerpoKb       tamaño máximo del cuerpo de una solicitud (protege la memoria)
  * @param adminInicialPassword contraseña del primer administrador; si está vacía se genera una
  */
 @ConfigurationProperties(prefix = "app.seguridad")
@@ -19,6 +24,9 @@ public record SeguridadProperties(
         String jwtSecret,
         @DefaultValue("480") long expiracionMinutos,
         @DefaultValue("http://localhost:4200") List<String> corsOrigenes,
+        @DefaultValue("20") int intentosLoginPorIp,
+        @DefaultValue("15") int ventanaLoginMinutos,
+        @DefaultValue("1024") int maximoCuerpoKb,
         String adminInicialPassword
 ) {
     public static final int LONGITUD_MINIMA_SECRETO = 32;

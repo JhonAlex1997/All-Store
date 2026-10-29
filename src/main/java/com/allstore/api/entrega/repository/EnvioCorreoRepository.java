@@ -16,6 +16,9 @@ public interface EnvioCorreoRepository extends JpaRepository<EnvioCorreo, Long> 
 
     boolean existsByComprobanteIdAndAutomaticoTrue(Long comprobanteId);
 
+    /** Correos pedidos por usuarios (no automáticos) de un comprobante desde ese momento. */
+    long countByComprobanteIdAndAutomaticoFalseAndCreatedAtAfter(Long comprobanteId, OffsetDateTime desde);
+
     /** Pendientes cuyo próximo intento ya llegó, los más antiguos primero. */
     @Query("""
             select e.id from EnvioCorreo e

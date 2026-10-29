@@ -82,6 +82,23 @@ La matriz completa está en `SecurityConfig`. Lo que no está permitido ahí, se
 - Usuario nuevo o con contraseña reiniciada debe cambiarla antes de usar el sistema.
 - Cambiar la contraseña o el rol, o desactivar a un usuario, cierra sus sesiones abiertas.
 - Cada registro guarda quién lo creó y quién lo modificó (`created_by`, `updated_by`).
+- Más de 20 ingresos fallidos desde una misma IP en 15 minutos la hacen esperar (429): frena el
+  *password spraying* (una clave contra muchos usuarios), que el bloqueo por usuario no detecta.
+- `POST /api/auth/cerrar-sesion` invalida el token en el servidor, en todos los equipos.
+- El cajero solo ve y usa (detalle, PDF, enlaces, correo, notas) sus comprobantes y los del local
+  donde tiene la caja abierta; los datos de clientes solo los ven caja y administrador, y el cajero
+  solo busca (no descarga la lista completa). Un comprobante se manda por correo hasta 5 veces al día.
+- Lo que llega al cliente (nombre, dirección, observaciones, productos) no admite enlaces, HTML ni
+  caracteres de control: nadie puede meter un enlace de phishing en un correo de la tienda.
+- Cabeceras: `Referrer-Policy: no-referrer`, CSP en la API, `nosniff`, sin marcos. Cuerpos de más
+  de 1 MB se rechazan (413) y ningún listado da más de 200 filas.
+- En producción (`SUNAT_ENTORNO=PRODUCCION`) no arranca con datos demo, Swagger, correos en archivo,
+  `URL_PUBLICA` sin https ni CORS `*`. Los certificados (`*.p12`, `*.pfx`) no entran al repositorio.
+
+**Para producción, además:** servirlo solo por HTTPS (detrás de Nginx o un balanceador, con
+`FORWARD_HEADERS_STRATEGY=native` para que el límite por IP vea la IP real); en el dominio del correo,
+SPF, DKIM y DMARC, para que nadie pueda enviar correos haciéndose pasar por la tienda; activar en
+GitHub las alertas de Dependabot (ya está `.github/dependabot.yml`).
 
 **Primer administrador:** en una base sin usuarios se crea `admin`. Su contraseña viene de
 `ADMIN_PASSWORD_INICIAL`; si no se definió, se genera una y se muestra una sola vez en el log.

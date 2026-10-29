@@ -1,6 +1,7 @@
 package com.allstore.api.cliente.dto;
 
 import com.allstore.api.cliente.entity.TipoDocumentoIdentidad;
+import com.allstore.api.common.validacion.TextoSeguro;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -16,8 +17,10 @@ public record ClienteRequest(
         String numeroDocumento,
         @NotBlank(message = "El nombre o razón social es obligatorio")
         @Size(max = 200, message = "El nombre no puede superar 200 caracteres")
+        @TextoSeguro
         String nombre,
         @Size(max = 250, message = "La dirección no puede superar 250 caracteres")
+        @TextoSeguro
         String direccion,
         @Pattern(regexp = "([0-9]{6})?", message = "El ubigeo debe tener 6 dígitos")
         String ubigeo,

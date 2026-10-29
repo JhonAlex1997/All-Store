@@ -44,6 +44,7 @@ public class NotaCreditoService {
 
     private final ComprobanteRepository comprobanteRepository;
     private final EmisionComprobante emision;
+    private final VisibilidadComprobante visibilidad;
     private final InventarioService inventarioService;
     private final CajaService cajaService;
 
@@ -65,6 +66,7 @@ public class NotaCreditoService {
         }
         Comprobante origen = emision.obtener(comprobanteId);
         validarOrigen(origen);
+        visibilidad.exigirVisible(origen);
         emision.exigirNoRechazado(origen);
         Serie serie = emision.serieParaEmitir(request.serieId(), TipoComprobante.NOTA_CREDITO);
         // SUNAT: la serie de la nota empieza con la misma letra que el comprobante que modifica.

@@ -78,7 +78,11 @@ public class Usuario extends BaseEntity {
      * Invalida los tokens ya emitidos (cierra todas las sesiones abiertas). Se trunca a
      * segundos porque la fecha de emisión del token (iat) tiene precisión de segundos.
      */
+    /**
+     * Desde este momento solo valen los tokens emitidos después (al milisegundo, como el claim
+     * emitido_ms del token): los anteriores dejan de valer aunque no hayan vencido.
+     */
     public void cerrarSesiones(OffsetDateTime ahora) {
-        tokensValidosDesde = ahora.truncatedTo(ChronoUnit.SECONDS);
+        tokensValidosDesde = ahora.truncatedTo(ChronoUnit.MILLIS);
     }
 }

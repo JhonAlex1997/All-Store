@@ -1,9 +1,9 @@
 package com.allstore.api.seguridad.config;
 
+import com.allstore.api.common.idempotencia.SolicitudIdempotente;
 import com.allstore.api.seguridad.entity.Rol;
 import com.allstore.api.seguridad.repository.UsuarioRepository;
 import com.allstore.api.seguridad.service.JwtService;
-import com.allstore.api.common.idempotencia.SolicitudIdempotente;
 import com.nimbusds.jose.jwk.source.ImmutableSecret;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
@@ -29,6 +29,13 @@ import org.springframework.security.oauth2.server.resource.authentication.JwtGra
 import org.springframework.security.oauth2.server.resource.web.authentication.BearerTokenAuthenticationFilter;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.header.writers.DelegatingRequestMatcherHeaderWriter;
+import org.springframework.security.web.header.writers.ReferrerPolicyHeaderWriter;
+import org.springframework.security.web.header.writers.StaticHeadersWriter;
+import org.springframework.security.web.servlet.util.matcher.PathPatternRequestMatcher;
+import org.springframework.security.web.session.DisableEncodeUrlFilter;
+import org.springframework.security.web.util.matcher.AndRequestMatcher;
+import org.springframework.security.web.util.matcher.NegatedRequestMatcher;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -36,6 +43,7 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 import java.nio.charset.StandardCharsets;
+import java.time.Clock;
 import java.time.Duration;
 import java.util.List;
 
@@ -56,12 +64,23 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http, UsuarioRepository usuarioRepository,
-                                                   RespuestaErrorJson respuestaErrorJson) throws Exception {
+                                                   RespuestaErrorJson respuestaErrorJson,
+                                                   SeguridadProperties properties) throws Exception {
         http
                 // API sin cookies de sesión: el token va en cada petición, así que no aplica CSRF.
                 .csrf(AbstractHttpConfigurer::disable)
                 .cors(Customizer.withDefaults())
                 .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                // Cabeceras: además de las de Spring (nosniff, X-Frame-Options DENY, sin caché),
+                // nunca enviar el Referer (los enlaces públicos llevan un código secreto en la URL) y,
+                // en las respuestas JSON de la API, una CSP que no permite cargar ni incrustar nada.
+                // Los PDF públicos y Swagger (solo dev) quedan fuera de la CSP para que se vean.
+                .headers(h -> h
+                        .referrerPolicy(r -> r.policy(ReferrerPolicyHeaderWriter.ReferrerPolicy.NO_REFERRER))
+                        .addHeaderWriter(new DelegatingRequestMatcherHeaderWriter(
+                                new AndRequestMatcher(PathPatternRequestMatcher.withDefaults().matcher("/api/**"),
+                                        new NegatedRequestMatcher(PathPatternRequestMatcher.withDefaults().matcher("/api/publico/**"))),
+                                new StaticHeadersWriter("Content-Security-Policy", "default-src 'none'; frame-ancestors 'none'"))))
                 .authorizeHttpRequests(auth -> auth
                         // Público
                         .requestMatchers(HttpMethod.POST, "/api/auth/login").permitAll()
@@ -91,8 +110,8 @@ public class SecurityConfig {
                         .requestMatchers("/api/productos/**", "/api/categorias/**", "/api/tallas/**", "/api/colores/**")
                         .hasAnyRole(ADMIN, ALMACENERO)
 
-                        // Clientes: lectura para todos, registro y edición en caja
-                        .requestMatchers(HttpMethod.GET, "/api/clientes/**").authenticated()
+                        // Clientes (datos personales: DNI, teléfono, correo): solo caja y administrador.
+                        // El almacenero no los necesita: la guía de una venta toma al cliente del comprobante.
                         .requestMatchers("/api/clientes/**").hasAnyRole(ADMIN, CAJERO)
 
                         // Inventario: consulta para todos (la caja ve si hay stock), movimientos y
@@ -133,6 +152,12 @@ public class SecurityConfig {
                         .accessDeniedHandler((request, response, ex) -> respuestaErrorJson.escribir(
                                 request, response, HttpStatus.FORBIDDEN, "No tienes permiso para realizar esta acción")))
                 .addFilterAfter(new UsuarioVigenteFilter(usuarioRepository, respuestaErrorJson),
+                        BearerTokenAuthenticationFilter.class)
+                // Primero de todo: cuerpo de tamaño razonable y límite de intentos fallidos por IP.
+                .addFilterBefore(new LimiteCuerpoSolicitud(properties.maximoCuerpoKb() * 1024L, respuestaErrorJson),
+                        DisableEncodeUrlFilter.class)
+                .addFilterBefore(new LimiteIntentosLogin(properties.intentosLoginPorIp(),
+                                Duration.ofMinutes(properties.ventanaLoginMinutos()), Clock.systemUTC(), respuestaErrorJson),
                         BearerTokenAuthenticationFilter.class);
         return http.build();
     }

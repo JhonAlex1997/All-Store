@@ -34,7 +34,7 @@ import java.util.Set;
 public class UsuarioVigenteFilter extends OncePerRequestFilter {
 
     static final Set<String> RUTAS_PERMITIDAS_SIN_CAMBIAR_PASSWORD =
-            Set.of("/api/auth/me", "/api/auth/cambiar-password");
+            Set.of("/api/auth/me", "/api/auth/cambiar-password", "/api/auth/cerrar-sesion");
 
     private final UsuarioRepository usuarioRepository;
     private final RespuestaErrorJson respuestaErrorJson;
@@ -67,8 +67,10 @@ public class UsuarioVigenteFilter extends OncePerRequestFilter {
         chain.doFilter(request, response);
     }
 
+    /** Con el milisegundo de emisión si el token lo trae; los tokens anteriores a ese claim, con el "iat" (segundos). */
     private static boolean emitidoAntesDelCierre(Jwt jwt, Usuario usuario) {
-        Instant emitido = jwt.getIssuedAt();
+        Number emitidoMs = jwt.getClaim(JwtService.CLAIM_EMITIDO_MS);
+        Instant emitido = emitidoMs != null ? Instant.ofEpochMilli(emitidoMs.longValue()) : jwt.getIssuedAt();
         return emitido == null || emitido.isBefore(usuario.getTokensValidosDesde().toInstant());
     }
 }

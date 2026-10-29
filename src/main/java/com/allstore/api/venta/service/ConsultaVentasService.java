@@ -28,6 +28,7 @@ import jakarta.persistence.criteria.Root;
 import jakarta.persistence.criteria.Subquery;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
@@ -61,13 +62,16 @@ public class ConsultaVentasService {
     private final ComprobanteRepository comprobanteRepository;
     private final EnvioSunatService envioSunatService;
     private final UsuarioEnSesion usuarioEnSesion;
+    private final VisibilidadComprobante visibilidad;
 
     @PersistenceContext
     private EntityManager entityManager;
 
     /**
      * El cajero ve solo sus ventas, salvo que busque un número exacto (B001-15): así atiende una
-     * reimpresión o un cambio de talla con el ticket en la mano, sin ver cuánto vende la tienda.
+     * reimpresión o un cambio de talla con el ticket en la mano, sin ver cuánto vende la tienda. Por
+     * número encuentra la venta solo si la puede ver (suya o del local de su caja abierta): recorrer
+     * los números no sirve para ver las de otros locales.
      */
     public PageResponse<VentaResumenResponse> listar(FiltroVentas filtro, Pageable pageable) {
         validar(filtro);
@@ -75,6 +79,10 @@ public class ConsultaVentasService {
                 : filtro.delVendedor(usuarioEnSesion.nombre());
         Specification<Comprobante> spec = (root, query, cb) -> predicado(visible, root, query, cb);
         Page<Comprobante> pagina = comprobanteRepository.findAll(spec, pageable);
+        if (!usuarioEnSesion.veTodo() && esNumero(filtro.busqueda())) {
+            List<Comprobante> visibles = pagina.getContent().stream().filter(visibilidad::esVisible).toList();
+            pagina = new PageImpl<>(visibles, pageable, visibles.size());
+        }
         List<Long> ids = pagina.map(Comprobante::getId).getContent();
         Map<Long, List<MetodoPago>> metodos = metodosDePago(ids);
         Map<Long, EstadoSunat> estados = envioSunatService.estados(ids);

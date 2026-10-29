@@ -1,6 +1,7 @@
 package com.allstore.api.guia.dto;
 
 import com.allstore.api.cliente.entity.TipoDocumentoIdentidad;
+import com.allstore.api.common.validacion.TextoSeguro;
 import com.allstore.api.guia.entity.ModalidadTransporte;
 import com.allstore.api.guia.entity.MotivoTraslado;
 import com.allstore.api.inventario.dto.ItemCantidadRequest;
@@ -55,6 +56,7 @@ public record GuiaRemisionRequest(
         @Pattern(regexp = "[A-Z0-9]{5,8}", message = "La placa va sin guion, ej. ABC123")
         String placa,
         @Size(max = 250, message = "La observación no puede superar 250 caracteres")
+        @TextoSeguro
         String observacion,
         @Size(max = 500, message = "Máximo 500 prendas por guía")
         List<@Valid ItemCantidadRequest> items
@@ -65,6 +67,7 @@ public record GuiaRemisionRequest(
             String ubigeo,
             @NotBlank(message = "La dirección de llegada es obligatoria")
             @Size(max = 250, message = "La dirección no puede superar 250 caracteres")
+            @TextoSeguro
             String direccion
     ) {
     }

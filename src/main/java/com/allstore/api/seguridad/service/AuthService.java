@@ -98,6 +98,15 @@ public class AuthService {
         return emitirSesion(usuario);
     }
 
+    /**
+     * Cierra todas las sesiones del usuario (en este y en otros equipos): sus tokens dejan de valer
+     * en el acto, no recién cuando vencen. Para la caja compartida, o si sospecha que le robaron la sesión.
+     */
+    @Transactional
+    public void cerrarSesion(String username) {
+        obtener(username).cerrarSesiones(OffsetDateTime.now());
+    }
+
     private LoginResponse emitirSesion(Usuario usuario) {
         return new LoginResponse(jwtService.generarToken(usuario), "Bearer", jwtService.duracion().toSeconds(),
                 UsuarioResponse.from(usuario));

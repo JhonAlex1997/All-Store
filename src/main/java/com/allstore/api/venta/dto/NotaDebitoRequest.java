@@ -1,5 +1,6 @@
 package com.allstore.api.venta.dto;
 
+import com.allstore.api.common.validacion.TextoSeguro;
 import com.allstore.api.venta.entity.MotivoNotaDebito;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
@@ -25,6 +26,7 @@ public record NotaDebitoRequest(
         MotivoNotaDebito motivo,
         @NotBlank(message = "Describe el motivo de la nota de débito")
         @Size(max = 250, message = "El sustento no puede superar 250 caracteres")
+        @TextoSeguro
         String sustento,
         @NotEmpty(message = "Agrega al menos un concepto")
         @Size(max = 20, message = "Máximo 20 conceptos")

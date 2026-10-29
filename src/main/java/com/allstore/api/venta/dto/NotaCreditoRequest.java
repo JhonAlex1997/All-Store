@@ -1,5 +1,6 @@
 package com.allstore.api.venta.dto;
 
+import com.allstore.api.common.validacion.TextoSeguro;
 import com.allstore.api.venta.entity.MetodoPago;
 import com.allstore.api.venta.entity.MotivoNotaCredito;
 import jakarta.validation.Valid;
@@ -25,6 +26,7 @@ public record NotaCreditoRequest(
         MotivoNotaCredito motivo,
         @NotBlank(message = "Describe el motivo de la nota de crédito")
         @Size(max = 250, message = "El sustento no puede superar 250 caracteres")
+        @TextoSeguro
         String sustento,
         @NotNull(message = "Indica cómo se devuelve el dinero")
         MetodoPago metodoReembolso,

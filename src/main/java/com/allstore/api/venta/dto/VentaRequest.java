@@ -1,5 +1,6 @@
 package com.allstore.api.venta.dto;
 
+import com.allstore.api.common.validacion.TextoSeguro;
 import com.allstore.api.empresa.entity.TipoComprobante;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotEmpty;
@@ -23,6 +24,7 @@ public record VentaRequest(
         Long serieId,
         Long clienteId,
         @Size(max = 500, message = "La observación no puede superar 500 caracteres")
+        @TextoSeguro
         String observacion,
         @NotEmpty(message = "Agrega al menos una prenda")
         @Size(max = 200, message = "Máximo 200 líneas por venta")

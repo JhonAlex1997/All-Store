@@ -97,6 +97,12 @@ public class CajaService {
         return respuesta(sesion);
     }
 
+    /** El local donde el usuario tiene la caja abierta, si la tiene. */
+    @Transactional(readOnly = true)
+    public Optional<Long> establecimientoDeMiCaja() {
+        return sesionRepository.findByUsuarioAndEstado(usuario(), EstadoCaja.ABIERTA).map(s -> s.getEstablecimiento().getId());
+    }
+
     /** La caja abierta del usuario, con su cuadre al momento. */
     @Transactional(readOnly = true)
     public CajaResponse miCaja() {

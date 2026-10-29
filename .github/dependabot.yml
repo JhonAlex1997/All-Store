@@ -1,0 +1,13 @@
+# Revisa cada semana si hay versiones nuevas (y parches de seguridad) de las dependencias de Maven
+# y de las acciones del CI, y abre un pull request por cada una.
+version: 2
+updates:
+  - package-ecosystem: maven
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly

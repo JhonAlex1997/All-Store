@@ -8,7 +8,9 @@ import com.allstore.api.cliente.repository.ClienteRepository;
 import com.allstore.api.common.dto.PageResponse;
 import com.allstore.api.common.exception.BusinessException;
 import com.allstore.api.common.exception.ResourceNotFoundException;
+import com.allstore.api.seguridad.service.UsuarioEnSesion;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
@@ -19,12 +21,29 @@ import org.springframework.util.StringUtils;
 @RequiredArgsConstructor
 public class ClienteService {
 
+    static final int MINIMO_BUSQUEDA_CAJA = 3;
+    static final int MAXIMO_FILAS_CAJA = 20;
+
     private final ClienteRepository clienteRepository;
+    private final UsuarioEnSesion usuarioEnSesion;
 
     /** Busca por nombre o número de documento. */
     @Transactional(readOnly = true)
+    /**
+     * El cajero busca un cliente (al menos 3 letras o dígitos) y recibe pocas filas: los datos
+     * personales de toda la clientela (DNI, teléfono, correo) no se pueden descargar desde la caja.
+     */
     public PageResponse<ClienteResponse> listar(String busqueda, TipoDocumentoIdentidad tipoDocumento,
                                                 Boolean activo, Pageable pageable) {
+        if (!usuarioEnSesion.veTodo()) {
+            if (!StringUtils.hasText(busqueda) || busqueda.trim().length() < MINIMO_BUSQUEDA_CAJA) {
+                throw new BusinessException("Escribe al menos " + MINIMO_BUSQUEDA_CAJA
+                        + " letras o dígitos del nombre o del documento del cliente");
+            }
+            if (pageable.getPageSize() > MAXIMO_FILAS_CAJA) {
+                pageable = PageRequest.of(pageable.getPageNumber(), MAXIMO_FILAS_CAJA, pageable.getSort());
+            }
+        }
         Specification<Cliente> spec = Specification.unrestricted();
         if (StringUtils.hasText(busqueda)) {
             String patron = "%" + busqueda.trim().toLowerCase() + "%";

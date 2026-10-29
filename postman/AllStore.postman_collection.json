@@ -2963,7 +2963,7 @@
           ]
         },
         {
-          "name": "Cajero encuentra una venta por su número exacto",
+          "name": "Cajero sin caja abierta no encuentra por número una venta ajena",
           "request": {
             "method": "GET",
             "header": [],
@@ -2978,7 +2978,7 @@
                 }
               ]
             },
-            "description": "Con el ticket en la mano encuentra cualquier venta, para reimprimirla o hacer un cambio de talla."
+            "description": "Por número exacto el cajero encuentra sus ventas y las del local donde tiene la caja abierta (para reimprimir o hacer un cambio de talla). Sin caja abierta, recorrer números no muestra ventas ajenas."
           },
           "event": [
             {
@@ -2987,7 +2987,36 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
-                  "pm.test(\"La encuentra\", () => pm.expect(pm.response.json().content.length).to.eql(1));"
+                  "pm.test(\"No la ve\", () => pm.expect(pm.response.json().content.length).to.eql(0));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Cajero no ve el detalle de una venta ajena (debe dar 403)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/ventas/{{ventaId}}",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenCajero}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 403\", () => pm.response.to.have.status(403));"
                 ]
               }
             }

@@ -27,6 +27,8 @@ import java.util.zip.ZipOutputStream;
  */
 final class CdrSunat {
 
+    private static final int MAXIMO_XML = 5 * 1024 * 1024;
+
     private CdrSunat() {
     }
 
@@ -100,7 +102,12 @@ final class CdrSunat {
             ZipEntry entry;
             while ((entry = entrada.getNextEntry()) != null) {
                 if (entry.getName().toLowerCase().endsWith(".xml")) {
-                    return entrada.readAllBytes();
+                    // Una constancia pesa unos KB: más del tope es un archivo dañado o malicioso (bomba zip).
+                    byte[] xml = entrada.readNBytes(MAXIMO_XML + 1);
+                    if (xml.length > MAXIMO_XML) {
+                        throw new IOException("El CDR de SUNAT supera " + MAXIMO_XML / (1024 * 1024) + " MB");
+                    }
+                    return xml;
                 }
             }
         }

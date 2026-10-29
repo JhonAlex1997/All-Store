@@ -22,6 +22,11 @@ public class JwtService {
     public static final String CLAIM_USUARIO_ID = "uid";
     public static final String CLAIM_ROL = "rol";
     public static final String CLAIM_NOMBRE = "nombre";
+    /**
+     * Momento exacto de emisión, en milisegundos. El "iat" estándar va en segundos: con él, un token
+     * emitido en el mismo segundo en que se cerraron las sesiones seguía valiendo.
+     */
+    public static final String CLAIM_EMITIDO_MS = "emitido_ms";
 
     private final JwtEncoder jwtEncoder;
     private final SeguridadProperties properties;
@@ -36,6 +41,7 @@ public class JwtService {
                 .claim(CLAIM_USUARIO_ID, usuario.getId())
                 .claim(CLAIM_ROL, usuario.getRol().name())
                 .claim(CLAIM_NOMBRE, usuario.getNombre())
+                .claim(CLAIM_EMITIDO_MS, ahora.toEpochMilli())
                 .build();
         JwsHeader header = JwsHeader.with(MacAlgorithm.HS256).build();
         return jwtEncoder.encode(JwtEncoderParameters.from(header, claims)).getTokenValue();
