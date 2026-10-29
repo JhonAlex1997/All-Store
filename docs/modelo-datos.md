@@ -1,6 +1,6 @@
 # Modelo de datos de AllStore
 
-23 tablas y 32 llaves foráneas (versión de base de datos V17). Todas las tablas, salvo las
+24 tablas y 33 llaves foráneas (versión de base de datos V18). Todas las tablas, salvo las
 de líneas (`comprobante_detalle`, `comprobante_pago`, `guia_remision_detalle`, `resumen_sunat_detalle`), tienen además `created_at`, `updated_at`,
 `created_by` y `updated_by` (auditoría), que no se repiten en los diagramas.
 
@@ -285,6 +285,7 @@ erDiagram
   PRODUCTO_VARIANTE ||--o{ GUIA_REMISION_DETALLE : "trasladada"
   GUIA_REMISION ||--o| ENVIO_SUNAT : "se envia"
   COMPROBANTE ||--o{ ENVIO_CORREO : "se entrega por correo"
+  COMPROBANTE ||--o{ ENVIO_WHATSAPP : "se entrega por WhatsApp"
   COMPROBANTE {
     bigint id PK
     varchar tipo_comprobante
@@ -439,6 +440,14 @@ erDiagram
     int intentos
     timestamptz proximo_intento
     timestamptz fecha_envio
+    varchar error
+  }
+  ENVIO_WHATSAPP {
+    bigint id PK
+    bigint comprobante_id FK
+    varchar telefono
+    varchar estado
+    varchar mensaje_id
     varchar error
   }
 ```

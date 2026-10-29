@@ -175,6 +175,52 @@ Los **totales** solo cuentan lo vigente: no los anulados ni las notas de venta y
 y lo **cobrado y devuelto por cada método**. Con `metodoPago=YAPE`, una venta mitad en efectivo y
 mitad por Yape suma completa en `totalVentas`, pero en `cobradoPorMetodo.YAPE` solo su parte.
 
+## Carga masiva desde Excel
+
+Para registrar el catálogo y el stock inicial de una vez (en vez de modelo por modelo):
+
+1. `GET /api/inventario/carga-masiva/plantilla` descarga el Excel: una fila por prenda con
+   `codigo`, `nombre`, `categoria`, `precio`, `precio_por_mayor` (opcional), `talla`, `color` y
+   `stock` (opcional). La hoja "Catálogo" lista las categorías, tallas y colores que el sistema
+   reconoce (sin importar mayúsculas ni tildes).
+2. `POST /api/inventario/carga-masiva?establecimientoId=1` (form-data, campo `archivo`) **revisa**
+   el archivo y dice cuántos modelos, combinaciones y unidades se crearían, y qué corregir en cada
+   fila.
+3. Con `&aplicar=true` **carga**: crea lo que no existe y registra el stock como inventario inicial
+   en ese local. Es todo o nada: con un error en una fila no se guarda nada.
+
+Un modelo que ya existe recibe solo las combinaciones nuevas; el stock de una combinación que ya
+existe se suma con un ajuste de inventario (así cargar dos veces el mismo archivo no duplica nada).
+Máximo 5000 filas por archivo.
+
+## Etiquetas con código de barras
+
+`POST /api/productos/etiquetas` devuelve un PDF para imprimir y pegar en las prendas:
+`{"formato": "ROLLO_50X25", "items": [{"varianteId": 15, "cantidad": 6}]}`.
+
+- `ROLLO_50X25`: una etiqueta por página, para impresoras térmicas de etiquetas (Zebra, Xprinter…).
+- `A4`: hoja de 24 etiquetas de 70 × 37 mm, para hojas autoadhesivas.
+- Cada etiqueta lleva la tienda, el modelo, color y talla, el precio (y el precio por mayor) y el
+  **código EAN-13** que lee la caja al escanear, con su SKU. Las barras miden 0.375 mm (3 puntos
+  exactos en una térmica de 203 dpi), con la zona blanca que pide GS1: verificado con un lector a
+  203 y 300 dpi.
+
+## Consulta de RUC y DNI
+
+`GET /api/clientes/consulta/RUC/20601030013` (o `/DNI/46027897`) devuelve nombre, dirección y
+ubigeo para llenar el cliente sin escribirlo a mano:
+
+1. Valida el número (formato y dígito de control del RUC) sin consultar a nadie.
+2. Busca entre los clientes registrados.
+3. Si no está, consulta al proveedor (SUNAT para RUC, RENIEC para DNI) y recuerda la respuesta 24
+   horas para no pagar dos veces el mismo número.
+
+Si el RUC no está **ACTIVO y HABIDO**, responde una advertencia: no conviene emitirle factura.
+RENIEC no tiene un servicio público gratuito: se usa un proveedor de pago, por ahora
+[Decolecta](https://decolecta.com) (`CONSULTA_DOCUMENTOS_PROVEEDOR=DECOLECTA` y
+`CONSULTA_DOCUMENTOS_TOKEN`). El número consultado se envía a ese proveedor. Sin configurar, los
+datos se escriben a mano.
+
 ## Precio por mayor
 
 - Cada modelo puede tener su **precio por mayor** (`precioPorMayor` del producto) y cada variante
@@ -387,6 +433,7 @@ backend para que el comprobante sea idéntico desde cualquier caja o reimpresió
 | --- | --- |
 | `GET /api/ventas/{id}/entrega` | Enlaces públicos (PDF, ticket, XML, constancia), enlace de WhatsApp con el mensaje listo y los correos enviados |
 | `POST /api/ventas/{id}/entrega/correo` | Enviar por correo el PDF, el XML y la constancia (`{"email": ...}`; sin email, al correo del cliente) |
+| `POST /api/ventas/{id}/entrega/whatsapp` | Enviar por WhatsApp (`{"celular": ...}`; sin celular, al del cliente) |
 | `GET /api/publico/comprobantes/{codigo}/pdf` · `/xml` · `/cdr` | Descarga **sin iniciar sesión**: es el enlace que recibe el cliente |
 
 - **Automático:** cuando SUNAT acepta un comprobante y el cliente tiene correo registrado, se le
@@ -396,8 +443,15 @@ backend para que el comprobante sea idéntico desde cualquier caja o reimpresió
 - No se entrega lo anulado ni lo rechazado por SUNAT.
 - El enlace público usa un código aleatorio (UUID) por comprobante: no se puede adivinar ni
   recorrer. Las descargas llevan `X-Robots-Tag: noindex` para que los buscadores no las guarden.
-- WhatsApp: si el cliente tiene un celular registrado, el enlace abre su chat; si no, WhatsApp pide
-  elegir el contacto.
+- **WhatsApp:** con la API oficial de Meta configurada (`WHATSAPP_TOKEN`, `WHATSAPP_NUMERO_ID`,
+  `WHATSAPP_PLANTILLA`), el sistema envía una plantilla aprobada con el **PDF adjunto** y queda
+  registrado (`ENVIADO` o `ERROR`, con el id del mensaje). Sin configurar, o si Meta lo rechaza,
+  devuelve el enlace `wa.me` con el mensaje listo y la caja lo envía a mano. Meta exige una cuenta
+  de WhatsApp Business verificada, una plantilla aprobada (encabezado DOCUMENTO y cuerpo con 4
+  variables: cliente, documento, total, tienda) y cobra por conversación. La primera vez hay que
+  probarla con tu cuenta real.
+- Por correo y por WhatsApp: hasta 5 envíos al día por comprobante; el cajero solo envía los suyos
+  o los del local donde tiene la caja abierta.
 
 **Configuración.** `CORREO_MODO=SMTP` con el servidor en `SPRING_MAIL_HOST`, `SPRING_MAIL_PORT`
 (587), `SPRING_MAIL_USERNAME` y `SPRING_MAIL_PASSWORD`, y `CORREO_REMITENTE` (normalmente la misma

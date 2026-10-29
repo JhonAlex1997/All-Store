@@ -8,9 +8,13 @@ import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 
+import java.util.Optional;
+
 public interface ProductoRepository extends JpaRepository<Producto, Long>, JpaSpecificationExecutor<Producto> {
 
     boolean existsByCodigoIgnoreCase(String codigo);
+
+    Optional<Producto> findByCodigoIgnoreCase(String codigo);
 
     // Trae la categoría en la misma consulta para no hacer una consulta extra por fila.
     @Override

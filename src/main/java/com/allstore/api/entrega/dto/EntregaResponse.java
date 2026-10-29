@@ -17,7 +17,9 @@ public record EntregaResponse(
         String whatsapp,
         String correoCliente,
         boolean correoHabilitado,
-        List<EnvioCorreoResponse> correos
+        List<EnvioCorreoResponse> correos,
+        boolean whatsappAutomatico,
+        List<EnvioWhatsappResponse> whatsapps
 ) {
     /** @param xml y cdr solo existen en comprobantes electrónicos (el CDR, cuando SUNAT ya respondió) */
     public record Enlaces(String pdf, String ticket, String xml, String cdr) {

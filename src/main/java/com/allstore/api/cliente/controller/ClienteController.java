@@ -2,8 +2,10 @@ package com.allstore.api.cliente.controller;
 
 import com.allstore.api.cliente.dto.ClienteRequest;
 import com.allstore.api.cliente.dto.ClienteResponse;
+import com.allstore.api.cliente.dto.ConsultaDocumentoResponse;
 import com.allstore.api.cliente.entity.TipoDocumentoIdentidad;
 import com.allstore.api.cliente.service.ClienteService;
+import com.allstore.api.cliente.service.ConsultaDocumentoService;
 import com.allstore.api.common.dto.PageResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -28,6 +30,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class ClienteController {
 
     private final ClienteService clienteService;
+    private final ConsultaDocumentoService consultaDocumentoService;
 
     /** Ej: GET /api/clientes?busqueda=perez&tipoDocumento=DNI */
     @GetMapping
@@ -45,6 +48,15 @@ public class ClienteController {
     }
 
     /** Ej: GET /api/clientes/documento/DNI/45678912 */
+    /**
+     * Datos de un RUC (SUNAT) o DNI (RENIEC) para llenar el cliente nuevo: primero entre los ya
+     * registrados y, si no está, en el proveedor configurado. Ej: GET /api/clientes/consulta/RUC/20601030013
+     */
+    @GetMapping("/consulta/{tipo}/{numero}")
+    public ConsultaDocumentoResponse consultar(@PathVariable TipoDocumentoIdentidad tipo, @PathVariable String numero) {
+        return consultaDocumentoService.consultar(tipo, numero);
+    }
+
     @GetMapping("/documento/{tipo}/{numero}")
     public ClienteResponse buscarPorDocumento(@PathVariable TipoDocumentoIdentidad tipo, @PathVariable String numero) {
         return clienteService.buscarPorDocumento(tipo, numero);
