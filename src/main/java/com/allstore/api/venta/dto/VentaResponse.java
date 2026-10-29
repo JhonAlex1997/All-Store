@@ -30,6 +30,8 @@ import java.util.List;
  * @param porMayor          se cobró a precio por mayor
  * @param porMayorManual    el precio por mayor lo dio el cajero sin llegar al mínimo de prendas
  * @param vendedor          usuario que registró el comprobante
+ * @param whatsappEntrega   celular al que se envía por WhatsApp (elegido al emitir)
+ * @param correoEntrega     correo al que se envía (elegido al emitir; si no, el del cliente)
  * @param sunat             estado ante SUNAT, hash y QR (null en notas de venta, que no se envían)
  * @param bajaSunat         si se anuló un comprobante electrónico: su baja ante SUNAT y el estado
  */
@@ -70,7 +72,9 @@ public record VentaResponse(
         List<Detalle> detalles,
         List<Pago> pagos,
         SunatInfo sunat,
-        BajaSunatInfo bajaSunat
+        BajaSunatInfo bajaSunat,
+        String whatsappEntrega,
+        String correoEntrega
 ) {
     /** Datos del cliente tal como quedaron en el comprobante. */
     public record Cliente(Long id, String tipoDocumento, String numeroDocumento, String nombre, String direccion) {
@@ -134,7 +138,9 @@ public record VentaResponse(
                 c.getDetalles().stream().map(Detalle::from).toList(),
                 c.getPagos().stream().map(Pago::from).toList(),
                 sunat,
-                bajaSunat
+                bajaSunat,
+                c.getWhatsappEntrega(),
+                c.getCorreoEntrega()
         );
     }
 }

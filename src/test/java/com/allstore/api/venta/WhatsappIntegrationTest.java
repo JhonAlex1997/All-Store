@@ -8,7 +8,13 @@ import com.allstore.api.empresa.entity.TipoComprobante;
 import com.allstore.api.empresa.service.EmpresaService;
 import com.allstore.api.entrega.dto.EnvioWhatsappResponse;
 import com.allstore.api.entrega.service.EntregaService;
+import com.allstore.api.entrega.entity.EnvioWhatsapp;
+import com.allstore.api.entrega.repository.EnvioCorreoRepository;
+import com.allstore.api.entrega.repository.EnvioWhatsappRepository;
 import com.allstore.api.entrega.service.ServicioWhatsapp;
+import com.allstore.api.facturacion.service.EnvioSunatService;
+import com.allstore.api.facturacion.service.ServicioEnvioSunat;
+import com.allstore.api.venta.dto.VentaRequest;
 import com.allstore.api.venta.dto.VentaResponse;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -33,7 +39,12 @@ class WhatsappIntegrationTest extends TiendaDePrueba {
     @Autowired private EntregaService entregaService;
     @Autowired private EmpresaService empresaService;
 
+    @Autowired private EnvioWhatsappRepository whatsappRepository;
+    @Autowired private EnvioCorreoRepository envioCorreoRepository;
+    @Autowired private EnvioSunatService envioSunatService;
+
     @MockitoBean private ServicioWhatsapp servicioWhatsapp;
+    @MockitoBean private ServicioEnvioSunat servicioEnvio;
 
     private VentaResponse boleta;
 
@@ -83,6 +94,51 @@ class WhatsappIntegrationTest extends TiendaDePrueba {
         assertThat(r.estado()).isEqualTo("ERROR");
         assertThat(r.error()).contains("plantilla");
         assertThat(r.enlace()).startsWith("https://wa.me/51987654321");
+    }
+
+    @Test
+    void laBoletaConWhatsappAlEmitirQuedaEnColaHastaQueSunatLaAcepte() throws Exception {
+        when(servicioWhatsapp.configurado()).thenReturn(true);
+        when(servicioEnvio.enviar(anyString(), any())).thenReturn(
+                new ServicioEnvioSunat.Respuesta(true, "0", "Aceptada", List.of(), new byte[]{1}));
+        VentaResponse venta = ventaService.crear(new VentaRequest(TipoComprobante.BOLETA, serieBoleta, null, null,
+                List.of(item(jeanB, 1, null)), List.of(efectivo("89.90", null)), null, "912 345 678", "comprador@correo.pe"));
+
+        assertThat(venta.whatsappEntrega()).isEqualTo("51912345678");
+        assertThat(whatsappRepository.findByComprobanteIdOrderByIdDesc(venta.id())).as("aún no la acepta SUNAT").isEmpty();
+
+        envioSunatService.enviarAhora(venta.id(), false);
+
+        assertThat(whatsappRepository.findByComprobanteIdOrderByIdDesc(venta.id())).singleElement().satisfies(w -> {
+            assertThat(w.getEstado()).isEqualTo(EnvioWhatsapp.Estado.PENDIENTE);
+            assertThat(w.getTelefono()).isEqualTo("51912345678");
+            assertThat(w.isAutomatico()).isTrue();
+        });
+        // El correo elegido al emitir también, aunque el cliente (Clientes varios) no tenga correo.
+        assertThat(envioCorreoRepository.findByComprobanteIdOrderByIdDesc(venta.id())).singleElement()
+                .satisfies(e -> assertThat(e.getDestinatario()).isEqualTo("comprador@correo.pe"));
+    }
+
+    @Test
+    void laNotaDeVentaNoEsperaASunatYSinLaApiQuedaElEnlaceAlNumeroElegido() {
+        when(servicioWhatsapp.configurado()).thenReturn(true);
+        VentaResponse nota = ventaService.crear(new VentaRequest(TipoComprobante.NOTA_VENTA, serieNotaVenta, null, null,
+                List.of(item(jeanB, 1, null)), List.of(efectivo("89.90", null)), null, "912345678", null));
+        assertThat(whatsappRepository.findByComprobanteIdOrderByIdDesc(nota.id())).singleElement()
+                .satisfies(w -> assertThat(w.getEstado()).isEqualTo(EnvioWhatsapp.Estado.PENDIENTE));
+
+        when(servicioWhatsapp.configurado()).thenReturn(false);
+        VentaResponse otra = ventaService.crear(new VentaRequest(TipoComprobante.NOTA_VENTA, serieNotaVenta, null, null,
+                List.of(item(jeanB, 1, null)), List.of(efectivo("89.90", null)), null, "912345678", null));
+        assertThat(whatsappRepository.findByComprobanteIdOrderByIdDesc(otra.id())).isEmpty();
+        assertThat(entregaService.entrega(otra.id()).whatsapp()).startsWith("https://wa.me/51912345678?text=");
+    }
+
+    @Test
+    void unCelularInvalidoAlEmitirSeRechazaAntesDeVender() {
+        assertThatThrownBy(() -> ventaService.crear(new VentaRequest(TipoComprobante.BOLETA, serieBoleta, null, null,
+                List.of(item(jeanB, 1, null)), List.of(efectivo("89.90", null)), null, "123", null)))
+                .isInstanceOf(BusinessException.class).hasMessageContaining("no es válido");
     }
 
     @Test

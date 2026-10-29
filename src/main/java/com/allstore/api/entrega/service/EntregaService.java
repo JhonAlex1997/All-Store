@@ -2,6 +2,7 @@ package com.allstore.api.entrega.service;
 
 import com.allstore.api.common.exception.BusinessException;
 import com.allstore.api.common.exception.ResourceNotFoundException;
+import com.allstore.api.common.validacion.Celular;
 import com.allstore.api.config.JpaAuditingConfig;
 import com.allstore.api.empresa.entity.Empresa;
 import com.allstore.api.empresa.service.EmpresaService;
@@ -24,6 +25,7 @@ import com.allstore.api.venta.dto.VentaResponse;
 import com.allstore.api.venta.entity.Comprobante;
 import com.allstore.api.venta.entity.EstadoComprobante;
 import com.allstore.api.venta.repository.ComprobanteRepository;
+import com.allstore.api.venta.service.EntregaSolicitada;
 import com.allstore.api.venta.service.VentaService;
 import com.allstore.api.venta.service.VisibilidadComprobante;
 import jakarta.mail.internet.MimeMessage;
@@ -118,7 +120,7 @@ public class EntregaService {
                 new EntregaResponse.Enlaces(pdf, pdf + "?formato=TICKET", tieneXml ? enlace(c, "xml") : null,
                         tieneCdr ? enlace(c, "cdr") : null),
                 whatsapp(c, pdf),
-                c.getCliente().getEmail(),
+                c.getCorreoEntrega() != null ? c.getCorreoEntrega() : c.getCliente().getEmail(),
                 properties.correo().habilitado(),
                 envioRepository.findByComprobanteIdOrderByIdDesc(comprobanteId).stream().map(EnvioCorreoResponse::from).toList(),
                 servicioWhatsapp.configurado(),
@@ -139,7 +141,8 @@ public class EntregaService {
         Comprobante c = obtener(comprobanteId);
         visibilidad.exigirVisible(c);
         validarEntregable(c);
-        String telefono = telefonoWhatsapp(StringUtils.hasText(celular) ? celular : c.getCliente().getTelefono());
+        String telefono = Celular.paraWhatsapp(StringUtils.hasText(celular) ? celular
+                : c.getWhatsappEntrega() != null ? c.getWhatsappEntrega() : c.getCliente().getTelefono());
         String pdf = enlace(c, "pdf");
         String manual = whatsapp(c, pdf, telefono);
         if (!servicioWhatsapp.configurado()) {
@@ -153,41 +156,30 @@ public class EntregaService {
         EnvioWhatsapp envio = new EnvioWhatsapp();
         envio.setComprobante(c);
         envio.setTelefono(telefono);
+        envio.setEstado(EnvioWhatsapp.Estado.PENDIENTE);
+        envio.setIntentos(EnvioWhatsapp.MAXIMO_INTENTOS - 1); // pedido por un usuario: un solo intento, ve el resultado al instante
+        enviarWhatsapp(envio);
+        whatsappRepository.save(envio);
+        return EnvioWhatsappResponse.from(envio, manual);
+    }
+
+    /** Un intento: ENVIADO, o de vuelta a PENDIENTE hasta agotar los intentos (entonces ERROR). */
+    private void enviarWhatsapp(EnvioWhatsapp envio) {
+        Comprobante c = envio.getComprobante();
+        envio.setIntentos(envio.getIntentos() + 1);
         try {
-            envio.setMensajeId(servicioWhatsapp.enviar(telefono, pdf, c.getNumeroImpreso() + ".pdf", List.of(
+            envio.setMensajeId(servicioWhatsapp.enviar(envio.getTelefono(), enlace(c, "pdf"), c.getNumeroImpreso() + ".pdf", List.of(
                     generico(c) ? "cliente" : c.getClienteNombre(),
                     c.getTipoComprobante().getDescripcion().toLowerCase() + " " + c.getNumeroImpreso(),
                     "S/ " + c.getTotal().toPlainString(),
                     negocio())));
             envio.setEstado(EnvioWhatsapp.Estado.ENVIADO);
+            envio.setError(null);
         } catch (IOException e) {
             log.warn("No se pudo enviar {} por WhatsApp: {}", c.getNumeroImpreso(), e.getMessage());
-            envio.setEstado(EnvioWhatsapp.Estado.ERROR);
+            envio.setEstado(envio.getIntentos() >= EnvioWhatsapp.MAXIMO_INTENTOS ? EnvioWhatsapp.Estado.ERROR : EnvioWhatsapp.Estado.PENDIENTE);
             envio.setError(e.getMessage().length() > 500 ? e.getMessage().substring(0, 500) : e.getMessage());
         }
-        whatsappRepository.save(envio);
-        return EnvioWhatsappResponse.from(envio, manual);
-    }
-
-    /**
-     * Celular con código de país, solo dígitos. Un celular peruano (9 dígitos que empiezan con 9)
-     * recibe el 51; uno de otro país debe venir con su código (+ y de 10 a 15 dígitos).
-     */
-    static String telefonoWhatsapp(String celular) {
-        if (!StringUtils.hasText(celular)) {
-            throw new BusinessException("Indica el celular del cliente para enviarle el comprobante por WhatsApp");
-        }
-        String digitos = celular.replaceAll("\\D", "");
-        if (digitos.length() == 9 && digitos.startsWith("9")) {
-            return "51" + digitos;
-        }
-        if (digitos.length() == 11 && digitos.startsWith("519")) {
-            return digitos;
-        }
-        if (celular.trim().startsWith("+") && digitos.length() >= 10 && digitos.length() <= 15 && !digitos.startsWith("51")) {
-            return digitos;
-        }
-        throw new BusinessException("El celular " + celular + " no es válido: usa 9 dígitos (ej. 987654321) o +código de país");
     }
 
     private String negocio() {
@@ -240,20 +232,59 @@ public class EntregaService {
      */
     @EventListener
     public void alAceptarSunat(ComprobanteAceptado evento) {
-        if (!properties.correo().habilitado() || !properties.correo().envioAutomatico()
-                || envioRepository.existsByComprobanteIdAndAutomaticoTrue(evento.comprobanteId())) {
+        encolarEntrega(obtener(evento.comprobanteId()));
+    }
+
+    /** Nota de venta con entrega pedida al emitir: no espera a SUNAT. */
+    @EventListener
+    public void alSolicitarEntrega(EntregaSolicitada evento) {
+        encolarEntrega(obtener(evento.comprobanteId()));
+    }
+
+    /**
+     * Deja en cola, una sola vez, el correo (al elegido al emitir o, si no, al del cliente) y el
+     * WhatsApp pedido al emitir. Solo registra: los envían después los procesos programados.
+     */
+    private void encolarEntrega(Comprobante c) {
+        if (c.getEstado() != EstadoComprobante.EMITIDO) {
             return;
         }
-        Comprobante c = obtener(evento.comprobanteId());
-        String email = c.getCliente().getEmail();
-        if (c.getEstado() != EstadoComprobante.EMITIDO || !StringUtils.hasText(email)) {
+        String email = c.getCorreoEntrega() != null ? c.getCorreoEntrega() : c.getCliente().getEmail();
+        if (properties.correo().habilitado() && properties.correo().envioAutomatico() && StringUtils.hasText(email)
+                && !envioRepository.existsByComprobanteIdAndAutomaticoTrue(c.getId())) {
+            EnvioCorreo envio = new EnvioCorreo();
+            envio.setComprobante(c);
+            envio.setDestinatario(email);
+            envio.setAutomatico(true);
+            envioRepository.save(envio);
+        }
+        // Sin la API de Meta no se encola: la caja abre el enlace wa.me (ver entrega()).
+        if (c.getWhatsappEntrega() != null && servicioWhatsapp.configurado()
+                && !whatsappRepository.existsByComprobanteIdAndAutomaticoTrue(c.getId())) {
+            EnvioWhatsapp envio = new EnvioWhatsapp();
+            envio.setComprobante(c);
+            envio.setTelefono(c.getWhatsappEntrega());
+            envio.setEstado(EnvioWhatsapp.Estado.PENDIENTE);
+            envio.setAutomatico(true);
+            whatsappRepository.save(envio);
+        }
+    }
+
+    /** Envía los WhatsApp pendientes cada cierto tiempo, cada uno en su propia transacción. */
+    @Scheduled(fixedDelayString = "${app.entrega.correo.intervalo-ms:30000}", initialDelay = 25_000)
+    public void enviarWhatsappPendientes() {
+        if (!servicioWhatsapp.configurado()) {
             return;
         }
-        EnvioCorreo envio = new EnvioCorreo();
-        envio.setComprobante(c);
-        envio.setDestinatario(email);
-        envio.setAutomatico(true);
-        envioRepository.save(envio);
+        for (Long id : whatsappRepository.idsPendientes(PageRequest.of(0, LOTE))) {
+            try {
+                transaccionPropia.executeWithoutResult(s -> whatsappRepository.tomarParaEnviar(id)
+                        .filter(e -> e.getEstado() == EnvioWhatsapp.Estado.PENDIENTE)
+                        .ifPresent(this::enviarWhatsapp));
+            } catch (RuntimeException e) {
+                log.error("Error enviando el WhatsApp {}", id, e);
+            }
+        }
     }
 
     /** Envía los correos pendientes cada cierto tiempo (app.entrega.correo.intervalo-ms). */
@@ -363,6 +394,9 @@ public class EntregaService {
      * que empiezan con 9) va directo a su chat; si no, WhatsApp pide elegir el contacto.
      */
     private static String whatsapp(Comprobante c, String enlacePdf) {
+        if (c.getWhatsappEntrega() != null) {
+            return whatsapp(c, enlacePdf, c.getWhatsappEntrega());
+        }
         String telefono = c.getCliente().getTelefono() == null ? "" : c.getCliente().getTelefono().replaceAll("\\D", "");
         if (telefono.length() == 11 && telefono.startsWith("51")) {
             telefono = telefono.substring(2);

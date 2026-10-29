@@ -7,6 +7,7 @@ import com.allstore.api.cliente.entity.TipoDocumentoIdentidad;
 import com.allstore.api.cliente.service.ClienteService;
 import com.allstore.api.common.exception.BusinessException;
 import com.allstore.api.common.idempotencia.SolicitudIdempotente;
+import com.allstore.api.common.validacion.Celular;
 import com.allstore.api.empresa.entity.Empresa;
 import com.allstore.api.empresa.entity.Serie;
 import com.allstore.api.empresa.entity.TipoComprobante;
@@ -27,6 +28,7 @@ import com.allstore.api.venta.entity.ComprobanteDetalle;
 import com.allstore.api.venta.entity.EstadoComprobante;
 import com.allstore.api.venta.repository.ComprobanteRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -60,6 +62,7 @@ public class VentaService {
     private final InventarioService inventarioService;
     private final CajaService cajaService;
     private final EmpresaService empresaService;
+    private final ApplicationEventPublisher eventos;
 
     // ---------- Emitir ----------
 
@@ -102,6 +105,12 @@ public class VentaService {
         comprobante.setCajaSesion(caja);
         comprobante.asignarCliente(cliente);
         comprobante.setObservacion(limpiar(request.observacion()));
+        if (StringUtils.hasText(request.whatsapp())) {
+            comprobante.setWhatsappEntrega(Celular.paraWhatsapp(request.whatsapp()));
+        }
+        if (StringUtils.hasText(request.correo())) {
+            comprobante.setCorreoEntrega(request.correo().trim().toLowerCase());
+        }
         aplicarPrecioPorMayor(comprobante, request);
         agregarDetalles(comprobante, request.items());
         comprobante.recalcularTotales();
@@ -116,6 +125,9 @@ public class VentaService {
                 request.items().stream().map(i -> new InventarioService.Linea(i.varianteId(), i.cantidad())).toList(),
                 null);
         emision.emitir(comprobante, serie, solicitud);
+        if (tipo == TipoComprobante.NOTA_VENTA && (comprobante.getWhatsappEntrega() != null || comprobante.getCorreoEntrega() != null)) {
+            eventos.publishEvent(new EntregaSolicitada(comprobante.getId()));
+        }
         emision.referenciar(movimientos, comprobante);
         return emision.respuesta(comprobante, null, List.of());
     }
@@ -165,6 +177,8 @@ public class VentaService {
         nuevo.setEstablecimiento(nota.getEstablecimiento());
         nuevo.asignarCliente(cliente);
         nuevo.setObservacion(nota.getObservacion());
+        nuevo.setWhatsappEntrega(nota.getWhatsappEntrega());
+        nuevo.setCorreoEntrega(nota.getCorreoEntrega());
         nuevo.setComprobanteOrigen(nota);
         nuevo.setPorMayor(nota.isPorMayor());
         nuevo.setPorMayorManual(nota.isPorMayorManual());
@@ -257,6 +271,8 @@ public class VentaService {
         nuevo.setComprobanteOrigen(rechazado.getComprobanteOrigen());
         nuevo.setReemplazaA(rechazado);
         nuevo.setObservacion(rechazado.getObservacion());
+        nuevo.setWhatsappEntrega(rechazado.getWhatsappEntrega());
+        nuevo.setCorreoEntrega(rechazado.getCorreoEntrega());
         nuevo.setPorMayor(rechazado.isPorMayor());
         nuevo.setPorMayorManual(rechazado.isPorMayorManual());
         rechazado.getDetalles().forEach(d -> nuevo.agregarDetalle(d.copiar()));

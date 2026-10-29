@@ -92,7 +92,7 @@ class ConsultaVentasIntegrationTest extends TiendaDePrueba {
                 List.of(new ItemDevolucionRequest(jeanA, 1)))).numero();
 
         boletaPorMayorManual = ventaService.crear(new VentaRequest(TipoComprobante.BOLETA, serieBoleta, null, null,
-                List.of(item(jeanB, 1, null)), List.of(efectivo("70.00", null)), true)).numero();
+                List.of(item(jeanB, 1, null)), List.of(efectivo("70.00", null)), true, null, null)).numero();
     }
 
     @Test

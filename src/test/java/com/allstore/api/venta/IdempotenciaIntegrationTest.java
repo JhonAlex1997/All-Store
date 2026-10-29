@@ -220,6 +220,6 @@ class IdempotenciaIntegrationTest extends TiendaDePrueba {
 
     private VentaRequest boleta(int cantidad) {
         return new VentaRequest(TipoComprobante.BOLETA, serieBoleta, null, null, List.of(item(jeanA, cantidad, null)),
-                List.of(efectivo(cantidad == 1 ? "89.90" : "179.80", null)), null);
+                List.of(efectivo(cantidad == 1 ? "89.90" : "179.80", null)), null, null, null);
     }
 }

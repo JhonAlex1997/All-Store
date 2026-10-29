@@ -19,9 +19,21 @@ import lombok.Setter;
 public class EnvioWhatsapp extends BaseEntity {
 
     public enum Estado {
+        /** Pedido al emitir: espera a que SUNAT acepte el comprobante o al proceso que lo envía. */
+        PENDIENTE,
         ENVIADO,
         ERROR
     }
+
+    /** Intentos antes de dejarlo en ERROR (los automáticos se reintentan solos). */
+    public static final int MAXIMO_INTENTOS = 3;
+
+    /** Pedido al emitir (lo envía el sistema); falso si lo pidió un usuario después. */
+    @Column(nullable = false, updatable = false)
+    private boolean automatico;
+
+    @Column(nullable = false)
+    private int intentos;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "comprobante_id", updatable = false)

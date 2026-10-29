@@ -450,6 +450,10 @@ backend para que el comprobante sea idéntico desde cualquier caja o reimpresió
   de WhatsApp Business verificada, una plantilla aprobada (encabezado DOCUMENTO y cuerpo con 4
   variables: cliente, documento, total, tienda) y cobra por conversación. La primera vez hay que
   probarla con tu cuenta real.
+- **Al emitir:** la venta puede traer `"whatsapp": "987654321"` y/o `"correo": "..."` (la casilla
+  "enviar por WhatsApp" de la caja). La boleta o factura se envía sola cuando SUNAT la acepta, así
+  llega válida; la nota de venta, en el acto. Con la API de Meta la envía el sistema con el PDF; sin
+  ella, `GET /api/ventas/{id}/entrega` trae el enlace `wa.me` a ese número para la caja.
 - Por correo y por WhatsApp: hasta 5 envíos al día por comprobante; el cajero solo envía los suyos
   o los del local donde tiene la caja abierta.
 

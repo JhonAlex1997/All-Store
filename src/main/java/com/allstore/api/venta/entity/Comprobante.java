@@ -107,6 +107,14 @@ public class Comprobante extends BaseEntity {
     @JoinColumn(name = "comprobante_origen_id", updatable = false)
     private Comprobante comprobanteOrigen;
 
+    /** Celular al que se envía por WhatsApp, elegido al emitir (con código de país, solo dígitos). */
+    @Column(name = "whatsapp_entrega", length = 20)
+    private String whatsappEntrega;
+
+    /** Correo al que se envía, elegido al emitir (si no, el del cliente). */
+    @Column(name = "correo_entrega", length = 120)
+    private String correoEntrega;
+
     /** Clave Idempotency-Key de la solicitud que lo emitió (para reconocer los reintentos). */
     @Column(name = "clave_idempotencia", length = 64, updatable = false)
     private String claveIdempotencia;

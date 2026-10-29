@@ -115,7 +115,7 @@ class PrecioPorMayorIntegrationTest extends TiendaDePrueba {
     @Test
     void alConvertirLaNotaDeVentaConservaElPrecioPorMayor() {
         VentaResponse nota = ventaService.crear(new VentaRequest(TipoComprobante.NOTA_VENTA, serieNotaVenta, null, null,
-                List.of(item(shortA, 3, null)), List.of(efectivo("126.00", null)), null));
+                List.of(item(shortA, 3, null)), List.of(efectivo("126.00", null)), null, null, null));
 
         VentaResponse boleta = ventaService.convertir(nota.id(), new ConvertirVentaRequest(TipoComprobante.BOLETA, serieBoleta, null));
 
@@ -126,6 +126,6 @@ class PrecioPorMayorIntegrationTest extends TiendaDePrueba {
     private VentaResponse vender(List<VentaItemRequest> items, String total, Boolean porMayor) {
         return ventaService.crear(new VentaRequest(TipoComprobante.BOLETA, serieBoleta, null, null, items,
                 List.of(new PagoRequest(com.allstore.api.venta.entity.MetodoPago.EFECTIVO, new BigDecimal(total), null, null)),
-                porMayor));
+                porMayor, null, null));
     }
 }

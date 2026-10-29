@@ -105,7 +105,7 @@ abstract class TiendaDePrueba {
 
     protected VentaResponse vender(TipoComprobante tipo, Long serieId, Long clienteId, List<VentaItemRequest> items,
                                    List<PagoRequest> pagos) {
-        return ventaService.crear(new VentaRequest(tipo, serieId, clienteId, null, items, pagos, null));
+        return ventaService.crear(new VentaRequest(tipo, serieId, clienteId, null, items, pagos, null, null, null));
     }
 
     protected static VentaItemRequest item(Long varianteId, int cantidad, String descuento) {

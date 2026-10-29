@@ -96,6 +96,10 @@
       "value": ""
     },
     {
+      "key": "ventaWhatsappId",
+      "value": ""
+    },
+    {
       "key": "montoMayor",
       "value": ""
     },
@@ -1310,6 +1314,63 @@
                 "exec": [
                   "pm.test(\"Responde 201\", () => pm.response.to.have.status(201));",
                   "pm.test(\"Es la misma venta\", () => pm.expect(pm.response.json().id).to.eql(Number(pm.collectionVariables.get(\"ventaId\"))));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Boleta enviada por WhatsApp y correo al emitir",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/ventas",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tipoComprobante\": \"BOLETA\",\n  \"serieId\": {{serieBoletaId}},\n  \"items\": [{ \"varianteId\": {{varianteVentaId}}, \"cantidad\": 1 }],\n  \"pagos\": [{ \"metodo\": \"YAPE\", \"monto\": {{precioVenta}} }],\n  \"whatsapp\": \"987 654 321\",\n  \"correo\": \"cliente@ejemplo.pe\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "La caja marca 'enviar por WhatsApp' en la misma venta. La boleta o factura se envía cuando SUNAT la acepta (llega válida); la nota de venta, en el acto. Con la API de Meta la envía el sistema con el PDF; sin ella, GET /entrega trae el enlace wa.me a ese número."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 201\", () => pm.response.to.have.status(201));",
+                  "const v = pm.response.json();",
+                  "pm.test(\"Guarda el celular\", () => pm.expect(v.whatsappEntrega).to.eql(\"51987654321\"));",
+                  "pm.collectionVariables.set(\"ventaWhatsappId\", v.id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Enlace de WhatsApp de esa boleta",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/ventas/{{ventaWhatsappId}}/entrega"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Va al celular elegido\", () => pm.expect(pm.response.json().whatsapp).to.include(\"wa.me/51987654321\"));"
                 ]
               }
             }

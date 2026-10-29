@@ -3,8 +3,10 @@ package com.allstore.api.venta.dto;
 import com.allstore.api.common.validacion.TextoSeguro;
 import com.allstore.api.empresa.entity.TipoComprobante;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
 import java.util.List;
@@ -32,6 +34,12 @@ public record VentaRequest(
         @NotEmpty(message = "Registra al menos un pago")
         @Size(max = 10, message = "Máximo 10 pagos por venta")
         List<@Valid PagoRequest> pagos,
-        Boolean porMayor
+        Boolean porMayor,
+        @Size(max = 20, message = "El celular no puede superar 20 caracteres")
+        @Pattern(regexp = "[0-9+ ()-]*", message = "El celular solo puede tener números, espacios, +, - y paréntesis")
+        String whatsapp,
+        @Email(message = "El correo no es válido")
+        @Size(max = 120, message = "El correo no puede superar 120 caracteres")
+        String correo
 ) {
 }
