@@ -414,6 +414,41 @@ Además, a las 8:00 y a las 18:00 se envía un **resumen por correo** si hay ale
 El plazo de envío es configurable (`app.alertas.dias-plazo-envio`, 3 por defecto): SUNAT indica 3
 días calendario para facturas y notas, y se usa el mismo para todo, porque avisar antes es lo prudente.
 
+## Reportes y exportación
+
+`GET /api/reportes/...` (solo ADMIN). Todos aceptan `desde` y `hasta` (por defecto, el mes en curso;
+máximo un año por consulta) y `establecimientoId`, y responden en JSON o, con `formato=XLSX` o
+`formato=CSV`, como archivo.
+
+| Reporte | Para decidir |
+| --- | --- |
+| `ventas-por-producto` | Qué modelos se venden: unidades netas, total y % del total |
+| `ventas-por-talla-color` | Qué tallas y colores salen, con el **stock actual** para reponer |
+| `ventas-por-vendedor` | Ventas, devoluciones, neto, ticket promedio, descuentos y por mayor manual de cada vendedor |
+| `ventas-por-hora` · `ventas-por-dia-semana` | Cuándo hay más clientes (hora de Lima): cuándo reforzar la caja |
+| `ventas-por-dia` | Ventas, devoluciones y neto de cada día |
+| `sin-rotacion?dias=60` | Prendas con stock que no se venden hace N días (o nunca), con el valor inmovilizado: candidatas a liquidación o a moverlas de local |
+| `detalle-ventas` | **Cada línea de cada comprobante** con cliente, vendedor, prenda (talla, color, categoría), importes y métodos de pago: el conjunto de datos para Excel o Python (CSV por defecto) |
+
+Cuentan solo lo vigente, igual que los totales de ventas: ni anulados, ni notas de venta convertidas
+(cuenta su boleta o factura), ni rechazados reemitidos; las notas de crédito restan. La venta de una
+nota convertida o de una reemisión cuenta para quien la vendió originalmente.
+
+El **detalle** incluye también lo anulado o convertido (columna `vigente`) para tener la historia
+completa, y la columna `signo` (-1 en notas de crédito): `cantidad * signo` da las unidades netas.
+Para un analista de datos:
+
+```python
+import pandas as pd
+df = pd.read_csv("detalle-ventas_2026-10-01_2026-10-31.csv", parse_dates=["fecha"])
+ventas = df[df.vigente == 1].assign(neto=lambda d: d.total * d.signo)
+ventas.groupby("talla").neto.sum().sort_values(ascending=False)
+```
+
+El CSV es UTF-8 con BOM (Excel lo abre con tildes) y punto decimal. Un texto que empieza con `=`,
+`+`, `-` o `@` (por ejemplo, un nombre de cliente malicioso) se escribe con un apóstrofo delante para
+que Excel no lo ejecute como fórmula. El Excel trae encabezado fijo, filtros y formato de soles y fechas.
+
 ## Bitácora de acciones sensibles
 
 `GET /api/bitacora` (solo ADMIN) responde **quién hizo qué, cuándo y desde dónde** en lo que mueve

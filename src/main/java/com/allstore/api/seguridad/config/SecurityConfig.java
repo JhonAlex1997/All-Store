@@ -156,6 +156,9 @@ public class SecurityConfig {
                         // Bitácora de acciones sensibles (quién anuló, cambió precios, desbloqueó...): solo administrador
                         .requestMatchers("/api/bitacora/**").hasRole(ADMIN)
 
+                        // Reportes y exportaciones (ventas por producto, vendedor, hora; detalle para análisis): solo administrador
+                        .requestMatchers("/api/reportes/**").hasRole(ADMIN)
+
                         // Todo lo demás, cerrado
                         .anyRequest().denyAll())
                 .oauth2ResourceServer(oauth -> oauth

@@ -2414,6 +2414,106 @@
           ]
         },
         {
+          "name": "Reporte: ventas por producto (mes en curso)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/reportes/ventas-por-producto",
+            "description": "También: ventas-por-talla-color, ventas-por-vendedor, ventas-por-hora, ventas-por-dia-semana, ventas-por-dia, sin-rotacion?dias=60. Con desde/hasta/establecimientoId y formato=XLSX o CSV."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Hay ventas\", () => pm.expect(pm.response.json().filas.length > 0).to.eql(true));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Reporte: ventas por vendedor en Excel",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/reportes/ventas-por-vendedor?formato=XLSX"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Es un Excel\", () => pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"spreadsheetml\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Reporte: ventas por hora",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/reportes/ventas-por-hora?desde={{hoy}}&hasta={{hoy}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Reporte: prendas sin rotación",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/reportes/sin-rotacion?dias=30"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Detalle de ventas para análisis (CSV)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/reportes/detalle-ventas?desde={{hoy}}&hasta={{hoy}}",
+            "description": "Cada línea de cada comprobante con cliente, vendedor, prenda, importes y pagos. Para Excel o pandas: pd.read_csv(...). Columna vigente y signo (-1 en notas de crédito)."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Es un CSV\", () => pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"text/csv\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
           "name": "Bitácora: anulaciones y descuentos de hoy",
           "request": {
             "method": "GET",
