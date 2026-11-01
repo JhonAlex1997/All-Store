@@ -1,0 +1,66 @@
+<section class="marca">
+  <div class="costura"></div>
+  <div class="logo"><span class="remache"></span>AllStore <small>Jeans</small></div>
+  <div class="lema">
+    <h1>Vende, factura y controla tu tienda <span>en un solo lugar</span>.</h1>
+    <p>Caja, boletas y facturas electrónicas ante SUNAT, inventario por talla y color, y el comprobante al cliente
+      por WhatsApp o correo.</p>
+    <div class="rasgos">
+      <div><i></i>Facturación electrónica SUNAT</div>
+      <div><i></i>Precio por mayor automático</div>
+      <div><i></i>Stock por talla y color</div>
+    </div>
+    <div class="pie-marca">AllStore Jeans · Sistema de ventas y facturación</div>
+  </div>
+</section>
+
+<section class="panel">
+  <form class="tarjeta" [formGroup]="form" (ngSubmit)="ingresar()" novalidate>
+    <h2>Ingresar</h2>
+    <p class="sub">Usa el usuario y la contraseña que te dio el administrador.</p>
+
+    @if (error(); as mensaje) {
+      <div class="aviso" role="alert">
+        <i class="pi pi-exclamation-circle" aria-hidden="true"></i>
+        <div><b>No se pudo ingresar</b>{{ mensaje }}</div>
+      </div>
+    }
+
+    <label for="usuario">Usuario</label>
+    <p-iconfield>
+      <p-inputicon class="pi pi-user" />
+      <input pInputText id="usuario" formControlName="username" autocomplete="username" autocapitalize="none"
+             spellcheck="false" [attr.autofocus]="enfocarPassword ? null : ''" fluid />
+    </p-iconfield>
+
+    <label for="password">Contraseña</label>
+    <p-iconfield>
+      <p-inputicon class="pi pi-lock" />
+      <input pInputText id="password" formControlName="password" autocomplete="current-password"
+             [type]="verPassword() ? 'text' : 'password'" [attr.autofocus]="enfocarPassword ? '' : null"
+             (keydown)="detectarMayusculas($event)" (keyup)="detectarMayusculas($event)" fluid />
+      <button type="button" class="ojo" (click)="verPassword.set(!verPassword())"
+              [attr.aria-label]="verPassword() ? 'Ocultar contraseña' : 'Mostrar contraseña'">
+        {{ verPassword() ? 'Ocultar' : 'Mostrar' }}
+      </button>
+    </p-iconfield>
+
+    <div class="fila">
+      <label class="recordar">
+        <p-checkbox formControlName="recordar" [binary]="true" inputId="recordar" />
+        <span>Recordar mi usuario</span>
+      </label>
+      <span class="mayus" [class.activo]="mayusculas()">
+        Bloq Mayús {{ mayusculas() ? 'activado' : 'desactivado' }}
+      </span>
+    </div>
+
+    <p-button type="submit" label="Ingresar" [loading]="enviando()" [disabled]="form.invalid" styleClass="boton" fluid />
+
+    <div class="seguro">
+      <i class="pi pi-shield" aria-hidden="true"></i>
+      Tu sesión se cierra al cerrar la pestaña o cuando vence el acceso.
+    </div>
+  </form>
+  <p class="nota">¿Olvidaste tu contraseña? Pídele al <b>administrador</b> que la reinicie.</p>
+</section>

@@ -1,0 +1,49 @@
+<div class="shell" [class.menu-abierto]="menuAbierto()">
+  <aside class="lateral" aria-label="Menú principal">
+    <a class="marca" routerLink="/" (click)="menuAbierto.set(false)">
+      <span class="logo">A</span>
+      <span class="nombre">All<b>Store</b></span>
+    </a>
+
+    <nav>
+      @for (grupo of menu(); track grupo.titulo) {
+        <div class="grupo">
+          <div class="titulo-grupo">{{ grupo.titulo }}</div>
+          @for (op of grupo.opciones; track op.ruta) {
+            <a class="opcion" [routerLink]="'/' + op.ruta" routerLinkActive="activa" (click)="menuAbierto.set(false)">
+              <i [class]="op.icono" aria-hidden="true"></i>
+              <span>{{ op.etiqueta }}</span>
+            </a>
+          }
+        </div>
+      }
+    </nav>
+  </aside>
+
+  <div class="velo" (click)="menuAbierto.set(false)"></div>
+
+  <div class="principal">
+    <header class="barra">
+      <p-button class="boton-menu" icon="pi pi-bars" [text]="true" severity="secondary" ariaLabel="Abrir menú"
+                (onClick)="menuAbierto.set(!menuAbierto())" />
+      <span class="espacio"></span>
+      @if (sesion.usuario(); as u) {
+        <div class="usuario">
+          <span class="avatar">{{ iniciales(u.nombre) }}</span>
+          <span class="datos">
+            <span class="nombre-usuario">{{ u.nombre }}</span>
+            <span class="rol">{{ nombreRol() }}</span>
+          </span>
+        </div>
+      }
+      <p-button icon="pi pi-key" [text]="true" severity="secondary" routerLink="/cambiar-password"
+                pTooltip="Cambiar contraseña" tooltipPosition="bottom" ariaLabel="Cambiar contraseña" />
+      <p-button icon="pi pi-sign-out" [text]="true" severity="secondary" (onClick)="salir()"
+                pTooltip="Cerrar sesión" tooltipPosition="bottom" ariaLabel="Cerrar sesión" />
+    </header>
+
+    <main class="contenido">
+      <router-outlet />
+    </main>
+  </div>
+</div>

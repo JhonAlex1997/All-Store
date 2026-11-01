@@ -1,0 +1,51 @@
+@use 'primeicons/primeicons.css';
+
+/* Colores de AllStore (los mismos del tema de PrimeNG en core/tema/allstore-preset.ts). */
+:root {
+  --as-denim-900: #13253f;
+  --as-denim-700: #1f3b63;
+  --as-denim-100: #d5e1f1;
+  --as-cobre: #d9902f;
+  --as-fondo: #f4f6fa;
+  --as-borde: #e3e8ef;
+  --as-texto: #1d2633;
+  --as-texto-suave: #64748b;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  height: 100%;
+}
+
+body {
+  font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  font-size: 14px;
+  color: var(--as-texto);
+  background: var(--as-fondo);
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3 { margin: 0; font-weight: 650; }
+
+/* Encabezado estándar de cada pantalla. */
+.as-pagina-titulo {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+
+  h1 { font-size: 1.35rem; }
+  .as-sub { color: var(--as-texto-suave); font-size: .9rem; margin-top: .15rem; }
+}
+
+.as-tarjeta {
+  background: #fff;
+  border: 1px solid var(--as-borde);
+  border-radius: 12px;
+  padding: 1.25rem;
+}
+
+/* Montos: cifras alineadas en tablas y totales. */
+.as-monto { font-variant-numeric: tabular-nums; white-space: nowrap; }
