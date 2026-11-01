@@ -59,6 +59,10 @@ public class Producto extends BaseEntity {
     @Column(name = "stock_minimo")
     private Integer stockMinimo;
 
+    /** Costo unitario SIN IGV, opcional e ingresado a mano (para márgenes y costo de ventas). */
+    @Column(precision = 12, scale = 2)
+    private BigDecimal costo;
+
     /** Catálogo 03 SUNAT. */
     @Column(name = "unidad_medida", nullable = false, length = 3)
     private String unidadMedida = UNIDAD_MEDIDA_UNIDAD;

@@ -14,7 +14,11 @@ public enum MotivoMovimiento {
     VENTA(TipoMovimiento.SALIDA, false, "Venta"),
     ANULACION_VENTA(TipoMovimiento.ENTRADA, false, "Anulación de venta"),
     DEVOLUCION_VENTA(TipoMovimiento.ENTRADA, false, "Devolución por nota de crédito"),
-    ANULACION_DEVOLUCION(TipoMovimiento.SALIDA, false, "Anulación de nota de crédito");
+    ANULACION_DEVOLUCION(TipoMovimiento.SALIDA, false, "Anulación de nota de crédito"),
+    COMPRA(TipoMovimiento.ENTRADA, false, "Compra a proveedor"),
+    ANULACION_COMPRA(TipoMovimiento.SALIDA, false, "Anulación de compra"),
+    PRODUCCION(TipoMovimiento.ENTRADA, false, "Ingreso de producción terminada"),
+    ANULACION_PRODUCCION(TipoMovimiento.SALIDA, false, "Anulación de ingreso de producción");
 
     private final TipoMovimiento tipo;
     private final boolean manual;

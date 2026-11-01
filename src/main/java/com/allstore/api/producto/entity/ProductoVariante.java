@@ -48,6 +48,15 @@ public class ProductoVariante extends BaseEntity {
     @Column(nullable = false)
     private boolean activo = true;
 
+    /** Costo propio SIN IGV de esta talla y color; null = el del modelo. */
+    @Column(precision = 12, scale = 2)
+    private BigDecimal costo;
+
+    /** El costo que rige (el propio o el del modelo); null si no se ingresó ninguno. */
+    public BigDecimal getCostoEfectivo() {
+        return costo != null ? costo : producto.getCosto();
+    }
+
     public BigDecimal getPrecioEfectivo() {
         return precioVenta != null ? precioVenta : producto.getPrecioVenta();
     }

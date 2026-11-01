@@ -1,6 +1,8 @@
 package com.allstore.api.producto.controller;
 
 import com.allstore.api.common.dto.PageResponse;
+import com.allstore.api.producto.dto.CostoRequest;
+import com.allstore.api.producto.dto.CostoResponse;
 import com.allstore.api.producto.dto.EtiquetasRequest;
 import com.allstore.api.producto.dto.ProductoCreateRequest;
 import com.allstore.api.producto.dto.ProductoDetalleResponse;
@@ -66,6 +68,18 @@ public class ProductoController {
     @PutMapping("/{id}")
     public ProductoDetalleResponse actualizar(@PathVariable Long id, @Valid @RequestBody ProductoUpdateRequest request) {
         return productoService.actualizar(id, request);
+    }
+
+    /** Costo SIN IGV del modelo (opcional): para márgenes y el costo de ventas. */
+    @PutMapping("/{id}/costo")
+    public CostoResponse definirCosto(@PathVariable Long id, @Valid @RequestBody CostoRequest request) {
+        return productoService.definirCosto(id, request.costo());
+    }
+
+    /** Costo propio SIN IGV de una talla y color (null vuelve al del modelo). */
+    @PutMapping("/variantes/{varianteId}/costo")
+    public CostoResponse definirCostoVariante(@PathVariable Long varianteId, @Valid @RequestBody CostoRequest request) {
+        return productoService.definirCostoVariante(varianteId, request.costo());
     }
 
     /** Stock mínimo de cada talla y color del modelo en cada tienda: con eso o menos, sale en la reposición. */

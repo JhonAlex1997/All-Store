@@ -357,6 +357,28 @@ el formato anterior, versión 1.0). Sin credenciales, la guía queda pendiente c
 envía sola cuando se configuren. El XML se verifica con pruebas automáticas de su estructura y el
 cliente REST con un servidor local que imita a SUNAT.
 
+## Costo, proveedores, compras e insumos
+
+**Costo (opcional, a mano).** `PUT /api/productos/{id}/costo` (modelo) o `PUT /api/productos/variantes/{id}/costo`
+(una talla y color, manda sobre el del modelo), sin IGV. No es obligatorio; donde no hay costo, los márgenes y el
+costo de ventas simplemente no se calculan. Cada cambio queda en la bitácora.
+
+**Proveedores** (`/api/proveedores`): RUC (validado) o DNI, razón social y contacto. Talleres y lavanderías también.
+
+**Insumos** (`/api/insumos`): tela (MTR), cierres, botones, remaches, etiquetas (NIU)... con stock por local, kardex
+(`/{id}/kardex`) e inventario inicial o ajustes (`POST /api/insumos/movimientos`). Los consume la producción.
+
+**Compras** (`POST /api/compras`, ADMIN y ALMACENERO): el documento del proveedor (factura, boleta, recibo por
+honorarios, ticket u otro) con sus líneas. Cada línea es una **prenda** (entra al stock del local, motivo COMPRA), un
+**insumo** (entra al stock de insumos) o un **servicio o gasto** (flete, lavado: solo descripción).
+
+- El costo unitario va **sin IGV** en facturas: el sistema separa base e IGV (crédito fiscal); en los demás
+  documentos todo va como no gravado. Línea a línea se puede marcar `"gravado": false`.
+- `"actualizarCostos": true` deja como costo de cada prenda e insumo el de esta compra; si no, el costo no cambia.
+- El mismo documento del mismo proveedor no se registra dos veces. `periodo` (AAAA-MM) es el mes del Registro de
+  Compras: el de emisión o hasta 12 meses después.
+- `POST /api/compras/{id}/anular` saca del stock lo que entró (si ya se vendió o se usó, no se puede).
+
 ## Caja
 
 - Cada cajero abre su caja con un fondo de sencillo (una sola abierta a la vez). Sin caja abierta

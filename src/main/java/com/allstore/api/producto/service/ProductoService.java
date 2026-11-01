@@ -6,6 +6,7 @@ import com.allstore.api.common.dto.PageResponse;
 import com.allstore.api.common.exception.BusinessException;
 import com.allstore.api.common.exception.ResourceNotFoundException;
 import com.allstore.api.producto.dto.ProductoCreateRequest;
+import com.allstore.api.producto.dto.CostoResponse;
 import com.allstore.api.producto.dto.ProductoDetalleResponse;
 import com.allstore.api.producto.dto.ProductoResumenResponse;
 import com.allstore.api.producto.dto.ProductoUpdateRequest;
@@ -149,6 +150,32 @@ public class ProductoService {
         variante.setPrecioPorMayor(porMayor);
         variante.setActivo(request.activo());
         return VarianteResponse.from(variante);
+    }
+
+    /** Costo SIN IGV del modelo (opcional, a mano); null lo quita. */
+    @Transactional
+    public CostoResponse definirCosto(Long id, BigDecimal costo) {
+        Producto producto = obtener(id);
+        if (!igual(producto.getCosto(), costo)) {
+            bitacora.registrar(AccionBitacora.COSTO_CAMBIADO, "PRODUCTO", producto.getId(), "Cambió el costo del modelo "
+                    + producto.getCodigo() + ": " + soles(producto.getCosto()) + " → " + soles(costo));
+        }
+        producto.setCosto(costo);
+        return new CostoResponse(producto.getId(), null, producto.getCodigo(), costo, costo);
+    }
+
+    /** Costo propio SIN IGV de una talla y color; null vuelve al del modelo. */
+    @Transactional
+    public CostoResponse definirCostoVariante(Long varianteId, BigDecimal costo) {
+        ProductoVariante variante = varianteRepository.findById(varianteId)
+                .orElseThrow(() -> new ResourceNotFoundException("Variante", varianteId));
+        if (!igual(variante.getCosto(), costo)) {
+            bitacora.registrar(AccionBitacora.COSTO_CAMBIADO, "VARIANTE", variante.getId(), "Cambió el costo propio de "
+                    + variante.getSku() + ": " + soles(variante.getCosto()) + " → " + soles(costo));
+        }
+        variante.setCosto(costo);
+        return new CostoResponse(variante.getProducto().getId(), variante.getId(), variante.getSku(), costo,
+                variante.getCostoEfectivo());
     }
 
     /** Mínimo de cada talla y color del modelo en cada tienda (null = sin mínimo): ver la lista de reposición. */

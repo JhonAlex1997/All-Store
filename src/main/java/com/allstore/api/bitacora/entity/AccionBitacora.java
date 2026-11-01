@@ -25,6 +25,7 @@ public enum AccionBitacora {
     CONTEO_CERRADO("Cerró un conteo físico y ajustó sus diferencias"),
     CARGA_MASIVA("Cargó catálogo y stock desde Excel"),
     PRECIO_CAMBIADO("Cambió un precio"),
+    COSTO_CAMBIADO("Cambió un costo"),
     CAMPANA_GUARDADA("Creó o cambió una campaña de promoción"),
 
     // Usuarios y accesos
