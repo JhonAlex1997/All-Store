@@ -4,6 +4,7 @@ import com.allstore.api.common.exception.BusinessException;
 import com.allstore.api.config.JpaAuditingConfig;
 import com.allstore.api.reporte.dto.DetalleVentaFila;
 import com.allstore.api.reporte.dto.SinRotacionFila;
+import com.allstore.api.reporte.dto.VentaCampanaFila;
 import com.allstore.api.reporte.dto.VentaDiaFila;
 import com.allstore.api.reporte.dto.VentaDiaSemanaFila;
 import com.allstore.api.reporte.dto.VentaHoraFila;
@@ -100,6 +101,27 @@ public class ReporteService {
                 Columna.entero("Comprobantes", VentaProductoFila::comprobantes),
                 Columna.moneda("Total (S/)", VentaProductoFila::total),
                 Columna.porcentaje("% del total", VentaProductoFila::participacion)));
+    }
+
+    /** Unidades, descuento dado y lo cobrado por cada campaña de promoción (las devoluciones restan). */
+    public Reporte<VentaCampanaFila> porCampana(Periodo p) {
+        List<VentaCampanaFila> filas = jdbc.query("""
+                select ca.id, ca.nombre,
+                       count(distinct c.id) filter (where c.tipo_comprobante <> '07'),
+                       sum(%s * d.cantidad), sum(%s * d.descuento_campana), sum(%s * d.total)
+                %s
+                join campana ca on ca.id = d.campana_id
+                %s
+                group by ca.id, ca.nombre
+                order by 5 desc
+                """.formatted(SIGNO, SIGNO, SIGNO, LINEAS, LINEAS_VIGENTES), parametros(p), (rs, i) -> new VentaCampanaFila(
+                rs.getLong(1), rs.getString(2), rs.getLong(3), rs.getLong(4), dinero(rs, 5), dinero(rs, 6)));
+        return new Reporte<>("ventas-por-campana", "Ventas por campaña", p.desde(), p.hasta(), filas, List.of(
+                Columna.texto("Campaña", VentaCampanaFila::campana),
+                Columna.entero("Comprobantes", VentaCampanaFila::comprobantes),
+                Columna.entero("Unidades", VentaCampanaFila::unidades),
+                Columna.moneda("Descuento (S/)", VentaCampanaFila::descuento),
+                Columna.moneda("Cobrado (S/)", VentaCampanaFila::total)));
     }
 
     public Reporte<VentaTallaColorFila> porTallaColor(Periodo p) {

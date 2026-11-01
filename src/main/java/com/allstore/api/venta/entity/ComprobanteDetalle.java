@@ -77,6 +77,19 @@ public class ComprobanteDetalle {
     @Column(nullable = false, precision = 12, scale = 2)
     private BigDecimal total;
 
+    /** Campaña de promoción que rebajó la línea; null si ninguna. */
+    @Column(name = "campana_id")
+    private Long campanaId;
+
+    /** Parte del descuento que dio la campaña (el resto lo dio el cajero). */
+    @Column(name = "descuento_campana", nullable = false, precision = 12, scale = 2)
+    private BigDecimal descuentoCampana = BigDecimal.ZERO;
+
+    /** Lo que descontó el cajero a mano. */
+    public BigDecimal getDescuentoManual() {
+        return descuento.subtract(descuentoCampana);
+    }
+
     /** Copia exacta de esta línea para otro comprobante (al convertir una nota de venta). */
     public ComprobanteDetalle copiar() {
         ComprobanteDetalle copia = new ComprobanteDetalle();
@@ -92,6 +105,8 @@ public class ComprobanteDetalle {
         copia.valorVenta = valorVenta;
         copia.igv = igv;
         copia.total = total;
+        copia.campanaId = campanaId;
+        copia.descuentoCampana = descuentoCampana;
         return copia;
     }
 }

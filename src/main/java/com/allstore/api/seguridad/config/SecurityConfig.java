@@ -118,6 +118,10 @@ public class SecurityConfig {
                         .requestMatchers("/api/productos/**", "/api/categorias/**", "/api/tallas/**", "/api/colores/**")
                         .hasAnyRole(ADMIN, ALMACENERO)
 
+                        // Campañas de promoción: la caja consulta precios; crear y cambiar, solo administrador
+                        .requestMatchers(HttpMethod.GET, "/api/campanas/**").authenticated()
+                        .requestMatchers("/api/campanas/**").hasRole(ADMIN)
+
                         // Clientes (datos personales: DNI, teléfono, correo): solo caja y administrador.
                         // El almacenero no los necesita: la guía de una venta toma al cliente del comprobante.
                         .requestMatchers("/api/clientes/**").hasAnyRole(ADMIN, CAJERO)

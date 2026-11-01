@@ -260,6 +260,21 @@ datos se escriben a mano.
   manual (`porMayorManual`) con el usuario que hizo la venta.
 - El ticket y el A4 dicen "Precio: Por mayor". Al convertir una nota de venta se conserva.
 
+## Promociones por campaña
+
+El administrador crea cada campaña (`POST /api/campanas`) y la venta la aplica sola:
+
+- **Tipo:** `PORCENTAJE` (20 = 20 % menos), `MONTO` (soles menos por prenda) o `PRECIO_FIJO` (la prenda a ese precio).
+- **Alcance:** categorías, modelos y/o prendas sueltas (`categoriaIds`, `productoIds`, `varianteIds`); sin
+  ninguno, todo el catálogo. **Fechas** (`fechaInicio`, `fechaFin`, inclusive) y **local** (`establecimientoId`;
+  sin él, todos). `"activo": false` la apaga antes de tiempo.
+- En la venta se cobra el precio normal con el **descuento de la campaña** en la línea (así lo ve SUNAT y el
+  cliente en el comprobante). Si varias campañas aplican, gana la que deja el precio más bajo; **no se
+  acumula con el por mayor** (gana el mejor precio). El cajero puede dar además un descuento suyo, que sí
+  queda en la bitácora; el de la campaña no.
+- La caja consulta el precio del día al escanear: `GET /api/campanas/precios?varianteIds=15,16&establecimientoId=1`.
+- `GET /api/reportes/ventas-por-campana`: unidades, descuento dado y lo cobrado por cada campaña.
+
 ## Comprobantes rechazados por SUNAT
 
 Un comprobante **rechazado** (CDR con código 2000-3999) no tiene validez y su número ya no se

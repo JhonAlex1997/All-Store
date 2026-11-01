@@ -80,14 +80,19 @@ public record VentaResponse(
     public record Cliente(Long id, String tipoDocumento, String numeroDocumento, String nombre, String direccion) {
     }
 
-    /** varianteId y sku son null en las líneas de concepto de una nota de débito. */
+    /**
+     * varianteId y sku son null en las líneas de concepto de una nota de débito.
+     *
+     * @param descuentoCampana parte del descuento que dio una campaña de promoción (campanaId)
+     */
     public record Detalle(int item, Long varianteId, String sku, String descripcion, String unidadMedida,
                           String tipoAfectacionIgv, int cantidad, BigDecimal precioUnitario, BigDecimal descuento,
-                          BigDecimal valorVenta, BigDecimal igv, BigDecimal total) {
+                          BigDecimal valorVenta, BigDecimal igv, BigDecimal total, Long campanaId,
+                          BigDecimal descuentoCampana) {
         static Detalle from(ComprobanteDetalle d) {
             return new Detalle(d.getItem(), d.getVariante() == null ? null : d.getVariante().getId(), d.getSku(), d.getDescripcion(), d.getUnidadMedida(),
                     d.getTipoAfectacionIgv(), d.getCantidad(), d.getPrecioUnitario(), d.getDescuento(),
-                    d.getValorVenta(), d.getIgv(), d.getTotal());
+                    d.getValorVenta(), d.getIgv(), d.getTotal(), d.getCampanaId(), d.getDescuentoCampana());
         }
     }
 

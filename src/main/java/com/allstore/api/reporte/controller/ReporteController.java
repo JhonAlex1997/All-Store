@@ -38,6 +38,15 @@ public class ReporteController {
         return responder(reporteService.porProducto(periodo(desde, hasta, establecimientoId)), formato);
     }
 
+    /** Cuánto vendió y cuánto descontó cada campaña de promoción. */
+    @GetMapping("/ventas-por-campana")
+    public ResponseEntity<?> porCampana(@RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate desde,
+                                        @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate hasta,
+                                        @RequestParam(required = false) Long establecimientoId,
+                                        @RequestParam(defaultValue = "JSON") Formato formato) {
+        return responder(reporteService.porCampana(periodo(desde, hasta, establecimientoId)), formato);
+    }
+
     /** Qué tallas y colores salen, con su stock actual para reponer. */
     @GetMapping("/ventas-por-talla-color")
     public ResponseEntity<?> porTallaColor(@RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate desde,

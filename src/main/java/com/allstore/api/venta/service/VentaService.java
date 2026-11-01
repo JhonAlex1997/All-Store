@@ -19,6 +19,8 @@ import com.allstore.api.inventario.entity.MotivoMovimiento;
 import com.allstore.api.inventario.entity.MovimientoInventario;
 import com.allstore.api.inventario.service.InventarioService;
 import com.allstore.api.producto.entity.ProductoVariante;
+import com.allstore.api.config.JpaAuditingConfig;
+import com.allstore.api.promocion.service.CampanaService;
 import com.allstore.api.producto.service.ProductoService;
 import com.allstore.api.venta.dto.ConvertirVentaRequest;
 import com.allstore.api.venta.dto.ReemitirRequest;
@@ -36,6 +38,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.List;
@@ -66,6 +69,7 @@ public class VentaService {
     private final EmpresaService empresaService;
     private final ApplicationEventPublisher eventos;
     private final Bitacora bitacora;
+    private final CampanaService campanaService;
 
     // ---------- Emitir ----------
 
@@ -115,7 +119,7 @@ public class VentaService {
             comprobante.setCorreoEntrega(request.correo().trim().toLowerCase());
         }
         aplicarPrecioPorMayor(comprobante, request);
-        agregarDetalles(comprobante, request.items());
+        agregarDetalles(comprobante, request.items(), serie.getEstablecimiento().getId());
         comprobante.recalcularTotales();
         if (comprobante.getTotal().signum() <= 0) {
             throw new BusinessException("El total de la venta debe ser mayor a cero");
@@ -139,11 +143,14 @@ public class VentaService {
     /** Lo que se sale de lo normal en una venta queda en la bitácora: descuentos y por mayor sin el mínimo. */
     private void registrarExcepciones(Comprobante venta) {
         String documento = venta.getTipoComprobante().getDescripcion().toLowerCase() + " " + venta.getNumeroImpreso();
-        if (venta.getTotalDescuento().signum() > 0) {
+        // Solo el descuento que dio el cajero: el de una campaña ya lo decidió el administrador.
+        BigDecimal manual = venta.getDetalles().stream().map(ComprobanteDetalle::getDescuentoManual)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        if (manual.signum() > 0) {
             bitacora.registrar(AccionBitacora.DESCUENTO_EN_VENTA, "COMPROBANTE", venta.getId(), "Vendió " + documento
-                            + " con S/ " + venta.getTotalDescuento() + " de descuento (total S/ " + venta.getTotal() + ")",
-                    String.join(", ", venta.getDetalles().stream().filter(d -> d.getDescuento().signum() > 0)
-                            .map(d -> d.getSku() + " x" + d.getCantidad() + ": -S/ " + d.getDescuento()).toList()));
+                            + " con S/ " + manual + " de descuento (total S/ " + venta.getTotal() + ")",
+                    String.join(", ", venta.getDetalles().stream().filter(d -> d.getDescuentoManual().signum() > 0)
+                            .map(d -> d.getSku() + " x" + d.getCantidad() + ": -S/ " + d.getDescuentoManual()).toList()));
         }
         if (venta.isPorMayorManual()) {
             int prendas = venta.getDetalles().stream().mapToInt(ComprobanteDetalle::getCantidad).sum();
@@ -365,7 +372,13 @@ public class VentaService {
         comprobante.setPorMayorManual(marcado && !porCantidad);
     }
 
-    private void agregarDetalles(Comprobante comprobante, List<VentaItemRequest> items) {
+    /**
+     * Arma las líneas al precio del sistema. Si una campaña vigente deja la prenda más barata que el
+     * precio que corresponde (normal o por mayor), se cobra el precio normal con el descuento de la
+     * campaña; la campaña no se acumula con el por mayor (gana el mejor precio). El descuento del
+     * cajero, si hay, se suma aparte.
+     */
+    private void agregarDetalles(Comprobante comprobante, List<VentaItemRequest> items, Long establecimientoId) {
         Set<Long> vistas = new HashSet<>();
         items.forEach(i -> {
             if (!vistas.add(i.varianteId())) {
@@ -373,13 +386,23 @@ public class VentaService {
             }
         });
         Map<Long, ProductoVariante> variantes = productoService.obtenerVariantes(vistas);
+        Map<Long, CampanaService.Oferta> ofertas = campanaService.mejoresOfertas(variantes.values(), establecimientoId,
+                LocalDate.now(JpaAuditingConfig.ZONA_LIMA));
         for (VentaItemRequest item : items) {
             ProductoVariante variante = variantes.get(item.varianteId());
             if (!variante.isActivo() || !variante.getProducto().isActivo()) {
                 throw new BusinessException("La prenda " + variante.getSku() + " está inactiva y no se puede vender");
             }
             BigDecimal precio = comprobante.isPorMayor() ? variante.getPrecioPorMayorEfectivo() : variante.getPrecioEfectivo();
-            BigDecimal descuento = item.descuento() == null ? BigDecimal.ZERO : item.descuento();
+            BigDecimal descuentoCampana = BigDecimal.ZERO;
+            Long campanaId = null;
+            CampanaService.Oferta oferta = ofertas.get(variante.getId());
+            if (oferta != null && oferta.precio().compareTo(precio) < 0) {
+                precio = variante.getPrecioEfectivo();
+                descuentoCampana = precio.subtract(oferta.precio()).multiply(BigDecimal.valueOf(item.cantidad()));
+                campanaId = oferta.campana().getId();
+            }
+            BigDecimal descuento = (item.descuento() == null ? BigDecimal.ZERO : item.descuento()).add(descuentoCampana);
             if (descuento.compareTo(precio.multiply(BigDecimal.valueOf(item.cantidad()))) >= 0) {
                 throw new BusinessException("El descuento de " + variante.getSku() + " no puede ser igual o mayor que su importe");
             }
@@ -395,6 +418,8 @@ public class VentaService {
             detalle.setCantidad(item.cantidad());
             detalle.setPrecioUnitario(precio);
             detalle.setDescuento(descuento.setScale(2));
+            detalle.setDescuentoCampana(descuentoCampana.setScale(2));
+            detalle.setCampanaId(campanaId);
             detalle.setValorVenta(calculo.valorVenta());
             detalle.setIgv(calculo.igv());
             detalle.setTotal(calculo.total());
