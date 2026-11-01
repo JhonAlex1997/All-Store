@@ -99,6 +99,11 @@ La matriz completa está en `SecurityConfig`. Lo que no está permitido ahí, se
   caracteres de control: nadie puede meter un enlace de phishing en un correo de la tienda.
 - Cabeceras: `Referrer-Policy: no-referrer`, CSP en la API, `nosniff`, sin marcos. Cuerpos de más
   de 1 MB se rechazan (413) y ningún listado da más de 200 filas.
+- Los filtros propios (límite de ingresos por IP, métricas, cambio obligatorio de contraseña) comparan la ruta
+  **decodificada**, la misma que evalúan las reglas de acceso: una ruta codificada como `/api/auth/%6Cogin` o
+  `/actuator/%70rometheus` no los salta.
+- Los choques con reglas únicas de la base (el mismo documento de compra registrado a la vez, un segundo conteo
+  abierto) responden 409 sin detalle técnico. Los insumos, que llevan su costo, solo los ven administrador y almacenero.
 - En producción (`SUNAT_ENTORNO=PRODUCCION`) no arranca con datos demo, Swagger, correos en archivo,
   `URL_PUBLICA` sin https ni CORS `*`. Los certificados (`*.p12`, `*.pfx`) no entran al repositorio.
 
