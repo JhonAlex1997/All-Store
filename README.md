@@ -679,8 +679,12 @@ no coincide, se reemplaza subiendo el archivo.
 
 - Van facturas (con crédito fiscal), boletas y tickets (sin él) del **periodo** de cada compra. Las anuladas no van;
   los recibos por honorarios y los documentos "otro" tampoco (se advierte).
-- Nombre del archivo: `LE` + RUC + AAAAMM + `00` + `080400` (RCE) + `02` (reemplazo) + `1112`. Como el del RVIE,
-  conviene pasarlo por el validador **PVSIRE** antes del primer envío.
+- Nombre del archivo: `LE` + RUC + AAAAMM + `00` + `080400` (RCE) + `02` (reemplazo) + `1112`.
+- **Verificado con la estructura oficial de SUNAT** (cpe.sunat.gob.pe › Estructura de archivos, "Estructura del
+  Reemplazo RCE", Anexo 11 de la RS 040-2022): 41 campos por línea (CAR y campos 37 a 41 vacíos; 42 a 80 libres, no
+  se usan), periodo AAAAMM y clasificación de bienes y servicios (1 = mercadería e insumos, 5 = otros gastos). El
+  RVIE también coincide campo por campo con su estructura oficial (Anexo 3). Igual conviene pasar el primer archivo
+  por el validador **PVSIRE**.
 - SUNAT solo **propone** facturas y notas (tipos 01, 07, 08…), no boletas ni tickets de compra: cada registro trae
   `propuestoPorSunat`. Si aceptas o complementas la propuesta, agrega en el SIRE los que no vienen ("Agregar" o
   "Importar nuevos comprobantes"); si la reemplazas con este archivo, ya van todos.

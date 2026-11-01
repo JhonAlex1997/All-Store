@@ -16,10 +16,11 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
 /**
- * Archivo plano para reemplazar la propuesta del RCE en el SIRE (RS 112-2021/SUNAT, Anexo 11),
- * con el mismo formato que el del RVIE: campos separados por "|", fechas DD/MM/AAAA, importes con 2
- * decimales. Todas las compras con IGV se anotan como destinadas a operaciones gravadas (la tienda
- * solo vende prendas gravadas).
+ * Archivo plano para reemplazar la propuesta del RCE en el SIRE, según la estructura que publica SUNAT
+ * ("Estructura del Reemplazo RCE", Anexo 11 de la RS 040-2022/SUNAT): campos separados por "|", periodo
+ * AAAAMM, fechas DD/MM/AAAA, importes con hasta 2 decimales sin separador de miles. Los campos 4 (CAR)
+ * y 37 a 41 van vacíos; los 42 a 80 son libres y no se usan. Todas las compras con IGV se anotan como
+ * destinadas a operaciones gravadas (la tienda solo vende prendas gravadas).
  *
  * <p>Nombre: LE + RUC + AAAA + MM + 00 + 080400 (RCE) + 02 (reemplazo) + 1 (operativa) + I (1 con
  * información, 0 sin ella) + 1 (soles) + 2. Antes del primer envío conviene pasarlo por el validador
@@ -90,8 +91,10 @@ public final class ArchivoRce {
                 r.moneda(),                             // 26 Moneda
                 "",                                     // 27 Tipo de cambio
                 "", "", "", "", "",                     // 28-32 Documento modificado (no aplica)
-                "",                                     // 33 Clasificación de bienes y servicios
-                "", "", ""                              // 34-36 Proyecto, % de participación, IMB
+                r.clasificacion(),                      // 33 Clasificación de bienes y servicios
+                "", "", "",                             // 34-36 Proyecto, % de participación, IMB
+                "",                                     // 37 CAR original: vacío en el reemplazo
+                "", "", "", ""                          // 38-41 Los completa SUNAT: vacíos
         ));
     }
 

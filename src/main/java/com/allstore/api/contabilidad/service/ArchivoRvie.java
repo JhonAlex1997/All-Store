@@ -17,7 +17,8 @@ import java.util.zip.ZipOutputStream;
 
 /**
  * Archivo plano para reemplazar la propuesta del RVIE en el SIRE, según el Anexo 3 de la
- * RS 112-2021/SUNAT (modificada por la RS 040-2022) y la estructura que publica SUNAT:
+ * RS 112-2021/SUNAT (modificada por la RS 040-2022) y la estructura que publica SUNAT ("Estructura
+ * del Reemplazo RVIE", verificada campo por campo el 01/11/2026):
  * <ul>
  *   <li>Campos 1 a 33 separados por "|"; los campos 34 a 40 los completa SUNAT y los 41 a 57
  *       (libres) no se usan.</li>

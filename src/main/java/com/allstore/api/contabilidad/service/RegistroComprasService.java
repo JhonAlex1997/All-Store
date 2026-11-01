@@ -58,7 +58,7 @@ public class RegistroComprasService {
             registros.add(new RegistroComprasResponse.Registro(c.getId(), c.getFechaEmision(), c.getTipoDocumento().getCodigo(),
                     c.getSerie(), c.getNumero(), c.getProveedor().getTipoDocumento().getCodigoSunat(),
                     c.getProveedor().getNumeroDocumento(), c.getProveedor().getRazonSocial(), c.getBaseGravada(), c.getIgv(),
-                    c.getNoGravado(), c.getTotal(), "PEN", PROPUESTOS.contains(c.getTipoDocumento())));
+                    c.getNoGravado(), c.getTotal(), "PEN", PROPUESTOS.contains(c.getTipoDocumento()), clasificacion(c)));
         }
         long noPropuestos = registros.stream().filter(r -> !r.propuestoPorSunat()).count();
         if (noPropuestos > 0) {
@@ -79,6 +79,18 @@ public class RegistroComprasService {
         BigDecimal total = sumar(registros, RegistroComprasResponse.Registro::total);
         return new RegistroComprasResponse(empresa.getRuc(), empresa.getRazonSocial(),
                 periodo.toString().replace("-", ""), registros, registros.size(), base, igv, noGravado, total, advertencias);
+    }
+
+    /**
+     * Campo 33 del RCE: 1 si lo comprado es sobre todo mercadería, materia prima o insumos (por importe);
+     * 5 si son otros gastos y servicios (flete, lavado...).
+     */
+    static String clasificacion(Compra compra) {
+        BigDecimal bienes = compra.getDetalles().stream().filter(d -> d.getVariante() != null || d.getInsumo() != null)
+                .map(d -> d.getValor()).reduce(BigDecimal.ZERO, BigDecimal::add);
+        BigDecimal servicios = compra.getDetalles().stream().filter(d -> d.getVariante() == null && d.getInsumo() == null)
+                .map(d -> d.getValor()).reduce(BigDecimal.ZERO, BigDecimal::add);
+        return bienes.compareTo(servicios) >= 0 ? "1" : "5";
     }
 
     public ArchivoRvie.Archivo archivoSire(YearMonth periodo, boolean zip) {

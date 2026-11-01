@@ -74,8 +74,12 @@ class RegistroComprasIntegrationTest extends TiendaDePrueba {
         assertThat(archivo.nombre()).isEqualTo("LE2000000000120250300080400021112.txt");
         String[] lineas = new String(archivo.contenido(), StandardCharsets.UTF_8).split("\r\n");
         assertThat(lineas).hasSize(2);
-        assertThat(lineas[0].split("\\|", -1)).hasSize(36)
+        // Estructura oficial: 41 campos (del 37 al 41 vacíos en el reemplazo).
+        assertThat(lineas[0].split("\\|", -1)).hasSize(41)
                 .satisfies(c -> {
+                    assertThat(c[2]).isEqualTo("202503");
+                    assertThat(c[32]).isEqualTo("5");   // un servicio: otros gastos
+                    assertThat(c[36] + c[37] + c[38] + c[39] + c[40]).isEmpty();
                     assertThat(c[6]).isEqualTo("01");
                     assertThat(c[14]).isEqualTo("100.00");
                     assertThat(c[15]).isEqualTo("18.00");

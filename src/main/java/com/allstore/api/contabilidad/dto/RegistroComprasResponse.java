@@ -27,10 +27,12 @@ public record RegistroComprasResponse(
      * @param proveedorTipoDocumento Catálogo 06 (6 = RUC, 1 = DNI)
      * @param propuestoPorSunat      SUNAT lo trae en su propuesta (facturas); las boletas y tickets no: hay que
      *                               agregarlos en el SIRE ("Agregar" o "Importar nuevos comprobantes")
+     * @param clasificacion          clasificación de los bienes y servicios adquiridos (campo 33 del RCE):
+     *                               1 = mercaderías, materias primas e insumos; 5 = otros gastos y servicios
      */
     public record Registro(Long compraId, LocalDate fechaEmision, String tipoComprobante, String serie, String numero,
                            String proveedorTipoDocumento, String proveedorNumeroDocumento, String proveedorNombre,
                            BigDecimal baseGravada, BigDecimal igv, BigDecimal noGravado, BigDecimal total, String moneda,
-                           boolean propuestoPorSunat) {
+                           boolean propuestoPorSunat, String clasificacion) {
     }
 }
