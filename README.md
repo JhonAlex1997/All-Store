@@ -648,6 +648,18 @@ no coincide, se reemplaza subiendo el archivo.
   Antes del primer envío conviene pasarlo por el validador oficial de SUNAT (**PVSIRE**): la norma
   no precisa la codificación ni el fin de línea, y el archivo usa UTF-8 con fin de línea CRLF.
 
+## Registro de Compras para el SIRE (RCE)
+
+| Endpoint (solo ADMIN) | Para qué |
+| --- | --- |
+| `GET /api/contabilidad/registro-compras?periodo=2026-11` | Las compras del mes: base gravada, **crédito fiscal** (IGV de las facturas), no gravado y advertencias |
+| `GET /api/contabilidad/registro-compras/sire?periodo=2026-11` | Archivo de reemplazo de la propuesta (`.zip`; `&formato=TXT` para el texto) |
+
+- Van facturas (con crédito fiscal), boletas y tickets (sin él) del **periodo** de cada compra. Las anuladas no van;
+  los recibos por honorarios y los documentos "otro" tampoco (se advierte).
+- Nombre del archivo: `LE` + RUC + AAAAMM + `00` + `080400` (RCE) + `02` (reemplazo) + `1112`. Como el del RVIE,
+  conviene pasarlo por el validador **PVSIRE** antes del primer envío.
+
 ## Pruebas
 
 ```bash
