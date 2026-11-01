@@ -42,3 +42,7 @@ build/
 *.key
 *.jks
 !config/sunat/certificado-beta-prueba.p12
+
+### Documentación generada (PDF, mockups): se comparte aparte, no va al repositorio ###
+docs/*.pdf
+docs/mockup/
