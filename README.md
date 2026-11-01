@@ -379,6 +379,21 @@ honorarios, ticket u otro) con sus líneas. Cada línea es una **prenda** (entra
   Compras: el de emisión o hasta 12 meses después.
 - `POST /api/compras/{id}/anular` saca del stock lo que entró (si ya se vendió o se usó, no se puede).
 
+## Producción
+
+`/api/produccion/ordenes` (ADMIN y ALMACENERO). Una orden por modelo con las tallas y colores a producir:
+
+1. `POST` con `productoId`, `establecimientoInsumosId` (de dónde sale la tela), `establecimientoDestinoId` (adonde
+   entran las prendas) y `tallas` (`varianteId`, `cantidad`).
+2. `POST /{id}/insumos` consume tela y avíos del local de insumos; `/{id}/insumos/devolver` devuelve lo que sobró.
+3. Las etapas van en orden: **corte → confección → lavado → acabado**. `POST /{id}/etapas/{ETAPA}/iniciar`
+   (`proveedorId` si la hace un taller externo) y `/terminar` con las `unidades` que salieron buenas (no más que las
+   que entraron: la diferencia es merma) y el `costoServicio` del taller.
+4. `POST /{id}/terminar` con las prendas de cada talla y color (no más que las del acabado): entran al stock del
+   destino (motivo PRODUCCION) y se calcula el **costo unitario** = (insumos consumidos a su costo + servicios) /
+   prendas. `"actualizarCostos": true` lo deja como costo de esas prendas (si no, el costo no cambia).
+5. `POST /{id}/anular`: en proceso, vuelven los insumos consumidos; terminada, salen del stock las prendas que entraron.
+
 ## Caja
 
 - Cada cajero abre su caja con un fondo de sencillo (una sola abierta a la vez). Sin caja abierta

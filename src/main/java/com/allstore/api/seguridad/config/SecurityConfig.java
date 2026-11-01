@@ -118,8 +118,8 @@ public class SecurityConfig {
                         .requestMatchers("/api/productos/**", "/api/categorias/**", "/api/tallas/**", "/api/colores/**")
                         .hasAnyRole(ADMIN, ALMACENERO)
 
-                        // Proveedores y compras: administrador y almacenero (lo que entra al almacén)
-                        .requestMatchers("/api/proveedores/**", "/api/compras/**").hasAnyRole(ADMIN, ALMACENERO)
+                        // Proveedores, compras y producción: administrador y almacenero
+                        .requestMatchers("/api/proveedores/**", "/api/compras/**", "/api/produccion/**").hasAnyRole(ADMIN, ALMACENERO)
 
                         // Insumos de producción: consulta para todos; registrar y ajustar, administrador y almacenero
                         .requestMatchers(HttpMethod.GET, "/api/insumos/**").authenticated()
