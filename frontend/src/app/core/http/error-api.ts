@@ -13,6 +13,9 @@ export interface ErrorApi {
   solicitud?: string;
 }
 
+const SIN_BACKEND = 'No se llegó al servidor de AllStore. Revisa que el backend esté encendido (puerto 8080) '
+  + 'y que el front se haya iniciado con "npm start".';
+
 /** Normaliza cualquier error HTTP a ErrorApi, aunque el cuerpo venga como Blob, texto o vacío. */
 export async function leerErrorApi(error: HttpErrorResponse): Promise<ErrorApi> {
   let cuerpo: unknown = error.error;
@@ -31,6 +34,11 @@ export async function leerErrorApi(error: HttpErrorResponse): Promise<ErrorApi> 
   }
   if (cuerpo && typeof cuerpo === 'object' && 'message' in cuerpo) {
     return { status: error.status, ...(cuerpo as Partial<ErrorApi>) } as ErrorApi;
+  }
+  // El backend siempre responde sus errores en JSON. Un 404 o 5xx sin ese cuerpo en /api lo dio otro
+  // servidor: el front se levantó sin proxy (ng serve en vez de npm start) o el backend está apagado.
+  if ((error.status === 404 || error.status >= 500) && (error.url ?? '').includes('/api/')) {
+    return { status: error.status, message: SIN_BACKEND };
   }
   return { status: error.status, message: mensajePorDefecto(error.status) };
 }
