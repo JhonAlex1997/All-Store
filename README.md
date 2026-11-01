@@ -175,6 +175,20 @@ Los **totales** solo cuentan lo vigente: no los anulados ni las notas de venta y
 y lo **cobrado y devuelto por cada método**. Con `metodoPago=YAPE`, una venta mitad en efectivo y
 mitad por Yape suma completa en `totalVentas`, pero en `cobradoPorMetodo.YAPE` solo su parte.
 
+## Stock mínimo y reposición
+
+Para no quedarse sin la talla que más se vende:
+
+- **Mínimo del modelo** (`PUT /api/productos/{id}/stock-minimo`, `{"stockMinimo": 3}`): rige para cada
+  talla y color del modelo en cada **tienda**.
+- **Mínimo propio** de una prenda en un local (`PUT /api/inventario/stock-minimo`): manda sobre el del
+  modelo y vale en cualquier local, también el almacén. `"minimo": null` lo quita.
+- `GET /api/inventario/reposicion` lista las prendas **en o bajo su mínimo** (primero las agotadas), con
+  cuánto falta, lo vendido en los últimos 30 días y el **stock en otros locales** (para trasladar antes de
+  comprar). Con `formato=XLSX` o `CSV`, como archivo para el proveedor.
+- Alerta `STOCK_BAJO` en el panel y en el resumen por correo: una por local ("Tienda principal: 7 prendas
+  en o bajo su mínimo (3 agotadas)"), no una por prenda.
+
 ## Carga masiva desde Excel
 
 Para registrar el catálogo y el stock inicial de una vez (en vez de modelo por modelo):

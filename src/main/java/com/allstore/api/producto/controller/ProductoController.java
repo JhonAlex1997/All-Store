@@ -6,6 +6,7 @@ import com.allstore.api.producto.dto.ProductoCreateRequest;
 import com.allstore.api.producto.dto.ProductoDetalleResponse;
 import com.allstore.api.producto.dto.ProductoResumenResponse;
 import com.allstore.api.producto.dto.ProductoUpdateRequest;
+import com.allstore.api.producto.dto.StockMinimoModeloRequest;
 import com.allstore.api.producto.dto.VarianteResponse;
 import com.allstore.api.producto.dto.VarianteUpdateRequest;
 import com.allstore.api.producto.dto.VariantesRequest;
@@ -65,6 +66,12 @@ public class ProductoController {
     @PutMapping("/{id}")
     public ProductoDetalleResponse actualizar(@PathVariable Long id, @Valid @RequestBody ProductoUpdateRequest request) {
         return productoService.actualizar(id, request);
+    }
+
+    /** Stock mínimo de cada talla y color del modelo en cada tienda: con eso o menos, sale en la reposición. */
+    @PutMapping("/{id}/stock-minimo")
+    public ProductoDetalleResponse definirStockMinimo(@PathVariable Long id, @Valid @RequestBody StockMinimoModeloRequest request) {
+        return productoService.definirStockMinimo(id, request.stockMinimo());
     }
 
     @PostMapping("/{id}/variantes")

@@ -1,15 +1,13 @@
 package com.allstore.api.reporte.controller;
 
 import com.allstore.api.common.exception.BusinessException;
-import com.allstore.api.reporte.exportacion.Exportador;
 import com.allstore.api.reporte.exportacion.Reporte;
+import com.allstore.api.reporte.exportacion.RespuestaReporte;
+import com.allstore.api.reporte.exportacion.RespuestaReporte.Formato;
 import com.allstore.api.reporte.service.ReporteService;
 import com.allstore.api.reporte.service.ReporteService.Periodo;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
-import org.springframework.http.ContentDisposition;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -17,7 +15,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.time.LocalDate;
-import java.util.List;
 
 /**
  * Reportes para decidir (solo ADMIN, ver SecurityConfig). Todos aceptan {@code desde}, {@code hasta}
@@ -29,13 +26,8 @@ import java.util.List;
 @RequiredArgsConstructor
 public class ReporteController {
 
-    public enum Formato { JSON, XLSX, CSV }
-
-    private static final MediaType XLSX = MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
-    private static final MediaType CSV = MediaType.parseMediaType("text/csv;charset=UTF-8");
-
     private final ReporteService reporteService;
-    private final Exportador exportador;
+    private final RespuestaReporte respuesta;
 
     /** Qué modelos se venden más: unidades netas, total y % del total. */
     @GetMapping("/ventas-por-producto")
@@ -119,20 +111,6 @@ public class ReporteController {
     }
 
     private ResponseEntity<?> responder(Reporte<?> reporte, Formato formato) {
-        return switch (formato) {
-            case JSON -> ResponseEntity.ok(new ReporteResponse<>(reporte.titulo(), reporte.desde(), reporte.hasta(), reporte.filas()));
-            case XLSX -> archivo(exportador.xlsx(reporte), XLSX, reporte.archivo("xlsx"));
-            case CSV -> archivo(exportador.csv(reporte), CSV, reporte.archivo("csv"));
-        };
-    }
-
-    private static ResponseEntity<byte[]> archivo(byte[] contenido, MediaType tipo, String nombre) {
-        return ResponseEntity.ok().contentType(tipo)
-                .header(HttpHeaders.CONTENT_DISPOSITION, ContentDisposition.attachment().filename(nombre).build().toString())
-                .body(contenido);
-    }
-
-    /** El reporte en JSON: título, periodo y filas. */
-    public record ReporteResponse<T>(String titulo, LocalDate desde, LocalDate hasta, List<T> filas) {
+        return respuesta.responder(reporte, formato);
     }
 }

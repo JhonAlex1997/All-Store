@@ -3,6 +3,7 @@ package com.allstore.api.monitoreo;
 import com.allstore.api.alerta.dto.Alerta;
 import com.allstore.api.alerta.dto.Alerta.Nivel;
 import com.allstore.api.alerta.dto.Alerta.Tipo;
+import com.allstore.api.alerta.service.FuenteAlertas;
 import com.allstore.api.config.JpaAuditingConfig;
 import com.allstore.api.monitoreo.dto.ErrorRegistrado;
 import com.allstore.api.monitoreo.dto.EstadoSistemaResponse.Disco;
@@ -20,12 +21,13 @@ import java.util.List;
  */
 @Component
 @RequiredArgsConstructor
-public class AlertasSistema {
+public class AlertasSistema implements FuenteAlertas {
 
     private final LatidoProcesos latido;
     private final RegistroErrores errores;
     private final EstadoSistemaService estadoSistema;
 
+    @Override
     public List<Alerta> alertas() {
         List<Alerta> alertas = new ArrayList<>();
         latido.detenidos().forEach(p -> alertas.add(Alerta.general(Nivel.CRITICA, Tipo.PROCESO_DETENIDO,

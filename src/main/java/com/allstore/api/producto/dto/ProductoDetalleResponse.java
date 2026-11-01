@@ -17,6 +17,7 @@ public record ProductoDetalleResponse(
         String unidadMedida,
         String tipoAfectacionIgv,
         boolean activo,
+        Integer stockMinimo,
         List<VarianteResponse> variantes
 ) {
     public static ProductoDetalleResponse from(Producto p) {
@@ -32,6 +33,7 @@ public record ProductoDetalleResponse(
                 p.getUnidadMedida(),
                 p.getTipoAfectacionIgv(),
                 p.isActivo(),
+                p.getStockMinimo(),
                 p.getVariantes().stream().map(VarianteResponse::from).toList()
         );
     }

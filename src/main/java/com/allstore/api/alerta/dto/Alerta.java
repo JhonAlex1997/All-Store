@@ -39,7 +39,9 @@ public record Alerta(
         /** Poco espacio en el disco del servidor. */
         DISCO,
         /** Errores internos (500) o fallos de los procesos en el último día. */
-        ERRORES_INTERNOS
+        ERRORES_INTERNOS,
+        /** Prendas en o bajo su stock mínimo en un local. */
+        STOCK_BAJO
     }
 
     public static Alerta general(Nivel nivel, Tipo tipo, String mensaje) {

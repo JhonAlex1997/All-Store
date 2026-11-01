@@ -1071,6 +1071,95 @@
           ]
         },
         {
+          "name": "Mínimo propio de la prenda en la tienda",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/inventario/stock-minimo",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"establecimientoId\": {{tiendaId}},\n  \"items\": [{ \"varianteId\": {{varianteVentaId}}, \"minimo\": 9999 }]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Manda sobre el mínimo del modelo (PUT /api/productos/{id}/stock-minimo, que rige en las tiendas). Responde lo que hay que reponer en ese local."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Sale en la reposición\", () => pm.expect(pm.response.json().some(f => f.varianteId === Number(pm.collectionVariables.get(\"varianteVentaId\")))).to.eql(true));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Lista de reposición de la tienda",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/inventario/reposicion?establecimientoId={{tiendaId}}",
+            "description": "Prendas en o bajo su mínimo, primero las agotadas, con lo vendido en 30 días y el stock en otros locales. formato=XLSX para enviarla al proveedor."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Trae faltan y stock en otros locales\", () => { const f = pm.response.json().filas[0]; pm.expect(f.faltan > 0 && f.enOtrosLocales !== undefined).to.eql(true); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Quitar el mínimo propio",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/inventario/stock-minimo",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"establecimientoId\": {{tiendaId}},\n  \"items\": [{ \"varianteId\": {{varianteVentaId}}, \"minimo\": null }]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
           "name": "Ajuste por sobrante (+2 en tienda)",
           "request": {
             "method": "POST",

@@ -151,6 +151,14 @@ public class ProductoService {
         return VarianteResponse.from(variante);
     }
 
+    /** Mínimo de cada talla y color del modelo en cada tienda (null = sin mínimo): ver la lista de reposición. */
+    @Transactional
+    public ProductoDetalleResponse definirStockMinimo(Long id, Integer stockMinimo) {
+        Producto producto = obtener(id);
+        producto.setStockMinimo(stockMinimo);
+        return ProductoDetalleResponse.from(producto);
+    }
+
     /** "Precio: S/ 89.90 → S/ 79.90; Por mayor: sin precio → S/ 70.00", o vacío si no cambió ninguno. */
     private static Optional<String> cambioDePrecio(BigDecimal precioAntes, BigDecimal precioDespues,
                                                    BigDecimal porMayorAntes, BigDecimal porMayorDespues) {

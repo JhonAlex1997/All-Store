@@ -5,7 +5,6 @@ import com.allstore.api.alerta.dto.Alerta;
 import com.allstore.api.alerta.dto.Alerta.Nivel;
 import com.allstore.api.alerta.dto.Alerta.Tipo;
 import com.allstore.api.alerta.service.AlertaService;
-import com.allstore.api.monitoreo.AlertasSistema;
 import com.allstore.api.facturacion.config.EntornoSunat;
 import com.allstore.api.facturacion.config.SunatProperties;
 import com.allstore.api.facturacion.repository.EnvioSunatRepository;
@@ -67,7 +66,7 @@ class AlertaCertificadoTest {
         SunatProperties sunat = new SunatProperties(sunatHabilitado, EntornoSunat.PRODUCCION, null, null, "USUARIO", "clave",
                 null, null, 30000, 8, null);
         AlertaService servicio = new AlertaService(envios, mock(ResumenSunatRepository.class), firmador, sunat,
-                new AlertaProperties(null, "0 0 8 * * *", 3, 30), mock(AlertasSistema.class));
+                new AlertaProperties(null, "0 0 8 * * *", 3, 30), List.of());
         return servicio.alertas().alertas();
     }
 }

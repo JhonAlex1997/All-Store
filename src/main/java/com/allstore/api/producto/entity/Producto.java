@@ -52,6 +52,13 @@ public class Producto extends BaseEntity {
     @Column(name = "precio_por_mayor", precision = 12, scale = 2)
     private BigDecimal precioPorMayor;
 
+    /**
+     * Mínimo de cada talla y color en cada tienda: con ese stock o menos, la prenda sale en la lista
+     * de reposición. Null = sin mínimo. Una prenda puede tener su propio mínimo por local (StockMinimo).
+     */
+    @Column(name = "stock_minimo")
+    private Integer stockMinimo;
+
     /** Catálogo 03 SUNAT. */
     @Column(name = "unidad_medida", nullable = false, length = 3)
     private String unidadMedida = UNIDAD_MEDIDA_UNIDAD;

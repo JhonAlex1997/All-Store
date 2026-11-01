@@ -13,7 +13,6 @@ import com.allstore.api.facturacion.entity.ResumenSunatDetalle;
 import com.allstore.api.facturacion.repository.EnvioSunatRepository;
 import com.allstore.api.facturacion.repository.ResumenSunatRepository;
 import com.allstore.api.facturacion.service.FirmadorXml;
-import com.allstore.api.monitoreo.AlertasSistema;
 import com.allstore.api.venta.entity.Comprobante;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -35,7 +34,7 @@ import java.util.function.Consumer;
  * Lo que el administrador debe atender para que la facturación electrónica no falle en silencio:
  * comprobantes rechazados o sin enviar, plazos de SUNAT por vencer, bajas rechazadas, guías cuyo
  * traslado empieza sin estar aceptadas y el certificado digital; además, las del propio sistema
- * (procesos detenidos, disco, errores internos: ver AlertasSistema). Se calcula al consultar (no se
+ * y de otros módulos (procesos detenidos, disco, stock bajo: ver FuenteAlertas). Se calcula al consultar (no se
  * guarda): una alerta desaparece sola cuando se resuelve lo que la causó.
  */
 @Service
@@ -53,7 +52,7 @@ public class AlertaService {
     private final FirmadorXml firmador;
     private final SunatProperties sunatProperties;
     private final AlertaProperties properties;
-    private final AlertasSistema alertasSistema;
+    private final List<FuenteAlertas> fuentes;
 
     public AlertasResponse alertas() {
         OffsetDateTime ahora = OffsetDateTime.now(JpaAuditingConfig.ZONA_LIMA);
@@ -65,7 +64,7 @@ public class AlertaService {
         sinAceptar(alertas, hoy);
         bajasRechazadas(alertas);
         guiasPorSalir(alertas, hoy);
-        alertas.addAll(alertasSistema.alertas());
+        fuentes.forEach(f -> alertas.addAll(f.alertas()));
         alertas.sort(Comparator.comparing(Alerta::nivel)
                 .thenComparing(Alerta::desde, Comparator.nullsFirst(Comparator.naturalOrder())));
         long criticas = alertas.stream().filter(a -> a.nivel() == Nivel.CRITICA).count();

@@ -5,11 +5,15 @@ import com.allstore.api.common.idempotencia.SolicitudIdempotente;
 import com.allstore.api.inventario.dto.CargaMasivaResponse;
 import com.allstore.api.inventario.dto.MovimientoManualRequest;
 import com.allstore.api.inventario.dto.MovimientoResponse;
+import com.allstore.api.inventario.dto.ReposicionFila;
 import com.allstore.api.inventario.dto.StockEstablecimientoResponse;
+import com.allstore.api.inventario.dto.StockMinimoRequest;
 import com.allstore.api.inventario.dto.StockResponse;
 import com.allstore.api.inventario.dto.TrasladoRequest;
 import com.allstore.api.inventario.service.CargaMasivaService;
 import com.allstore.api.inventario.service.InventarioService;
+import com.allstore.api.inventario.service.ReposicionService;
+import com.allstore.api.reporte.exportacion.RespuestaReporte;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springdoc.core.annotations.ParameterObject;
@@ -24,6 +28,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -44,6 +49,27 @@ public class InventarioController {
 
     private final InventarioService inventarioService;
     private final CargaMasivaService cargaMasivaService;
+    private final ReposicionService reposicionService;
+    private final RespuestaReporte respuestaReporte;
+
+    /**
+     * Qué reponer: prendas en o bajo su stock mínimo (primero las agotadas), con lo que rotan y lo que
+     * hay en otros locales para trasladar. Con formato=XLSX o CSV, como archivo.
+     */
+    @GetMapping("/reposicion")
+    public ResponseEntity<?> reposicion(@RequestParam(required = false) Long establecimientoId,
+                                        @RequestParam(defaultValue = "JSON") RespuestaReporte.Formato formato) {
+        return respuestaReporte.responder(reposicionService.reporte(establecimientoId), formato);
+    }
+
+    /**
+     * Mínimos propios de prendas en un local (minimo = null quita el propio y vuelve a regir el del
+     * modelo). Responde la reposición pendiente de ese local.
+     */
+    @PutMapping("/stock-minimo")
+    public List<ReposicionFila> definirStockMinimo(@Valid @RequestBody StockMinimoRequest request) {
+        return reposicionService.definirMinimos(request);
+    }
 
     /** Ej: GET /api/inventario/stock?establecimientoId=1&busqueda=mom&soloConStock=true */
     @GetMapping("/stock")
