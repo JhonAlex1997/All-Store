@@ -189,6 +189,21 @@ Para no quedarse sin la talla que más se vende:
 - Alerta `STOCK_BAJO` en el panel y en el resumen por correo: una por local ("Tienda principal: 7 prendas
   en o bajo su mínimo (3 agotadas)"), no una por prenda.
 
+## Conteo físico de inventario
+
+`/api/inventario/conteos` (abrir, contar y cerrar: ADMIN y ALMACENERO):
+
+1. `POST` con `establecimientoId` (y opcional `categoriaId` o `productoIds`) abre el conteo; uno abierto por local.
+   `GET /{id}?formato=XLSX` da la hoja de conteo para imprimir.
+2. `PUT /{id}/cantidades` registra lo contado por id o por código escaneado; `"modo": "SUMAR"` para escanear
+   prenda por prenda. Una prenda que no estaba en el conteo se agrega.
+3. `POST /{id}/cerrar` ajusta las diferencias en el kardex (AJUSTE_ENTRADA / AJUSTE_SALIDA con referencia al
+   conteo) y queda en la bitácora. `{"noContadosEnCero": true}` ajusta a 0 lo no contado. `POST /{id}/anular`
+   lo descarta.
+
+Se puede contar con la tienda abierta: la diferencia se mide contra el stock del sistema en el momento en que
+se contó cada prenda, así lo vendido después no aparece como faltante. Cerrar dos veces no ajusta dos veces.
+
 ## Carga masiva desde Excel
 
 Para registrar el catálogo y el stock inicial de una vez (en vez de modelo por modelo):

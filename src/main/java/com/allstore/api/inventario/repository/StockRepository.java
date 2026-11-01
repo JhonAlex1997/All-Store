@@ -61,4 +61,8 @@ public interface StockRepository extends JpaRepository<Stock, Long> {
             where s.variante.id = :varianteId order by e.codigo
             """)
     List<Stock> findByVariante(@Param("varianteId") Long varianteId);
+
+    /** Cantidad actual de una prenda en un local (vacío si nunca tuvo movimientos ahí). */
+    @Query("select s.cantidad from Stock s where s.variante.id = :varianteId and s.establecimiento.id = :establecimientoId")
+    Optional<Integer> cantidad(@Param("varianteId") Long varianteId, @Param("establecimientoId") Long establecimientoId);
 }
