@@ -237,6 +237,17 @@ class SeguridadIntegrationTest {
     }
 
     @Test
+    void elErrorDeUnaDescargaLlegaComoJsonAunqueSePidaUnArchivo() throws Exception {
+        // El cliente del front pide los PDF con Accept: application/octet-stream; si fallan, debe llegar
+        // el error real (404 con mensaje), no un 500 vacío por no poder negociar JSON.
+        mockMvc.perform(get("/api/ventas/999999/pdf").accept(MediaType.APPLICATION_OCTET_STREAM)
+                        .header("Authorization", "Bearer " + login("t_cajero", PASSWORD)))
+                .andExpect(status().isNotFound())
+                .andExpect(header().string("Content-Type", MediaType.APPLICATION_JSON_VALUE))
+                .andExpect(jsonPath("$.message").value("Comprobante no encontrado: 999999"));
+    }
+
+    @Test
     void lasAlertasSonSoloDelAdmin() throws Exception {
         mockMvc.perform(get("/api/alertas").header("Authorization", "Bearer " + login("t_cajero", PASSWORD)))
                 .andExpect(status().isForbidden());

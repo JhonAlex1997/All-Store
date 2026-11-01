@@ -8,6 +8,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.core.PropertyReferenceException;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.access.AccessDeniedException;
@@ -125,7 +126,9 @@ public class GlobalExceptionHandler {
                 details,
                 RegistroSolicitudes.codigoActual()
         );
-        return ResponseEntity.status(status).body(body);
+        // El tipo va fijo: si la petición pedía un archivo (Accept: application/pdf u octet-stream) y falla,
+        // sin esto Spring no puede negociar JSON y responde 500 vacío en lugar del error real.
+        return ResponseEntity.status(status).contentType(MediaType.APPLICATION_JSON).body(body);
     }
 
     /** Un parámetro repetido (?metodoPago=YAPE&metodoPago=X) llega como arreglo. */
