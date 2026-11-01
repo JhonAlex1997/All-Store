@@ -15,6 +15,8 @@ import com.allstore.api.entrega.entity.EnvioWhatsapp;
 import com.allstore.api.entrega.entity.EstadoCorreo;
 import com.allstore.api.entrega.repository.EnvioCorreoRepository;
 import com.allstore.api.entrega.repository.EnvioWhatsappRepository;
+import com.allstore.api.monitoreo.LatidoProcesos;
+import com.allstore.api.monitoreo.RegistroErrores;
 import com.allstore.api.facturacion.dto.SunatInfo;
 import com.allstore.api.facturacion.entity.EstadoSunat;
 import com.allstore.api.facturacion.evento.ComprobanteAceptado;
@@ -82,16 +84,20 @@ public class EntregaService {
     private final ServicioWhatsapp servicioWhatsapp;
     private final EnvioWhatsappRepository whatsappRepository;
     private final TransactionTemplate transaccionPropia;
+    private final LatidoProcesos latido;
+    private final RegistroErrores errores;
 
     public EntregaService(EnvioCorreoRepository envioRepository, ComprobanteRepository comprobanteRepository,
                           VentaService ventaService, ImpresionService impresionService, EnvioSunatService envioSunatService,
                           EmpresaService empresaService, ServicioCorreo servicioCorreo, CorreoComprobante correoComprobante,
                           EntregaProperties properties, PlatformTransactionManager transactionManager,
                           VisibilidadComprobante visibilidad, ServicioWhatsapp servicioWhatsapp,
-                          EnvioWhatsappRepository whatsappRepository) {
+                          EnvioWhatsappRepository whatsappRepository, LatidoProcesos latido, RegistroErrores errores) {
         this.visibilidad = visibilidad;
         this.servicioWhatsapp = servicioWhatsapp;
         this.whatsappRepository = whatsappRepository;
+        this.latido = latido;
+        this.errores = errores;
         this.envioRepository = envioRepository;
         this.comprobanteRepository = comprobanteRepository;
         this.ventaService = ventaService;
@@ -273,6 +279,10 @@ public class EntregaService {
     /** Envía los WhatsApp pendientes cada cierto tiempo, cada uno en su propia transacción. */
     @Scheduled(fixedDelayString = "${app.entrega.correo.intervalo-ms:30000}", initialDelay = 25_000)
     public void enviarWhatsappPendientes() {
+        latido.ejecutar(LatidoProcesos.WHATSAPP, this::enviarLoteWhatsapp);
+    }
+
+    private void enviarLoteWhatsapp() {
         if (!servicioWhatsapp.configurado()) {
             return;
         }
@@ -283,6 +293,7 @@ public class EntregaService {
                         .ifPresent(this::enviarWhatsapp));
             } catch (RuntimeException e) {
                 log.error("Error enviando el WhatsApp {}", id, e);
+                errores.proceso(LatidoProcesos.WHATSAPP, e);
             }
         }
     }
@@ -290,6 +301,10 @@ public class EntregaService {
     /** Envía los correos pendientes cada cierto tiempo (app.entrega.correo.intervalo-ms). */
     @Scheduled(fixedDelayString = "${app.entrega.correo.intervalo-ms:30000}", initialDelay = 20_000)
     public void enviarPendientes() {
+        latido.ejecutar(LatidoProcesos.CORREOS, this::enviarLoteCorreos);
+    }
+
+    private void enviarLoteCorreos() {
         if (!properties.correo().habilitado()) {
             return;
         }
@@ -301,6 +316,7 @@ public class EntregaService {
                         .ifPresent(this::enviar));
             } catch (RuntimeException e) {
                 log.error("Error enviando el correo {}", id, e);
+                errores.proceso(LatidoProcesos.CORREOS, e);
             }
         }
     }

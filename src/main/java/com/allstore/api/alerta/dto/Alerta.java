@@ -33,7 +33,13 @@ public record Alerta(
         ENVIO_EN_ERROR,
         PLAZO_DE_ENVIO,
         BAJA_RECHAZADA,
-        GUIA_SIN_ACEPTAR
+        GUIA_SIN_ACEPTAR,
+        /** Un proceso de envío (SUNAT, correos, WhatsApp) dejó de correr. */
+        PROCESO_DETENIDO,
+        /** Poco espacio en el disco del servidor. */
+        DISCO,
+        /** Errores internos (500) o fallos de los procesos en el último día. */
+        ERRORES_INTERNOS
     }
 
     public static Alerta general(Nivel nivel, Tipo tipo, String mensaje) {

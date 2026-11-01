@@ -1,6 +1,8 @@
 package com.allstore.api.seguridad.config;
 
 import com.allstore.api.common.idempotencia.SolicitudIdempotente;
+import com.allstore.api.monitoreo.AccesoMetricas;
+import com.allstore.api.monitoreo.UsuarioEnRegistro;
 import com.allstore.api.seguridad.entity.Rol;
 import com.allstore.api.seguridad.repository.UsuarioRepository;
 import com.allstore.api.seguridad.service.JwtService;
@@ -84,7 +86,13 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         // Público
                         .requestMatchers(HttpMethod.POST, "/api/auth/login").permitAll()
-                        .requestMatchers("/actuator/health").permitAll()
+                        // Revisión de salud (para el balanceador o un monitor de caídas): solo "UP"/"DOWN";
+                        // el detalle (base, disco) lo ve el administrador con su sesión.
+                        .requestMatchers("/actuator/health", "/actuator/health/**").permitAll()
+                        // Prometheus: lo protege AccesoMetricas con METRICAS_TOKEN (no usa sesión).
+                        .requestMatchers(HttpMethod.GET, AccesoMetricas.RUTA).permitAll()
+                        // El resto de actuator (métricas, info): solo administrador
+                        .requestMatchers("/actuator/**").hasRole(ADMIN)
                         // Enlace de descarga que recibe el cliente: solo lectura, protegido por un
                         // código aleatorio imposible de adivinar
                         .requestMatchers(HttpMethod.GET, "/api/publico/comprobantes/**").permitAll()
@@ -142,6 +150,9 @@ public class SecurityConfig {
                         // Alertas (comprobantes rechazados, plazos de SUNAT, certificado): solo administrador
                         .requestMatchers("/api/alertas/**").hasRole(ADMIN)
 
+                        // Monitoreo (estado del sistema, errores recientes): solo administrador
+                        .requestMatchers("/api/sistema/**").hasRole(ADMIN)
+
                         // Todo lo demás, cerrado
                         .anyRequest().denyAll())
                 .oauth2ResourceServer(oauth -> oauth
@@ -152,6 +163,10 @@ public class SecurityConfig {
                         .accessDeniedHandler((request, response, ex) -> respuestaErrorJson.escribir(
                                 request, response, HttpStatus.FORBIDDEN, "No tienes permiso para realizar esta acción")))
                 .addFilterAfter(new UsuarioVigenteFilter(usuarioRepository, respuestaErrorJson),
+                        BearerTokenAuthenticationFilter.class)
+                // El usuario en cada línea del log de la solicitud (después de validar el token)
+                .addFilterAfter(new UsuarioEnRegistro(), UsuarioVigenteFilter.class)
+                .addFilterBefore(new AccesoMetricas(properties.metricasToken(), respuestaErrorJson),
                         BearerTokenAuthenticationFilter.class)
                 // Primero de todo: cuerpo de tamaño razonable y límite de intentos fallidos por IP.
                 .addFilterBefore(new LimiteCuerpoSolicitud(properties.maximoCuerpoKb() * 1024L, respuestaErrorJson),

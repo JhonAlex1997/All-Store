@@ -1,6 +1,9 @@
 package com.allstore.api.common.exception;
 
+import com.allstore.api.monitoreo.RegistroErrores;
+import com.allstore.api.monitoreo.RegistroSolicitudes;
 import jakarta.servlet.http.HttpServletRequest;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.core.PropertyReferenceException;
 import org.springframework.http.HttpStatus;
@@ -20,7 +23,10 @@ import java.util.Map;
 
 @Slf4j
 @RestControllerAdvice
+@RequiredArgsConstructor
 public class GlobalExceptionHandler {
+
+    private final RegistroErrores registroErrores;
 
     @ExceptionHandler(BusinessException.class)
     public ResponseEntity<ErrorResponse> handleBusiness(BusinessException ex, HttpServletRequest request) {
@@ -88,7 +94,11 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleGeneric(Exception ex, HttpServletRequest request) {
         log.error("Error no controlado en {} {}", request.getMethod(), request.getRequestURI(), ex);
-        return build(HttpStatus.INTERNAL_SERVER_ERROR, "Ocurrió un error interno en el servidor", request, null);
+        registroErrores.solicitud(request.getMethod(), request.getRequestURI(), ex);
+        // El código permite al administrador encontrar el error en el log cuando la caja lo reporta.
+        String codigo = RegistroSolicitudes.codigoActual();
+        return build(HttpStatus.INTERNAL_SERVER_ERROR, "Ocurrió un error interno en el servidor"
+                + (codigo != null ? " (código " + codigo + "). Si se repite, repórtalo con ese código" : ""), request, null);
     }
 
     private ResponseEntity<ErrorResponse> build(HttpStatus status, String message, HttpServletRequest request,
@@ -99,7 +109,8 @@ public class GlobalExceptionHandler {
                 status.getReasonPhrase(),
                 message,
                 request.getRequestURI(),
-                details
+                details,
+                RegistroSolicitudes.codigoActual()
         );
         return ResponseEntity.status(status).body(body);
     }

@@ -21,8 +21,11 @@ import com.allstore.api.venta.entity.ComprobantePago;
 import com.allstore.api.venta.entity.EstadoComprobante;
 import com.allstore.api.venta.entity.MetodoPago;
 import com.allstore.api.venta.repository.ComprobanteRepository;
+import io.micrometer.core.instrument.MeterRegistry;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.util.StringUtils;
 
 import java.math.BigDecimal;
@@ -45,6 +48,7 @@ public class EmisionComprobante {
     private final SerieService serieService;
     private final EnvioSunatService envioSunatService;
     private final Idempotencia idempotencia;
+    private final MeterRegistry metricas;
 
     /** La solicitud con su clave Idempotency-Key (o NINGUNA si la caja no la envió); ver {@link Idempotencia}. */
     public SolicitudIdempotente solicitud(String clave, String operacion, Object... datos) {
@@ -98,6 +102,22 @@ public class EmisionComprobante {
         comprobante.setFechaEmision(OffsetDateTime.now(JpaAuditingConfig.ZONA_LIMA));
         comprobanteRepository.save(comprobante);
         envioSunatService.registrar(comprobante);
+        contarAlConfirmar(comprobante.getTipoComprobante());
+    }
+
+    /** Métrica de comprobantes emitidos por tipo; solo si la venta se confirma (no si se deshace). */
+    private void contarAlConfirmar(TipoComprobante tipo) {
+        Runnable contar = () -> metricas.counter("allstore.comprobantes.emitidos", "tipo", tipo.name()).increment();
+        if (TransactionSynchronizationManager.isSynchronizationActive()) {
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override
+                public void afterCommit() {
+                    contar.run();
+                }
+            });
+        } else {
+            contar.run();
+        }
     }
 
     /** Respuesta completa del comprobante, con su estado ante SUNAT (y el de su baja, si se anuló). */

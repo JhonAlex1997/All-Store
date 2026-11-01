@@ -80,6 +80,8 @@ public interface EnvioSunatRepository extends JpaRepository<EnvioSunat, Long> {
     @EntityGraph(attributePaths = {"comprobante", "resumen", "guia"})
     Page<EnvioSunat> findByEstado(EstadoSunat estado, Pageable pageable);
 
+    long countByEstado(EstadoSunat estado);
+
     @Override
     @EntityGraph(attributePaths = {"comprobante", "resumen", "guia"})
     Page<EnvioSunat> findAll(Pageable pageable);

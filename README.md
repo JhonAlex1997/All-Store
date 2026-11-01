@@ -414,6 +414,49 @@ Además, a las 8:00 y a las 18:00 se envía un **resumen por correo** si hay ale
 El plazo de envío es configurable (`app.alertas.dias-plazo-envio`, 3 por defecto): SUNAT indica 3
 días calendario para facturas y notas, y se usa el mismo para todo, porque avisar antes es lo prudente.
 
+## Monitoreo y logs
+
+Para saber si el sistema está bien sin entrar al servidor, y encontrar rápido la causa de un error.
+
+**Panel del administrador** (solo ADMIN):
+
+| Endpoint | Para qué |
+| --- | --- |
+| `GET /api/sistema/estado` | Estado general (`OK`, `ATENCION`, `CRITICO`): base de datos (responde, tamaño), disco libre, memoria, versión y tiempo activo, procesos de envío, colas (SUNAT, correos, WhatsApp) y errores del último día |
+| `GET /api/sistema/errores` | Los últimos 100 errores internos, con el código de solicitud para buscarlos en el log |
+
+**Alertas nuevas** (en `GET /api/alertas` y en el resumen por correo): un proceso de envío (SUNAT,
+correos, WhatsApp) que **dejó de correr** (crítica: no da error, solo deja de enviar), **disco** del
+servidor por llenarse (menos de 15 %; crítica bajo 7 %) y **errores internos** en las últimas 24 horas.
+
+**Código de solicitud.** Cada respuesta lleva la cabecera `X-Request-Id`, y cada error lo incluye
+en `solicitud`; un error 500 lo muestra en el mensaje ("código 3f9a…"). Con ese código se encuentra
+en el log todo lo que pasó. Si la caja o Nginx envían su propio `X-Request-Id`, se conserva.
+
+**Logs.** Una línea por solicitud (método, ruta, estado, duración, usuario, IP; nunca el cuerpo ni la
+consulta, que pueden llevar DNI o contraseñas) y cada línea lleva el código y el usuario. Las
+solicitudes de más de 3 segundos y los errores 500 salen como advertencia. En producción,
+`LOG_ARCHIVO` escribe además un archivo **JSON (ECS)** con rotación (20 MB, 30 días, máximo 2 GB),
+listo para Grafana Loki, Elastic o CloudWatch.
+
+**Para herramientas de monitoreo:**
+
+| Endpoint | Acceso | Para qué |
+| --- | --- | --- |
+| `/actuator/health` | Público (solo `UP`/`DOWN`; el ADMIN ve el detalle) | Monitor de caídas (UptimeRobot, Better Stack) o el balanceador |
+| `/actuator/health/liveness` · `/readiness` | Público | Docker / Kubernetes |
+| `/actuator/prometheus` | Usuario `metricas` + `METRICAS_TOKEN` (vacío = cerrado) | Prometheus + Grafana |
+| `/actuator/metrics`, `/actuator/info` | ADMIN | Consulta puntual |
+
+Métricas propias, además de las automáticas (solicitudes HTTP con percentiles, memoria, conexiones):
+`allstore_comprobantes_emitidos_total{tipo}`, `allstore_sunat_envios{estado}`,
+`allstore_correos{estado}`, `allstore_whatsapp{estado}`, `allstore_cajas_abiertas`,
+`allstore_errores_internos_total` y `allstore_procesos_vuelta_seconds{proceso}`.
+
+**Para producción:** un monitor de caídas externo que consulte `/actuator/health` cada minuto (si
+el servidor se apaga, nada dentro de él puede avisar) y, si se quiere ver tendencias, Prometheus +
+Grafana leyendo `/actuator/prometheus`.
+
 ## Representación impresa
 
 `GET /api/ventas/{id}/pdf?formato=TICKET` (80 mm, impresora térmica) o `formato=A4`. Responde el

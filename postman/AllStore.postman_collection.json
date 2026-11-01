@@ -2391,6 +2391,96 @@
           ]
         },
         {
+          "name": "Estado del sistema (monitoreo)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/sistema/estado",
+            "description": "OK / ATENCION / CRITICO: base de datos, disco, memoria, procesos de envío (SUNAT, correos, WhatsApp), colas y errores internos del último día. Solo ADMIN."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "const e = pm.response.json();",
+                  "pm.test(\"Base disponible y 3 procesos\", () => { pm.expect(e.baseDatos.disponible).to.eql(true); pm.expect(e.procesos.length).to.eql(3); });",
+                  "pm.test(\"Lleva el código de solicitud\", () => pm.expect(!!pm.response.headers.get(\"X-Request-Id\")).to.eql(true));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Errores internos recientes",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/sistema/errores",
+            "description": "Los últimos 100 errores 500 o de procesos, con el código para buscarlos en el log."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Salud (público, sin detalle)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/actuator/health",
+            "auth": {
+              "type": "noauth"
+            },
+            "description": "Para un monitor de caídas: solo UP/DOWN. Con sesión de ADMIN muestra base y disco."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"UP\", () => pm.expect(pm.response.json().status).to.eql(\"UP\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Métricas Prometheus sin clave (debe dar 401 o 404)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/actuator/prometheus",
+            "auth": {
+              "type": "noauth"
+            },
+            "description": "Prometheus las lee con usuario 'metricas' y METRICAS_TOKEN. Sin METRICAS_TOKEN responde 404."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Cerrado\", () => pm.expect([401, 404]).to.include(pm.response.code));"
+                ]
+              }
+            }
+          ]
+        },
+        {
           "name": "Envíos pendientes",
           "request": {
             "method": "GET",

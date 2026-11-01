@@ -12,6 +12,8 @@ import java.util.Optional;
 
 public interface EnvioWhatsappRepository extends JpaRepository<EnvioWhatsapp, Long> {
 
+    long countByEstado(EnvioWhatsapp.Estado estado);
+
     List<EnvioWhatsapp> findByComprobanteIdOrderByIdDesc(Long comprobanteId);
 
     long countByComprobanteIdAndCreatedAtAfter(Long comprobanteId, OffsetDateTime desde);

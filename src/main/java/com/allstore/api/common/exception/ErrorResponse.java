@@ -7,7 +7,8 @@ import java.util.Map;
 
 /**
  * Formato único de error de la API. {@code message} es siempre legible por el usuario final;
- * {@code details} lleva el error por campo cuando falla una validación.
+ * {@code details} lleva el error por campo cuando falla una validación; {@code solicitud} es el código
+ * de la solicitud (cabecera X-Request-Id) para encontrarla en el log si hay que reportar el error.
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public record ErrorResponse(
@@ -16,6 +17,7 @@ public record ErrorResponse(
         String error,
         String message,
         String path,
-        Map<String, String> details
+        Map<String, String> details,
+        String solicitud
 ) {
 }

@@ -1,6 +1,7 @@
 package com.allstore.api.seguridad.config;
 
 import com.allstore.api.common.exception.ErrorResponse;
+import com.allstore.api.monitoreo.RegistroSolicitudes;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -25,7 +26,7 @@ public class RespuestaErrorJson {
     public void escribir(HttpServletRequest request, HttpServletResponse response, HttpStatus status,
                          String mensaje) throws IOException {
         ErrorResponse body = new ErrorResponse(OffsetDateTime.now(), status.value(), status.getReasonPhrase(),
-                mensaje, request.getRequestURI(), null);
+                mensaje, request.getRequestURI(), null, RegistroSolicitudes.codigoActual());
         response.setStatus(status.value());
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
         response.setCharacterEncoding("UTF-8");

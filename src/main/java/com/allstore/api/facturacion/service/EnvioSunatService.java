@@ -17,6 +17,8 @@ import com.allstore.api.facturacion.entity.ResumenSunat;
 import com.allstore.api.facturacion.evento.ComprobanteAceptado;
 import com.allstore.api.facturacion.repository.EnvioSunatRepository;
 import com.allstore.api.facturacion.repository.ResumenSunatRepository;
+import com.allstore.api.monitoreo.LatidoProcesos;
+import com.allstore.api.monitoreo.RegistroErrores;
 import com.allstore.api.guia.entity.GuiaRemision;
 import com.allstore.api.venta.entity.Comprobante;
 import lombok.extern.slf4j.Slf4j;
@@ -87,12 +89,15 @@ public class EnvioSunatService {
     private final SunatProperties properties;
     private final TransactionTemplate transaccionPropia;
     private final ApplicationEventPublisher eventos;
+    private final LatidoProcesos latido;
+    private final RegistroErrores errores;
 
     public EnvioSunatService(EnvioSunatRepository envioRepository, ResumenSunatRepository resumenRepository,
                              GeneradorXmlUbl generador, GeneradorResumenXml generadorResumen,
                              GeneradorGuiaXml generadorGuia, FirmadorXml firmador, ServicioEnvioSunat servicio,
                              ServicioGuiaSunat servicioGuia, EmpresaService empresaService, SunatProperties properties,
-                             PlatformTransactionManager transactionManager, ApplicationEventPublisher eventos) {
+                             PlatformTransactionManager transactionManager, ApplicationEventPublisher eventos,
+                             LatidoProcesos latido, RegistroErrores errores) {
         this.envioRepository = envioRepository;
         this.resumenRepository = resumenRepository;
         this.generador = generador;
@@ -106,6 +111,8 @@ public class EnvioSunatService {
         this.transaccionPropia = new TransactionTemplate(transactionManager);
         this.transaccionPropia.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
         this.eventos = eventos;
+        this.latido = latido;
+        this.errores = errores;
     }
 
     // ---------- Al emitir ----------
@@ -160,6 +167,10 @@ public class EnvioSunatService {
     /** Revisa los pendientes y los tickets por consultar cada cierto tiempo (app.sunat.intervalo-envio-ms). */
     @Scheduled(fixedDelayString = "${app.sunat.intervalo-envio-ms:30000}", initialDelay = 15_000)
     public void enviarPendientes() {
+        latido.ejecutar(LatidoProcesos.ENVIO_SUNAT, this::enviarLote);
+    }
+
+    private void enviarLote() {
         if (!properties.habilitado()) {
             return;
         }
@@ -172,6 +183,7 @@ public class EnvioSunatService {
                         .ifPresent(this::procesar));
             } catch (RuntimeException e) {
                 log.error("Error procesando el envío SUNAT {}", id, e);
+                errores.proceso(LatidoProcesos.ENVIO_SUNAT, e);
             }
         }
     }

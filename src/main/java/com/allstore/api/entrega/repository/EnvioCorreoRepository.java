@@ -1,6 +1,7 @@
 package com.allstore.api.entrega.repository;
 
 import com.allstore.api.entrega.entity.EnvioCorreo;
+import com.allstore.api.entrega.entity.EstadoCorreo;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -11,6 +12,8 @@ import java.util.List;
 import java.util.Optional;
 
 public interface EnvioCorreoRepository extends JpaRepository<EnvioCorreo, Long> {
+
+    long countByEstado(EstadoCorreo estado);
 
     List<EnvioCorreo> findByComprobanteIdOrderByIdDesc(Long comprobanteId);
 

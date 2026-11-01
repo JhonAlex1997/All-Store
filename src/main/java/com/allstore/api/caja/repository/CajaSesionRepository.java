@@ -26,6 +26,8 @@ public interface CajaSesionRepository extends JpaRepository<CajaSesion, Long>, J
 
     Optional<CajaSesion> findByClaveApertura(String clave);
 
+    long countByEstado(EstadoCaja estado);
+
     Optional<CajaSesion> findByClaveCierre(String clave);
 
     /**
