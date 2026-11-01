@@ -33,6 +33,8 @@ public class RegistroComprasService {
 
     private static final List<TipoDocumentoCompra> DEL_REGISTRO = List.of(TipoDocumentoCompra.FACTURA,
             TipoDocumentoCompra.BOLETA, TipoDocumentoCompra.TICKET);
+    /** Lo que SUNAT incluye en la propuesta del RCE (tipos 01, 07, 08, 23, 30...): de lo que se registra aquí, la factura. */
+    private static final List<TipoDocumentoCompra> PROPUESTOS = List.of(TipoDocumentoCompra.FACTURA);
 
     private final CompraRepository compraRepository;
     private final EmpresaService empresaService;
@@ -56,8 +58,14 @@ public class RegistroComprasService {
             registros.add(new RegistroComprasResponse.Registro(c.getId(), c.getFechaEmision(), c.getTipoDocumento().getCodigo(),
                     c.getSerie(), c.getNumero(), c.getProveedor().getTipoDocumento().getCodigoSunat(),
                     c.getProveedor().getNumeroDocumento(), c.getProveedor().getRazonSocial(), c.getBaseGravada(), c.getIgv(),
-                    c.getNoGravado(), c.getTotal(), "PEN"));
+                    c.getNoGravado(), c.getTotal(), "PEN", PROPUESTOS.contains(c.getTipoDocumento())));
         }
+        long noPropuestos = registros.stream().filter(r -> !r.propuestoPorSunat()).count();
+        if (noPropuestos > 0) {
+            advertencias.add(noPropuestos + " boleta(s) o ticket(s) no vienen en la propuesta de SUNAT: si aceptas la propuesta, "
+                    + "agrégalos en el SIRE (\"Agregar\" o \"Importar nuevos comprobantes\"); si la reemplazas con este archivo, ya van");
+        }
+        advertencias.add(SireFechas.disponibleDesde(periodo));
         if (fuera > 0) {
             advertencias.add(fuera + " documento(s) del periodo no van al Registro de Compras (recibos por honorarios u "
                     + "otros documentos sin crédito fiscal)");

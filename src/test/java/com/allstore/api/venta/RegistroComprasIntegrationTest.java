@@ -62,7 +62,10 @@ class RegistroComprasIntegrationTest extends TiendaDePrueba {
         assertThat(rce.creditoFiscal()).isEqualByComparingTo("18.00");
         assertThat(rce.noGravado()).isEqualByComparingTo("50.00");
         assertThat(rce.total()).isEqualByComparingTo("168.00");
-        assertThat(rce.advertencias()).anyMatch(a -> a.contains("no van al Registro de Compras"));
+        assertThat(rce.advertencias()).anyMatch(a -> a.contains("no van al Registro de Compras"))
+                .anyMatch(a -> a.startsWith("1 boleta(s) o ticket(s) no vienen en la propuesta de SUNAT"))
+                .anyMatch(a -> a.contains("ya está disponible en el SIRE (desde el 08/04/2025)"));
+        assertThat(rce.registros()).extracting(RegistroComprasResponse.Registro::propuestoPorSunat).containsExactly(true, false);
     }
 
     @Test

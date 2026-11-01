@@ -23,11 +23,14 @@ public record RegistroComprasResponse(
         List<String> advertencias
 ) {
     /**
-     * @param tipoComprobante Catálogo 10 (01 factura, 03 boleta, 12 ticket)
+     * @param tipoComprobante        Catálogo 10 (01 factura, 03 boleta, 12 ticket)
      * @param proveedorTipoDocumento Catálogo 06 (6 = RUC, 1 = DNI)
+     * @param propuestoPorSunat      SUNAT lo trae en su propuesta (facturas); las boletas y tickets no: hay que
+     *                               agregarlos en el SIRE ("Agregar" o "Importar nuevos comprobantes")
      */
     public record Registro(Long compraId, LocalDate fechaEmision, String tipoComprobante, String serie, String numero,
                            String proveedorTipoDocumento, String proveedorNumeroDocumento, String proveedorNombre,
-                           BigDecimal baseGravada, BigDecimal igv, BigDecimal noGravado, BigDecimal total, String moneda) {
+                           BigDecimal baseGravada, BigDecimal igv, BigDecimal noGravado, BigDecimal total, String moneda,
+                           boolean propuestoPorSunat) {
     }
 }

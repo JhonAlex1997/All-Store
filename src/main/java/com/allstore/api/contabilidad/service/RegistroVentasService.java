@@ -73,6 +73,7 @@ public class RegistroVentasService {
                 .map(c -> registro(c, estados.get(c.getId()), advertencias, pendientes))
                 .toList();
 
+        advertencias.add(SireFechas.disponibleDesde(periodo));
         if (periodo.equals(actual)) {
             advertencias.addFirst("El periodo aún no termina: el registro puede cambiar con las ventas de los próximos días");
         }

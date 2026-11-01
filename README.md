@@ -681,6 +681,13 @@ no coincide, se reemplaza subiendo el archivo.
   los recibos por honorarios y los documentos "otro" tampoco (se advierte).
 - Nombre del archivo: `LE` + RUC + AAAAMM + `00` + `080400` (RCE) + `02` (reemplazo) + `1112`. Como el del RVIE,
   conviene pasarlo por el validador **PVSIRE** antes del primer envío.
+- SUNAT solo **propone** facturas y notas (tipos 01, 07, 08…), no boletas ni tickets de compra: cada registro trae
+  `propuestoPorSunat`. Si aceptas o complementas la propuesta, agrega en el SIRE los que no vienen ("Agregar" o
+  "Importar nuevos comprobantes"); si la reemplazas con este archivo, ya van todos.
+
+**Plazos del SIRE** (obligatorio para todos desde el 1 de junio de 2026): la propuesta de un periodo se genera desde
+el **día 8 del mes siguiente**; ambos registros (RVIE y RCE) lo indican en sus advertencias. En el SIRE se puede
+aceptar la propuesta, complementarla o reemplazarla con el archivo plano.
 
 ## Asientos contables (libro diario y mayor)
 
