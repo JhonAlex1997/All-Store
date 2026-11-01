@@ -4,6 +4,7 @@ import com.allstore.api.cliente.entity.TipoDocumentoIdentidad;
 import com.allstore.api.common.exception.BusinessException;
 import com.allstore.api.config.JpaAuditingConfig;
 import com.allstore.api.contabilidad.dto.RegistroVentasResponse;
+import com.allstore.api.contabilidad.dto.ValidacionSireResponse;
 import com.allstore.api.contabilidad.dto.RegistroVentasResponse.DocumentoModificado;
 import com.allstore.api.contabilidad.dto.RegistroVentasResponse.Registro;
 import com.allstore.api.contabilidad.dto.RegistroVentasResponse.Resumen;
@@ -86,8 +87,21 @@ public class RegistroVentasService {
             advertencias.add(notasDeVenta.getCantidad() + " nota(s) de venta por S/ " + ArchivoRvie.importe(notasDeVenta.getTotal())
                     + " sin boleta ni factura: no son comprobantes de pago y no van al registro");
         }
-        return new RegistroVentasResponse(AAAAMM.format(periodo), empresa.getRuc(), empresa.getRazonSocial(), registros,
-                resumenPorTipo(registros), resumen(null, "Total del periodo", registros), advertencias);
+        RegistroVentasResponse respuesta = new RegistroVentasResponse(AAAAMM.format(periodo), empresa.getRuc(),
+                empresa.getRazonSocial(), registros, resumenPorTipo(registros), resumen(null, "Total del periodo", registros),
+                advertencias);
+        ValidacionSireResponse validacion = ValidadorSire.rvie(ArchivoRvie.txt(respuesta));
+        if (!validacion.valido()) {
+            advertencias.add("El archivo para el SIRE tiene " + validacion.inconsistencias().size()
+                    + " inconsistencia(s): revísalas en /api/contabilidad/registro-ventas/validar");
+        }
+        return respuesta;
+    }
+
+    /** Revisa el archivo de reemplazo con las reglas de la estructura oficial (antes del PVSIRE). */
+    @Transactional(readOnly = true)
+    public ValidacionSireResponse validar(YearMonth periodo) {
+        return ValidadorSire.rvie(ArchivoRvie.txt(generar(periodo)));
     }
 
     @Transactional(readOnly = true)

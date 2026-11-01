@@ -6,6 +6,7 @@ import com.allstore.api.compra.entity.TipoDocumentoCompra;
 import com.allstore.api.compra.repository.CompraRepository;
 import com.allstore.api.config.JpaAuditingConfig;
 import com.allstore.api.contabilidad.dto.RegistroComprasResponse;
+import com.allstore.api.contabilidad.dto.ValidacionSireResponse;
 import com.allstore.api.empresa.entity.Empresa;
 import com.allstore.api.empresa.service.EmpresaService;
 import lombok.RequiredArgsConstructor;
@@ -77,8 +78,19 @@ public class RegistroComprasService {
         BigDecimal igv = sumar(registros, RegistroComprasResponse.Registro::igv);
         BigDecimal noGravado = sumar(registros, RegistroComprasResponse.Registro::noGravado);
         BigDecimal total = sumar(registros, RegistroComprasResponse.Registro::total);
-        return new RegistroComprasResponse(empresa.getRuc(), empresa.getRazonSocial(),
+        RegistroComprasResponse respuesta = new RegistroComprasResponse(empresa.getRuc(), empresa.getRazonSocial(),
                 periodo.toString().replace("-", ""), registros, registros.size(), base, igv, noGravado, total, advertencias);
+        ValidacionSireResponse validacion = ValidadorSire.rce(ArchivoRce.txt(respuesta));
+        if (!validacion.valido()) {
+            advertencias.add("El archivo para el SIRE tiene " + validacion.inconsistencias().size()
+                    + " inconsistencia(s): revísalas en /api/contabilidad/registro-compras/validar");
+        }
+        return respuesta;
+    }
+
+    /** Revisa el archivo de reemplazo con las reglas de la estructura oficial (antes del PVSIRE). */
+    public ValidacionSireResponse validar(YearMonth periodo) {
+        return ValidadorSire.rce(ArchivoRce.txt(generar(periodo)));
     }
 
     /**

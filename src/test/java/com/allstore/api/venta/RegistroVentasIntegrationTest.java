@@ -100,6 +100,8 @@ class RegistroVentasIntegrationTest extends TiendaDePrueba {
         boletaAClientesVarios();
 
         var archivo = registroVentasService.archivoSire(mes, false);
+        // Pasa la revisión con las reglas de la estructura oficial del SIRE.
+        assertThat(registroVentasService.validar(mes).inconsistencias()).isEmpty();
 
         assertThat(archivo.nombre()).isEqualTo("LE20000000001" + mes.toString().replace("-", "") + "0014040002" + "1112.txt");
         String[] lineas = new String(archivo.contenido(), StandardCharsets.UTF_8).split("\r\n");

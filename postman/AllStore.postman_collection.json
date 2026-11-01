@@ -3461,6 +3461,47 @@
           ]
         },
         {
+          "name": "Revisar el archivo del RCE (como el PVSIRE)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/contabilidad/registro-compras/validar?periodo={{periodoActual}}",
+            "description": "Reglas de la estructura oficial de SUNAT: nombre, campos, fechas, importes, RUC, cuadre y duplicados."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Sin inconsistencias\", () => pm.expect(pm.response.json().valido).to.eql(true));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Revisar el archivo del RVIE (como el PVSIRE)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/contabilidad/registro-ventas/validar?periodo={{periodoActual}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Sin inconsistencias\", () => pm.expect(pm.response.json().valido).to.eql(true));"
+                ]
+              }
+            }
+          ]
+        },
+        {
           "name": "Producción: nueva orden",
           "request": {
             "method": "POST",

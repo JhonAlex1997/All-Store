@@ -689,6 +689,15 @@ no coincide, se reemplaza subiendo el archivo.
   `propuestoPorSunat`. Si aceptas o complementas la propuesta, agrega en el SIRE los que no vienen ("Agregar" o
   "Importar nuevos comprobantes"); si la reemplazas con este archivo, ya van todos.
 
+**Revisión previa al PVSIRE.** `GET /api/contabilidad/registro-ventas/validar?periodo=2026-11` y
+`/registro-compras/validar` revisan el archivo con las reglas de la estructura oficial: nombre (y que coincida con el
+RUC, el periodo y si hay información), cantidad de campos, largo y formato de cada uno, fechas reales y del periodo,
+importes (2 decimales, negativos solo en notas de crédito), RUC con dígito verificador, DNI de 8 dígitos, que el
+total sea la suma de sus importes, que el IGV sea el 18 % de la base, notas con su comprobante modificado, CAR y campos
+reservados vacíos, sin BOM y sin comprobantes repetidos. Responde cada inconsistencia con su fila, campo y motivo, y
+el registro del mes lo advierte. No reemplaza al PVSIRE (que además cruza con la información de SUNAT), pero detecta
+antes los errores de formato.
+
 **Plazos del SIRE** (obligatorio para todos desde el 1 de junio de 2026): la propuesta de un periodo se genera desde
 el **día 8 del mes siguiente**; ambos registros (RVIE y RCE) lo indican en sus advertencias. En el SIRE se puede
 aceptar la propuesta, complementarla o reemplazarla con el archivo plano.

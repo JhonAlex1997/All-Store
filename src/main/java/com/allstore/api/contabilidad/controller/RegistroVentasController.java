@@ -1,6 +1,7 @@
 package com.allstore.api.contabilidad.controller;
 
 import com.allstore.api.contabilidad.dto.RegistroVentasResponse;
+import com.allstore.api.contabilidad.dto.ValidacionSireResponse;
 import com.allstore.api.contabilidad.service.ArchivoRvie;
 import com.allstore.api.contabilidad.service.RegistroVentasService;
 import lombok.RequiredArgsConstructor;
@@ -35,6 +36,15 @@ public class RegistroVentasController {
     @GetMapping
     public RegistroVentasResponse registro(@RequestParam @DateTimeFormat(pattern = "yyyy-MM") YearMonth periodo) {
         return registroVentasService.generar(periodo);
+    }
+
+    /**
+     * Revisa el archivo del SIRE con las reglas de la estructura oficial de SUNAT (como el PVSIRE): fila,
+     * campo y motivo de cada inconsistencia.
+     */
+    @GetMapping("/validar")
+    public ValidacionSireResponse validar(@RequestParam @DateTimeFormat(pattern = "yyyy-MM") YearMonth periodo) {
+        return registroVentasService.validar(periodo);
     }
 
     /** Archivo para reemplazar la propuesta del RVIE en el SIRE. Ej: GET .../sire?periodo=2026-10 */

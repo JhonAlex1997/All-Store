@@ -66,6 +66,8 @@ class RegistroComprasIntegrationTest extends TiendaDePrueba {
                 .anyMatch(a -> a.startsWith("1 boleta(s) o ticket(s) no vienen en la propuesta de SUNAT"))
                 .anyMatch(a -> a.contains("ya está disponible en el SIRE (desde el 08/04/2025)"));
         assertThat(rce.registros()).extracting(RegistroComprasResponse.Registro::propuestoPorSunat).containsExactly(true, false);
+        // El archivo que genera el sistema pasa la revisión con las reglas de la estructura oficial.
+        assertThat(registroComprasService.validar(periodo).inconsistencias()).isEmpty();
     }
 
     @Test
