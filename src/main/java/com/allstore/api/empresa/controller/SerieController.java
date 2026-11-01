@@ -1,5 +1,7 @@
 package com.allstore.api.empresa.controller;
 
+import com.allstore.api.common.idempotencia.SolicitudIdempotente;
+import com.allstore.api.common.idempotencia.UnaVez;
 import com.allstore.api.empresa.dto.SerieCreateRequest;
 import com.allstore.api.empresa.dto.SerieResponse;
 import com.allstore.api.empresa.dto.SerieUpdateRequest;
@@ -13,6 +15,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
@@ -25,6 +28,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class SerieController {
 
+    private final UnaVez unaVez;
     private final SerieService serieService;
 
     /** Ej: GET /api/series?tipoComprobante=BOLETA&establecimientoId=1 */
@@ -36,8 +40,10 @@ public class SerieController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public SerieResponse crear(@Valid @RequestBody SerieCreateRequest request) {
-        return serieService.crear(request);
+    public SerieResponse crear(@Valid @RequestBody SerieCreateRequest request,
+        @RequestHeader(name = SolicitudIdempotente.CABECERA, required = false) String clave) {
+        return unaVez.ejecutar(clave, "crear-serie", SerieResponse.class,
+                () -> serieService.crear(request), request);
     }
 
     @PutMapping("/{id}")

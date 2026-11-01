@@ -1,6 +1,8 @@
 package com.allstore.api.insumo.controller;
 
 import com.allstore.api.common.dto.PageResponse;
+import com.allstore.api.common.idempotencia.SolicitudIdempotente;
+import com.allstore.api.common.idempotencia.UnaVez;
 import com.allstore.api.insumo.dto.AjusteInsumoRequest;
 import com.allstore.api.insumo.dto.InsumoRequest;
 import com.allstore.api.insumo.dto.InsumoResponse;
@@ -18,10 +20,12 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+import tools.jackson.core.type.TypeReference;
 
 import java.util.List;
 
@@ -31,6 +35,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class InsumoController {
 
+    private final UnaVez unaVez;
     private final InsumoService insumoService;
 
     @GetMapping
@@ -40,8 +45,10 @@ public class InsumoController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public InsumoResponse crear(@Valid @RequestBody InsumoRequest request) {
-        return insumoService.crear(request);
+    public InsumoResponse crear(@Valid @RequestBody InsumoRequest request,
+        @RequestHeader(name = SolicitudIdempotente.CABECERA, required = false) String clave) {
+        return unaVez.ejecutar(clave, "crear-insumo", InsumoResponse.class,
+                () -> insumoService.crear(request), request);
     }
 
     @PutMapping("/{id}")
@@ -64,7 +71,9 @@ public class InsumoController {
     /** Inventario inicial o ajuste de insumos en un local. */
     @PostMapping("/movimientos")
     @ResponseStatus(HttpStatus.CREATED)
-    public List<MovimientoInsumoResponse> ajustar(@Valid @RequestBody AjusteInsumoRequest request) {
-        return insumoService.ajustar(request);
+    public List<MovimientoInsumoResponse> ajustar(@Valid @RequestBody AjusteInsumoRequest request,
+        @RequestHeader(name = SolicitudIdempotente.CABECERA, required = false) String clave) {
+        return unaVez.ejecutar(clave, "ajustar-insumos", new TypeReference<List<MovimientoInsumoResponse>>() { },
+                () -> insumoService.ajustar(request), request);
     }
 }

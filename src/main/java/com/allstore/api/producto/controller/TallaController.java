@@ -1,5 +1,7 @@
 package com.allstore.api.producto.controller;
 
+import com.allstore.api.common.idempotencia.SolicitudIdempotente;
+import com.allstore.api.common.idempotencia.UnaVez;
 import com.allstore.api.producto.dto.TallaRequest;
 import com.allstore.api.producto.dto.TallaResponse;
 import com.allstore.api.producto.service.TallaService;
@@ -11,6 +13,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
@@ -23,6 +26,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class TallaController {
 
+    private final UnaVez unaVez;
     private final TallaService tallaService;
 
     @GetMapping
@@ -32,8 +36,10 @@ public class TallaController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public TallaResponse crear(@Valid @RequestBody TallaRequest request) {
-        return tallaService.crear(request);
+    public TallaResponse crear(@Valid @RequestBody TallaRequest request,
+        @RequestHeader(name = SolicitudIdempotente.CABECERA, required = false) String clave) {
+        return unaVez.ejecutar(clave, "crear-talla", TallaResponse.class,
+                () -> tallaService.crear(request), request);
     }
 
     @PutMapping("/{id}")

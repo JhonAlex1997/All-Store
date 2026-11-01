@@ -1,5 +1,7 @@
 package com.allstore.api.producto.controller;
 
+import com.allstore.api.common.idempotencia.SolicitudIdempotente;
+import com.allstore.api.common.idempotencia.UnaVez;
 import com.allstore.api.producto.dto.CategoriaRequest;
 import com.allstore.api.producto.dto.CategoriaResponse;
 import com.allstore.api.producto.service.CategoriaService;
@@ -11,6 +13,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
@@ -23,6 +26,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class CategoriaController {
 
+    private final UnaVez unaVez;
     private final CategoriaService categoriaService;
 
     @GetMapping
@@ -32,8 +36,10 @@ public class CategoriaController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public CategoriaResponse crear(@Valid @RequestBody CategoriaRequest request) {
-        return categoriaService.crear(request);
+    public CategoriaResponse crear(@Valid @RequestBody CategoriaRequest request,
+        @RequestHeader(name = SolicitudIdempotente.CABECERA, required = false) String clave) {
+        return unaVez.ejecutar(clave, "crear-categoria", CategoriaResponse.class,
+                () -> categoriaService.crear(request), request);
     }
 
     @PutMapping("/{id}")

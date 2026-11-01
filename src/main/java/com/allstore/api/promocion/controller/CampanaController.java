@@ -1,6 +1,8 @@
 package com.allstore.api.promocion.controller;
 
 import com.allstore.api.common.exception.BusinessException;
+import com.allstore.api.common.idempotencia.SolicitudIdempotente;
+import com.allstore.api.common.idempotencia.UnaVez;
 import com.allstore.api.promocion.dto.CampanaRequest;
 import com.allstore.api.promocion.dto.CampanaResponse;
 import com.allstore.api.promocion.dto.PrecioCampanaResponse;
@@ -13,6 +15,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
@@ -28,6 +31,7 @@ public class CampanaController {
 
     static final int MAXIMO_PRENDAS = 200;
 
+    private final UnaVez unaVez;
     private final CampanaService campanaService;
 
     /** Todas, o solo las vigentes hoy con ?vigentes=true. */
@@ -52,8 +56,10 @@ public class CampanaController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public CampanaResponse crear(@Valid @RequestBody CampanaRequest request) {
-        return campanaService.crear(request);
+    public CampanaResponse crear(@Valid @RequestBody CampanaRequest request,
+        @RequestHeader(name = SolicitudIdempotente.CABECERA, required = false) String clave) {
+        return unaVez.ejecutar(clave, "crear-campana", CampanaResponse.class,
+                () -> campanaService.crear(request), request);
     }
 
     /** También para desactivarla ("activo": false) o cambiar sus fechas o alcance. */

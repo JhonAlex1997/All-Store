@@ -140,6 +140,10 @@
       "value": ""
     },
     {
+      "key": "claveConsumo",
+      "value": ""
+    },
+    {
       "key": "numeroCompra",
       "value": ""
     },
@@ -3542,6 +3546,10 @@
             "method": "POST",
             "header": [
               {
+                "key": "Idempotency-Key",
+                "value": "{{claveConsumo}}"
+              },
+              {
                 "key": "Content-Type",
                 "value": "application/json"
               }
@@ -3559,11 +3567,59 @@
           },
           "event": [
             {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.collectionVariables.set(\"claveConsumo\", \"consumo-\" + Date.now());"
+                ]
+              }
+            },
+            {
               "listen": "test",
               "script": {
                 "type": "text/javascript",
                 "exec": [
                   "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Producción: doble clic al consumir (misma Idempotency-Key)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Idempotency-Key",
+                "value": "{{claveConsumo}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/produccion/ordenes/{{ordenId}}/insumos",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"items\": [\n    {\n      \"insumoId\": {{insumoId}},\n      \"cantidad\": 18\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "El reintento con la misma clave recibe la misma respuesta: la tela se descuenta una sola vez."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Se consumió una sola vez\", () => pm.expect(pm.response.json().insumos[0].cantidad).to.eql(18));"
                 ]
               }
             }

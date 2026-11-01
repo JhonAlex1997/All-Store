@@ -1,5 +1,7 @@
 package com.allstore.api.entrega.controller;
 
+import com.allstore.api.common.idempotencia.SolicitudIdempotente;
+import com.allstore.api.common.idempotencia.UnaVez;
 import com.allstore.api.entrega.dto.EntregaResponse;
 import com.allstore.api.entrega.dto.EnviarCorreoRequest;
 import com.allstore.api.entrega.dto.EnviarWhatsappRequest;
@@ -12,6 +14,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -21,6 +24,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 public class EntregaController {
 
+    private final UnaVez unaVez;
     private final EntregaService entregaService;
 
     /** Enlaces de descarga para compartir, WhatsApp y los correos ya enviados. */
@@ -38,13 +42,17 @@ public class EntregaController {
      * el enlace wa.me para enviarlo a mano). Cuerpo opcional: {"celular": "987654321"}.
      */
     @PostMapping("/whatsapp")
-    public EnvioWhatsappResponse enviarWhatsapp(@PathVariable Long id, @Valid @RequestBody(required = false) EnviarWhatsappRequest request) {
-        return entregaService.enviarWhatsapp(id, request == null ? null : request.celular());
+    public EnvioWhatsappResponse enviarWhatsapp(@PathVariable Long id, @Valid @RequestBody(required = false) EnviarWhatsappRequest request,
+        @RequestHeader(name = SolicitudIdempotente.CABECERA, required = false) String clave) {
+        return unaVez.ejecutar(clave, "enviar-whatsapp", EnvioWhatsappResponse.class,
+                () -> entregaService.enviarWhatsapp(id, request == null ? null : request.celular()), id, request);
     }
 
     @PostMapping("/correo")
     public EnvioCorreoResponse enviarCorreo(@PathVariable Long id,
-                                            @Valid @RequestBody(required = false) EnviarCorreoRequest request) {
-        return entregaService.enviarCorreo(id, request == null ? null : request.email());
+                                            @Valid @RequestBody(required = false) EnviarCorreoRequest request,
+        @RequestHeader(name = SolicitudIdempotente.CABECERA, required = false) String clave) {
+        return unaVez.ejecutar(clave, "enviar-correo", EnvioCorreoResponse.class,
+                () -> entregaService.enviarCorreo(id, request == null ? null : request.email()), id, request);
     }
 }

@@ -156,7 +156,17 @@ hace doble clic, la venta no debe registrarse dos veces. Para eso la caja envía
     el reintento recibe la caja o el comprobante en vez del error "ya tienes una caja abierta" o
     "ya está anulado".
 
-  Sin la cabecera todo funciona como siempre (cada solicitud registra).
+  - **todo lo demás que crea o mueve algo:** compras (registrar, anular), producción (crear orden, consumir y
+    devolver insumos, iniciar y terminar etapas, terminar, anular), conteos (abrir, contar, cerrar, anular),
+    insumos (crear, ajustar), carga masiva (al aplicar), campañas, entregas por correo y WhatsApp, resumen de
+    alertas, reintento de baja, y las altas de productos, variantes, clientes, proveedores, categorías, tallas,
+    colores, establecimientos, series y usuarios. Aquí el reintento recibe **la misma respuesta** que la primera
+    vez, guardada en `solicitud_procesada` en la misma transacción (se conserva 7 días).
+
+  Sin la cabecera todo funciona como siempre (cada solicitud registra). **El frontend debe enviar un UUID nuevo
+  en cada acción del usuario** (y el mismo si reintenta): así un doble clic o un reintento por mala conexión no
+  duplica nada. La clave va ligada al usuario: otro usuario con la misma clave recibe un error, no la respuesta
+  ajena. Las actualizaciones (`PUT`) y los cambios de estado ya son seguros de repetir.
 - La clave se guarda en lo que se crea y en la misma transacción: no puede quedar una venta
   registrada sin su clave ni una clave sin su venta.
 

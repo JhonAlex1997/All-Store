@@ -2,6 +2,7 @@ package com.allstore.api.inventario.controller;
 
 import com.allstore.api.common.dto.PageResponse;
 import com.allstore.api.common.idempotencia.SolicitudIdempotente;
+import com.allstore.api.common.idempotencia.UnaVez;
 import com.allstore.api.inventario.dto.CargaMasivaResponse;
 import com.allstore.api.inventario.dto.MovimientoManualRequest;
 import com.allstore.api.inventario.dto.MovimientoResponse;
@@ -37,9 +38,12 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.io.InputStream;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.time.LocalDate;
+import java.util.HexFormat;
 import java.util.List;
 
 @RestController
@@ -48,6 +52,7 @@ import java.util.List;
 public class InventarioController {
 
     private final InventarioService inventarioService;
+    private final UnaVez unaVez;
     private final CargaMasivaService cargaMasivaService;
     private final ReposicionService reposicionService;
     private final RespuestaReporte respuestaReporte;
@@ -119,9 +124,26 @@ public class InventarioController {
     @PostMapping(value = "/carga-masiva", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public CargaMasivaResponse cargaMasiva(@RequestParam("archivo") MultipartFile archivo,
                                            @RequestParam Long establecimientoId,
-                                           @RequestParam(defaultValue = "false") boolean aplicar) throws IOException {
-        try (InputStream entrada = archivo.getInputStream()) {
-            return cargaMasivaService.cargar(entrada, establecimientoId, aplicar);
+                                           @RequestParam(defaultValue = "false") boolean aplicar,
+                                           @RequestHeader(name = SolicitudIdempotente.CABECERA, required = false) String clave)
+            throws IOException {
+        byte[] contenido = archivo.getBytes();
+        if (!aplicar) {
+            // Solo revisa: no cambia nada, se puede repetir.
+            return cargaMasivaService.cargar(new ByteArrayInputStream(contenido), establecimientoId, false);
+        }
+        // Aplicar dos veces sumaría el stock dos veces: con la clave, un reintento recibe el resultado ya dado.
+        String huellaArchivo = HexFormat.of().formatHex(sha256(contenido));
+        return unaVez.ejecutar(clave, "carga-masiva", CargaMasivaResponse.class,
+                () -> cargaMasivaService.cargar(new ByteArrayInputStream(contenido), establecimientoId, true),
+                establecimientoId, huellaArchivo);
+    }
+
+    private static byte[] sha256(byte[] contenido) {
+        try {
+            return MessageDigest.getInstance("SHA-256").digest(contenido);
+        } catch (NoSuchAlgorithmException e) {
+            throw new IllegalStateException("SHA-256 no disponible", e);
         }
     }
 

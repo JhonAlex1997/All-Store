@@ -1,5 +1,7 @@
 package com.allstore.api.seguridad.controller;
 
+import com.allstore.api.common.idempotencia.SolicitudIdempotente;
+import com.allstore.api.common.idempotencia.UnaVez;
 import com.allstore.api.seguridad.dto.ReiniciarPasswordRequest;
 import com.allstore.api.seguridad.dto.UsuarioCreateRequest;
 import com.allstore.api.seguridad.dto.UsuarioResponse;
@@ -14,6 +16,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
@@ -26,6 +29,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class UsuarioController {
 
+    private final UnaVez unaVez;
     private final UsuarioService usuarioService;
 
     @GetMapping
@@ -35,8 +39,10 @@ public class UsuarioController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public UsuarioResponse crear(@Valid @RequestBody UsuarioCreateRequest request) {
-        return usuarioService.crear(request);
+    public UsuarioResponse crear(@Valid @RequestBody UsuarioCreateRequest request,
+        @RequestHeader(name = SolicitudIdempotente.CABECERA, required = false) String clave) {
+        return unaVez.ejecutar(clave, "crear-usuario", UsuarioResponse.class,
+                () -> usuarioService.crear(request), request);
     }
 
     @PutMapping("/{id}")

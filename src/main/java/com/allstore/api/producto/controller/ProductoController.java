@@ -1,6 +1,8 @@
 package com.allstore.api.producto.controller;
 
 import com.allstore.api.common.dto.PageResponse;
+import com.allstore.api.common.idempotencia.SolicitudIdempotente;
+import com.allstore.api.common.idempotencia.UnaVez;
 import com.allstore.api.producto.dto.CostoRequest;
 import com.allstore.api.producto.dto.CostoResponse;
 import com.allstore.api.producto.dto.EtiquetasRequest;
@@ -31,6 +33,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
@@ -41,6 +44,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 public class ProductoController {
 
+    private final UnaVez unaVez;
     private final ProductoService productoService;
     private final EtiquetaService etiquetaService;
 
@@ -61,8 +65,10 @@ public class ProductoController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public ProductoDetalleResponse crear(@Valid @RequestBody ProductoCreateRequest request) {
-        return productoService.crear(request);
+    public ProductoDetalleResponse crear(@Valid @RequestBody ProductoCreateRequest request,
+        @RequestHeader(name = SolicitudIdempotente.CABECERA, required = false) String clave) {
+        return unaVez.ejecutar(clave, "crear-producto", ProductoDetalleResponse.class,
+                () -> productoService.crear(request), request);
     }
 
     @PutMapping("/{id}")
@@ -90,8 +96,10 @@ public class ProductoController {
 
     @PostMapping("/{id}/variantes")
     @ResponseStatus(HttpStatus.CREATED)
-    public ProductoDetalleResponse agregarVariantes(@PathVariable Long id, @Valid @RequestBody VariantesRequest request) {
-        return productoService.agregarVariantes(id, request);
+    public ProductoDetalleResponse agregarVariantes(@PathVariable Long id, @Valid @RequestBody VariantesRequest request,
+        @RequestHeader(name = SolicitudIdempotente.CABECERA, required = false) String clave) {
+        return unaVez.ejecutar(clave, "agregar-variantes", ProductoDetalleResponse.class,
+                () -> productoService.agregarVariantes(id, request), id, request);
     }
 
     @PatchMapping("/variantes/{varianteId}")

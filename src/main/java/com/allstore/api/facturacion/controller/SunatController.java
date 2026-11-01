@@ -1,6 +1,8 @@
 package com.allstore.api.facturacion.controller;
 
 import com.allstore.api.common.dto.PageResponse;
+import com.allstore.api.common.idempotencia.SolicitudIdempotente;
+import com.allstore.api.common.idempotencia.UnaVez;
 import com.allstore.api.facturacion.dto.BajaSunatInfo;
 import com.allstore.api.facturacion.dto.EnvioSunatResponse;
 import com.allstore.api.facturacion.entity.EstadoSunat;
@@ -18,6 +20,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -28,6 +31,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 public class SunatController {
 
+    private final UnaVez unaVez;
     private final EnvioSunatService envioSunatService;
     private final BajaSunatService bajaSunatService;
 
@@ -85,8 +89,10 @@ public class SunatController {
      * de baja o un resumen diario nuevo (con otro número) y lo deja pendiente de envío.
      */
     @PostMapping("/comprobantes/{comprobanteId}/baja")
-    public BajaSunatInfo reintentarBaja(@PathVariable Long comprobanteId) {
-        return bajaSunatService.reintentar(comprobanteId);
+    public BajaSunatInfo reintentarBaja(@PathVariable Long comprobanteId,
+        @RequestHeader(name = SolicitudIdempotente.CABECERA, required = false) String clave) {
+        return unaVez.ejecutar(clave, "reintentar-baja", BajaSunatInfo.class,
+                () -> bajaSunatService.reintentar(comprobanteId), comprobanteId);
     }
 
     @GetMapping("/comprobantes/{comprobanteId}/xml")
