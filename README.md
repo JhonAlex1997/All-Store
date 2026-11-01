@@ -20,9 +20,16 @@ producción (desde la recepción de materia prima hasta la venta final).
 | `guia` | Guía de remisión remitente electrónica: traslado entre locales (mueve stock) y entrega de ventas |
 | `impresion` | Representación impresa en PDF: ticket de 80 mm y A4, con QR, hash y leyenda de SUNAT; guías en A4 |
 | `entrega` | Entrega al cliente: correo con PDF, XML y constancia de SUNAT; enlace público de descarga; WhatsApp |
-| `contabilidad` | Registro de Ventas e Ingresos Electrónico (RVIE) del mes y su archivo para el SIRE |
+| `contabilidad` | Registro de Ventas (RVIE) y de Compras (RCE) para el SIRE; libro diario y mayor |
+| `promocion` | Campañas de promoción (porcentaje, monto o precio fijo) aplicadas solas en la venta |
+| `compra` | Proveedores y compras (prendas, insumos y servicios) con IGV y crédito fiscal |
+| `insumo` | Insumos de producción (tela, avíos) con stock por local y kardex |
+| `produccion` | Órdenes de producción: corte, confección, lavado y acabado, con costo |
+| `reporte` | Reportes de ventas e inventario, exportación a Excel y CSV |
+| `bitacora` | Bitácora inmutable de acciones sensibles |
+| `monitoreo` | Estado del sistema, errores recientes, métricas y logs |
 
-Pendiente: compras, producción, resto de la contabilidad (registro de compras, asientos). Frontend.
+Pendiente: venta al crédito (cuando se decida). Frontend.
 
 ## Levantar en local
 
@@ -674,6 +681,24 @@ no coincide, se reemplaza subiendo el archivo.
   los recibos por honorarios y los documentos "otro" tampoco (se advierte).
 - Nombre del archivo: `LE` + RUC + AAAAMM + `00` + `080400` (RCE) + `02` (reemplazo) + `1112`. Como el del RVIE,
   conviene pasarlo por el validador **PVSIRE** antes del primer envío.
+
+## Asientos contables (libro diario y mayor)
+
+`GET /api/contabilidad/libro-diario?periodo=2026-11` (solo ADMIN): los asientos del mes, el **mayor** (debe, haber y
+saldo de cada cuenta) y advertencias; con `formato=XLSX` o `CSV`, el diario línea por línea para el contador o su
+sistema contable. Se generan al consultar desde los documentos (no se guardan), así siempre coinciden con lo registrado.
+
+| Documento | Asiento (PCGE) |
+| --- | --- |
+| Venta (nota de venta, boleta, factura) | Debe 1011 Caja (efectivo) / 1041 Bancos (tarjeta, Yape, Plin, transferencia) · Haber 70111 Ventas (base) y 40111 IGV |
+| Nota de crédito | Al revés de la venta |
+| Nota de débito | Como una venta |
+| Costo de ventas (del día) | Debe 69111 · Haber 20111, **solo de las prendas con costo** (las demás se advierten) |
+| Compra | Debe 60111 (prendas), 60211 (insumos), 6391 (servicios) y 40111 (IGV de facturas) · Haber 4212; destino: Debe 20111 / 24111 · Haber 61 |
+| Producción terminada | Debe 21111 · Haber 71111, por su costo |
+
+Todo se contabiliza al contado (la tienda no vende a crédito). Las cuentas están en `PlanCuentas`: es un borrador para
+el contador, que puede pedir otras subcuentas.
 
 ## Pruebas
 

@@ -140,6 +140,38 @@
       "value": ""
     },
     {
+      "key": "numeroCompra",
+      "value": ""
+    },
+    {
+      "key": "periodoActual",
+      "value": ""
+    },
+    {
+      "key": "conteoId",
+      "value": ""
+    },
+    {
+      "key": "campanaId",
+      "value": ""
+    },
+    {
+      "key": "ordenId",
+      "value": ""
+    },
+    {
+      "key": "compraId",
+      "value": ""
+    },
+    {
+      "key": "insumoId",
+      "value": ""
+    },
+    {
+      "key": "proveedorId",
+      "value": ""
+    },
+    {
       "key": "serieNcBoletaId",
       "value": ""
     },
@@ -3242,7 +3274,763 @@
       ]
     },
     {
-      "name": "12 Pruebas de seguridad",
+      "name": "12 ERP: compras, producción, campañas y contabilidad",
+      "item": [
+        {
+          "name": "Proveedor (taller y textil)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/proveedores",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tipoDocumento\": \"RUC\",\n  \"numeroDocumento\": \"20100047218\",\n  \"razonSocial\": \"TEXTIL Y TALLER POSTMAN SAC\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Creado o ya existe\", () => pm.expect([201, 400]).to.include(pm.response.code));",
+                  "if (pm.response.code === 201) pm.collectionVariables.set(\"proveedorId\", pm.response.json().id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Proveedores",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/proveedores"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "const p = pm.response.json().find(x => x.numeroDocumento === \"20100047218\");",
+                  "pm.collectionVariables.set(\"proveedorId\", p.id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Insumo: denim",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/insumos",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"codigo\": \"DENIM-PM\",\n  \"nombre\": \"Denim 14 oz (Postman)\",\n  \"unidadMedida\": \"MTR\",\n  \"costo\": 12.5\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Creado o ya existe\", () => pm.expect([201, 400]).to.include(pm.response.code));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Insumos",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/insumos"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "pm.collectionVariables.set(\"insumoId\", pm.response.json().find(x => x.codigo === \"DENIM-PM\").id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Compra: factura con prendas e insumo",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/compras",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"proveedorId\": {{proveedorId}},\n  \"establecimientoId\": {{almacenId}},\n  \"tipoDocumento\": \"FACTURA\",\n  \"serie\": \"F100\",\n  \"numero\": \"{{numeroCompra}}\",\n  \"fechaEmision\": \"{{hoy}}\",\n  \"actualizarCostos\": false,\n  \"items\": [\n    {\n      \"varianteId\": {{varianteId}},\n      \"cantidad\": 10,\n      \"costoUnitario\": 38.5\n    },\n    {\n      \"insumoId\": {{insumoId}},\n      \"cantidad\": 60,\n      \"costoUnitario\": 12.5\n    },\n    {\n      \"descripcion\": \"Flete\",\n      \"cantidad\": 1,\n      \"costoUnitario\": 40,\n      \"gravado\": false\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Prendas al stock del local, insumos al stock de insumos y el flete como gasto. Base e IGV separados (factura: crédito fiscal). actualizarCostos=true dejaría estos costos en las prendas e insumos."
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.collectionVariables.set(\"hoy\", new Date(Date.now() - 5 * 3600 * 1000).toISOString().slice(0, 10));",
+                  "pm.collectionVariables.set(\"numeroCompra\", String(Date.now() % 100000000));"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 201\", () => pm.response.to.have.status(201));",
+                  "const c = pm.response.json();",
+                  "pm.test(\"IGV de la base gravada\", () => pm.expect(c.igv).to.eql(204.3));",
+                  "pm.collectionVariables.set(\"compraId\", c.id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Registro de Compras del mes (RCE)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/contabilidad/registro-compras?periodo={{periodoActual}}"
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.collectionVariables.set(\"periodoActual\", new Date(Date.now() - 5 * 3600 * 1000).toISOString().slice(0, 7));"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Con crédito fiscal\", () => pm.expect(pm.response.json().creditoFiscal > 0).to.eql(true));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Producción: nueva orden",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/produccion/ordenes",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"productoId\": {{productoId}},\n  \"establecimientoInsumosId\": {{almacenId}},\n  \"establecimientoDestinoId\": {{tiendaId}},\n  \"observacion\": \"Lote Postman\",\n  \"tallas\": [\n    {\n      \"varianteId\": {{varianteId}},\n      \"cantidad\": 12\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 201\", () => pm.response.to.have.status(201));",
+                  "pm.collectionVariables.set(\"ordenId\", pm.response.json().id);",
+                  "pm.test(\"Empieza en corte\", () => pm.expect(pm.response.json().etapaActual).to.eql(\"CORTE\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Producción: consumir tela",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/produccion/ordenes/{{ordenId}}/insumos",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"items\": [\n    {\n      \"insumoId\": {{insumoId}},\n      \"cantidad\": 18\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Producción: iniciar corte",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/produccion/ordenes/{{ordenId}}/etapas/CORTE/iniciar",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Producción: terminar corte",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/produccion/ordenes/{{ordenId}}/etapas/CORTE/terminar",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"unidades\": 12\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Producción: confección en taller externo",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/produccion/ordenes/{{ordenId}}/etapas/CONFECCION/iniciar",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"proveedorId\": {{proveedorId}}\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Producción: terminar confección (1 de merma)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/produccion/ordenes/{{ordenId}}/etapas/CONFECCION/terminar",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"unidades\": 11,\n  \"costoServicio\": 132\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Producción: iniciar lavado",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/produccion/ordenes/{{ordenId}}/etapas/LAVADO/iniciar",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Producción: terminar lavado",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/produccion/ordenes/{{ordenId}}/etapas/LAVADO/terminar",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"unidades\": 11,\n  \"costoServicio\": 55\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Producción: iniciar acabado",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/produccion/ordenes/{{ordenId}}/etapas/ACABADO/iniciar",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Producción: terminar acabado",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/produccion/ordenes/{{ordenId}}/etapas/ACABADO/terminar",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"unidades\": 11\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Producción: cerrar la orden (entra al stock)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/produccion/ordenes/{{ordenId}}/terminar",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tallas\": [\n    {\n      \"varianteId\": {{varianteId}},\n      \"cantidad\": 11\n    }\n  ],\n  \"actualizarCostos\": false\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "Costo unitario = (18 m x 12.50 + 132 + 55) / 11."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Terminada con costo\", () => { const o = pm.response.json(); pm.expect(o.estado).to.eql(\"TERMINADA\"); pm.expect(o.costoUnitario).to.eql(37.4545); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Campaña: 10 % en el modelo (hoy)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/campanas",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Campaña Postman\",\n  \"tipo\": \"PORCENTAJE\",\n  \"valor\": 10,\n  \"fechaInicio\": \"{{hoy}}\",\n  \"fechaFin\": \"{{hoy}}\",\n  \"productoIds\": [\n    {{productoId}}\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 201\", () => pm.response.to.have.status(201));",
+                  "pm.collectionVariables.set(\"campanaId\", pm.response.json().id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Campaña: precio del día en la caja",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/campanas/precios?varianteIds={{varianteId}}&establecimientoId={{tiendaId}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Con precio de campaña\", () => pm.expect(pm.response.json()[0].precioCampana !== null).to.eql(true));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Campaña: apagarla",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/campanas/{{campanaId}}",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Campaña Postman\",\n  \"tipo\": \"PORCENTAJE\",\n  \"valor\": 10,\n  \"fechaInicio\": \"{{hoy}}\",\n  \"fechaFin\": \"{{hoy}}\",\n  \"activo\": false,\n  \"productoIds\": [\n    {{productoId}}\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Conteo físico: abrir (un modelo, almacén)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/inventario/conteos",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"establecimientoId\": {{almacenId}},\n  \"productoIds\": [\n    {{productoId}}\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 201\", () => pm.response.to.have.status(201));",
+                  "pm.collectionVariables.set(\"conteoId\", pm.response.json().id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Conteo físico: hoja para imprimir (Excel)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/inventario/conteos/{{conteoId}}?formato=XLSX"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Conteo físico: anular",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": "{{baseUrl}}/api/inventario/conteos/{{conteoId}}/anular"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Libro diario del mes",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/contabilidad/libro-diario?periodo={{periodoActual}}",
+            "description": "Asientos de ventas, notas, costo de ventas, compras y producción, con el mayor. formato=XLSX para el contador."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "const d = pm.response.json();",
+                  "pm.test(\"Cuadra\", () => pm.expect(d.totalDebe).to.eql(d.totalHaber));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Reporte: ventas por campaña",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/reportes/ventas-por-campana"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "13 Pruebas de seguridad",
       "item": [
         {
           "name": "Sin token (debe dar 401)",
