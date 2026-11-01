@@ -1,5 +1,7 @@
 package com.allstore.api.facturacion.service;
 
+import com.allstore.api.bitacora.entity.AccionBitacora;
+import com.allstore.api.bitacora.service.Bitacora;
 import com.allstore.api.common.dto.PageResponse;
 import com.allstore.api.common.exception.BusinessException;
 import com.allstore.api.common.exception.ResourceNotFoundException;
@@ -91,13 +93,14 @@ public class EnvioSunatService {
     private final ApplicationEventPublisher eventos;
     private final LatidoProcesos latido;
     private final RegistroErrores errores;
+    private final Bitacora bitacora;
 
     public EnvioSunatService(EnvioSunatRepository envioRepository, ResumenSunatRepository resumenRepository,
                              GeneradorXmlUbl generador, GeneradorResumenXml generadorResumen,
                              GeneradorGuiaXml generadorGuia, FirmadorXml firmador, ServicioEnvioSunat servicio,
                              ServicioGuiaSunat servicioGuia, EmpresaService empresaService, SunatProperties properties,
                              PlatformTransactionManager transactionManager, ApplicationEventPublisher eventos,
-                             LatidoProcesos latido, RegistroErrores errores) {
+                             LatidoProcesos latido, RegistroErrores errores, Bitacora bitacora) {
         this.envioRepository = envioRepository;
         this.resumenRepository = resumenRepository;
         this.generador = generador;
@@ -113,6 +116,7 @@ public class EnvioSunatService {
         this.eventos = eventos;
         this.latido = latido;
         this.errores = errores;
+        this.bitacora = bitacora;
     }
 
     // ---------- Al emitir ----------
@@ -234,6 +238,9 @@ public class EnvioSunatService {
             }
             envio.setEstado(EstadoSunat.PENDIENTE);
             if (regenerarXml) {
+                bitacora.registrar(AccionBitacora.XML_REGENERADO, "ENVIO_SUNAT", envio.getId(), "Regeneró el XML de "
+                        + envio.getDocumento() + " antes de reenviarlo a SUNAT (cambia el hash: reimprimir)",
+                        envio.getHash() != null ? "Hash anterior: " + envio.getHash() : null);
                 envio.setXmlFirmado(null);
                 envio.setHash(null);
             }

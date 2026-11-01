@@ -1,5 +1,7 @@
 package com.allstore.api.seguridad.service;
 
+import com.allstore.api.bitacora.entity.AccionBitacora;
+import com.allstore.api.bitacora.service.Bitacora;
 import com.allstore.api.common.exception.BusinessException;
 import com.allstore.api.common.exception.ResourceNotFoundException;
 import com.allstore.api.seguridad.dto.ReiniciarPasswordRequest;
@@ -15,6 +17,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.OffsetDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 /** Administración de usuarios (solo para el rol ADMIN). */
@@ -24,6 +27,7 @@ public class UsuarioService {
 
     private final UsuarioRepository usuarioRepository;
     private final PasswordEncoder passwordEncoder;
+    private final Bitacora bitacora;
 
     @Transactional(readOnly = true)
     public List<UsuarioResponse> listar() {
@@ -33,6 +37,8 @@ public class UsuarioService {
     @Transactional
     public UsuarioResponse crear(UsuarioCreateRequest request) {
         Usuario usuario = registrar(request.username(), request.nombre(), request.rol(), request.passwordTemporal(), true);
+        bitacora.registrar(AccionBitacora.USUARIO_CREADO, "USUARIO", usuario.getId(),
+                "Creó al usuario " + usuario.getUsername() + " con rol " + usuario.getRol());
         return UsuarioResponse.from(usuario);
     }
 
@@ -74,6 +80,17 @@ public class UsuarioService {
             }
         }
         boolean cambiaAcceso = usuario.getRol() != request.rol() || usuario.isActivo() != request.activo();
+        if (cambiaAcceso) {
+            List<String> cambios = new ArrayList<>();
+            if (usuario.getRol() != request.rol()) {
+                cambios.add("rol " + usuario.getRol() + " → " + request.rol());
+            }
+            if (usuario.isActivo() != request.activo()) {
+                cambios.add(request.activo() ? "reactivado" : "desactivado");
+            }
+            bitacora.registrar(AccionBitacora.USUARIO_MODIFICADO, "USUARIO", usuario.getId(),
+                    "Cambió al usuario " + usuario.getUsername() + ": " + String.join(", ", cambios));
+        }
         usuario.setNombre(request.nombre().trim());
         usuario.setRol(request.rol());
         usuario.setActivo(request.activo());
@@ -91,6 +108,8 @@ public class UsuarioService {
         usuario.setDebeCambiarPassword(true);
         quitarBloqueo(usuario);
         usuario.cerrarSesiones(OffsetDateTime.now());
+        bitacora.registrar(AccionBitacora.PASSWORD_REINICIADA, "USUARIO", usuario.getId(),
+                "Reinició la contraseña de " + usuario.getUsername() + " (deberá cambiarla al ingresar)");
         return UsuarioResponse.from(usuario);
     }
 
@@ -98,6 +117,8 @@ public class UsuarioService {
     public UsuarioResponse desbloquear(Long id) {
         Usuario usuario = obtener(id);
         quitarBloqueo(usuario);
+        bitacora.registrar(AccionBitacora.USUARIO_DESBLOQUEADO, "USUARIO", usuario.getId(),
+                "Desbloqueó a " + usuario.getUsername());
         return UsuarioResponse.from(usuario);
     }
 

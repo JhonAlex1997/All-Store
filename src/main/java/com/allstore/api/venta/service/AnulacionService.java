@@ -1,5 +1,7 @@
 package com.allstore.api.venta.service;
 
+import com.allstore.api.bitacora.entity.AccionBitacora;
+import com.allstore.api.bitacora.service.Bitacora;
 import com.allstore.api.common.exception.BusinessException;
 import com.allstore.api.common.idempotencia.Idempotencia;
 import com.allstore.api.common.idempotencia.SolicitudIdempotente;
@@ -49,6 +51,7 @@ public class AnulacionService {
     private final InventarioService inventarioService;
     private final BajaSunatService bajaSunatService;
     private final Idempotencia idempotencia;
+    private final Bitacora bitacora;
 
     @Transactional
     public VentaResponse anular(Long id, AnularVentaRequest request) {
@@ -89,6 +92,10 @@ public class AnulacionService {
         if (darDeBaja) {
             bajaSunatService.registrar(comprobante, motivo);
         }
+        bitacora.registrar(AccionBitacora.COMPROBANTE_ANULADO, "COMPROBANTE", comprobante.getId(), "Anuló "
+                        + comprobante.getTipoComprobante().getDescripcion().toLowerCase() + " " + comprobante.getNumeroImpreso()
+                        + " por S/ " + comprobante.getTotal() + (darDeBaja ? " (con baja ante SUNAT)" : ""),
+                "Motivo: " + motivo);
         return emision.respuesta(comprobante, null, List.of());
     }
 

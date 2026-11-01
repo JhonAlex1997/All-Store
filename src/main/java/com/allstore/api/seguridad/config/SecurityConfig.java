@@ -153,6 +153,9 @@ public class SecurityConfig {
                         // Monitoreo (estado del sistema, errores recientes): solo administrador
                         .requestMatchers("/api/sistema/**").hasRole(ADMIN)
 
+                        // Bitácora de acciones sensibles (quién anuló, cambió precios, desbloqueó...): solo administrador
+                        .requestMatchers("/api/bitacora/**").hasRole(ADMIN)
+
                         // Todo lo demás, cerrado
                         .anyRequest().denyAll())
                 .oauth2ResourceServer(oauth -> oauth

@@ -1,5 +1,7 @@
 package com.allstore.api.producto.service;
 
+import com.allstore.api.bitacora.entity.AccionBitacora;
+import com.allstore.api.bitacora.service.Bitacora;
 import com.allstore.api.common.dto.PageResponse;
 import com.allstore.api.common.exception.BusinessException;
 import com.allstore.api.common.exception.ResourceNotFoundException;
@@ -27,12 +29,14 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -45,6 +49,7 @@ public class ProductoService {
     private final TallaRepository tallaRepository;
     private final ColorRepository colorRepository;
     private final CategoriaService categoriaService;
+    private final Bitacora bitacora;
 
     @Transactional(readOnly = true)
     public PageResponse<ProductoResumenResponse> listar(String busqueda, Long categoriaId, Boolean activo,
@@ -107,8 +112,12 @@ public class ProductoService {
         if (!producto.getCategoria().getId().equals(request.categoriaId())) {
             producto.setCategoria(categoriaActiva(request.categoriaId()));
         }
+        BigDecimal porMayor = precioPorMayor(request.precioPorMayor(), request.precioVenta());
+        cambioDePrecio(producto.getPrecioVenta(), request.precioVenta(), producto.getPrecioPorMayor(), porMayor)
+                .ifPresent(detalle -> bitacora.registrar(AccionBitacora.PRECIO_CAMBIADO, "PRODUCTO", producto.getId(),
+                        "Cambió el precio del modelo " + producto.getCodigo() + " " + producto.getNombre(), detalle));
         producto.setPrecioVenta(request.precioVenta());
-        producto.setPrecioPorMayor(precioPorMayor(request.precioPorMayor(), request.precioVenta()));
+        producto.setPrecioPorMayor(porMayor);
         producto.setActivo(request.activo());
         return ProductoDetalleResponse.from(producto);
     }
@@ -131,11 +140,36 @@ public class ProductoService {
     public VarianteResponse actualizarVariante(Long varianteId, VarianteUpdateRequest request) {
         ProductoVariante variante = varianteRepository.findById(varianteId)
                 .orElseThrow(() -> new ResourceNotFoundException("Variante", varianteId));
+        BigDecimal porMayor = precioPorMayor(request.precioPorMayor(),
+                request.precioVenta() != null ? request.precioVenta() : variante.getProducto().getPrecioVenta());
+        cambioDePrecio(variante.getPrecioVenta(), request.precioVenta(), variante.getPrecioPorMayor(), porMayor)
+                .ifPresent(detalle -> bitacora.registrar(AccionBitacora.PRECIO_CAMBIADO, "VARIANTE", variante.getId(),
+                        "Cambió el precio propio de " + variante.getSku(), detalle));
         variante.setPrecioVenta(request.precioVenta());
-        variante.setPrecioPorMayor(precioPorMayor(request.precioPorMayor(),
-                request.precioVenta() != null ? request.precioVenta() : variante.getProducto().getPrecioVenta()));
+        variante.setPrecioPorMayor(porMayor);
         variante.setActivo(request.activo());
         return VarianteResponse.from(variante);
+    }
+
+    /** "Precio: S/ 89.90 → S/ 79.90; Por mayor: sin precio → S/ 70.00", o vacío si no cambió ninguno. */
+    private static Optional<String> cambioDePrecio(BigDecimal precioAntes, BigDecimal precioDespues,
+                                                   BigDecimal porMayorAntes, BigDecimal porMayorDespues) {
+        List<String> cambios = new ArrayList<>();
+        if (!igual(precioAntes, precioDespues)) {
+            cambios.add("Precio: " + soles(precioAntes) + " → " + soles(precioDespues));
+        }
+        if (!igual(porMayorAntes, porMayorDespues)) {
+            cambios.add("Por mayor: " + soles(porMayorAntes) + " → " + soles(porMayorDespues));
+        }
+        return cambios.isEmpty() ? Optional.empty() : Optional.of(String.join("; ", cambios));
+    }
+
+    private static boolean igual(BigDecimal a, BigDecimal b) {
+        return a == null ? b == null : b != null && a.compareTo(b) == 0;
+    }
+
+    private static String soles(BigDecimal monto) {
+        return monto == null ? "sin precio" : "S/ " + monto.setScale(2, RoundingMode.HALF_UP);
     }
 
     /** El precio por mayor es una rebaja: no puede superar al precio normal. */

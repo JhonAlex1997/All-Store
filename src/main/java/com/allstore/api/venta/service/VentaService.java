@@ -1,5 +1,7 @@
 package com.allstore.api.venta.service;
 
+import com.allstore.api.bitacora.entity.AccionBitacora;
+import com.allstore.api.bitacora.service.Bitacora;
 import com.allstore.api.caja.entity.CajaSesion;
 import com.allstore.api.caja.service.CajaService;
 import com.allstore.api.cliente.entity.Cliente;
@@ -63,6 +65,7 @@ public class VentaService {
     private final CajaService cajaService;
     private final EmpresaService empresaService;
     private final ApplicationEventPublisher eventos;
+    private final Bitacora bitacora;
 
     // ---------- Emitir ----------
 
@@ -129,7 +132,24 @@ public class VentaService {
             eventos.publishEvent(new EntregaSolicitada(comprobante.getId()));
         }
         emision.referenciar(movimientos, comprobante);
+        registrarExcepciones(comprobante);
         return emision.respuesta(comprobante, null, List.of());
+    }
+
+    /** Lo que se sale de lo normal en una venta queda en la bitácora: descuentos y por mayor sin el mínimo. */
+    private void registrarExcepciones(Comprobante venta) {
+        String documento = venta.getTipoComprobante().getDescripcion().toLowerCase() + " " + venta.getNumeroImpreso();
+        if (venta.getTotalDescuento().signum() > 0) {
+            bitacora.registrar(AccionBitacora.DESCUENTO_EN_VENTA, "COMPROBANTE", venta.getId(), "Vendió " + documento
+                            + " con S/ " + venta.getTotalDescuento() + " de descuento (total S/ " + venta.getTotal() + ")",
+                    String.join(", ", venta.getDetalles().stream().filter(d -> d.getDescuento().signum() > 0)
+                            .map(d -> d.getSku() + " x" + d.getCantidad() + ": -S/ " + d.getDescuento()).toList()));
+        }
+        if (venta.isPorMayorManual()) {
+            int prendas = venta.getDetalles().stream().mapToInt(ComprobanteDetalle::getCantidad).sum();
+            bitacora.registrar(AccionBitacora.POR_MAYOR_MANUAL, "COMPROBANTE", venta.getId(), "Dio precio por mayor en "
+                    + documento + " con " + prendas + (prendas == 1 ? " prenda" : " prendas") + " (total S/ " + venta.getTotal() + ")");
+        }
     }
 
     /**
@@ -280,6 +300,9 @@ public class VentaService {
         nuevo.recalcularTotales();
         emision.emitir(nuevo, serie, solicitud);
         rechazado.setEstado(EstadoComprobante.REEMPLAZADO);
+        bitacora.registrar(AccionBitacora.COMPROBANTE_REEMITIDO, "COMPROBANTE", nuevo.getId(), "Reemitió " + numero
+                + ", rechazado por SUNAT, como " + nuevo.getTipoComprobante().getDescripcion().toLowerCase() + " "
+                + nuevo.getNumeroImpreso() + " (S/ " + nuevo.getTotal() + ")");
         return emision.respuesta(nuevo, null, List.of());
     }
 

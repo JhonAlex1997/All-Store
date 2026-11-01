@@ -1,5 +1,7 @@
 package com.allstore.api.empresa.service;
 
+import com.allstore.api.bitacora.entity.AccionBitacora;
+import com.allstore.api.bitacora.service.Bitacora;
 import com.allstore.api.common.exception.BusinessException;
 import com.allstore.api.common.exception.ResourceNotFoundException;
 import com.allstore.api.empresa.dto.NumeroComprobante;
@@ -15,6 +17,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -22,6 +25,7 @@ import java.util.List;
 public class SerieService {
 
     private final SerieRepository serieRepository;
+    private final Bitacora bitacora;
     private final EstablecimientoService establecimientoService;
 
     @Transactional(readOnly = true)
@@ -51,7 +55,9 @@ public class SerieService {
     public SerieResponse actualizar(Long id, SerieUpdateRequest request) {
         Serie serie = serieRepository.findByIdParaEmitir(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Serie", id));
+        List<String> cambios = new ArrayList<>();
         if (!serie.getEstablecimiento().getId().equals(request.establecimientoId())) {
+            cambios.add("establecimiento " + serie.getEstablecimiento().getCodigo() + " → id " + request.establecimientoId());
             serie.setEstablecimiento(establecimientoActivo(request.establecimientoId()));
         }
         if (request.correlativoActual() != null && request.correlativoActual() != serie.getCorrelativoActual()) {
@@ -59,9 +65,17 @@ public class SerieService {
                 throw new BusinessException("El correlativo no puede bajar de " + serie.getCorrelativoActual()
                         + ": se repetirían números ya emitidos");
             }
+            cambios.add("correlativo " + serie.getCorrelativoActual() + " → " + request.correlativoActual());
             serie.setCorrelativoActual(request.correlativoActual());
         }
+        if (serie.isActivo() != request.activo()) {
+            cambios.add(request.activo() ? "activada" : "desactivada");
+        }
         serie.setActivo(request.activo());
+        if (!cambios.isEmpty()) {
+            bitacora.registrar(AccionBitacora.SERIE_MODIFICADA, "SERIE", serie.getId(),
+                    "Cambió la serie " + serie.getCodigo() + ": " + String.join(", ", cambios));
+        }
         return SerieResponse.from(serie);
     }
 

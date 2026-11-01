@@ -1,5 +1,7 @@
 package com.allstore.api.seguridad.service;
 
+import com.allstore.api.bitacora.entity.AccionBitacora;
+import com.allstore.api.bitacora.service.Bitacora;
 import com.allstore.api.common.exception.AutenticacionException;
 import com.allstore.api.common.exception.BusinessException;
 import com.allstore.api.common.exception.ResourceNotFoundException;
@@ -27,6 +29,7 @@ public class AuthService {
     private final UsuarioRepository usuarioRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
+    private final Bitacora bitacora;
     /**
      * Hash contra el que se compara cuando el usuario no existe, para que la respuesta tarde lo
      * mismo que con un usuario real: así no se puede averiguar qué usuarios existen midiendo
@@ -34,10 +37,12 @@ public class AuthService {
      */
     private final String hashFicticio;
 
-    public AuthService(UsuarioRepository usuarioRepository, PasswordEncoder passwordEncoder, JwtService jwtService) {
+    public AuthService(UsuarioRepository usuarioRepository, PasswordEncoder passwordEncoder, JwtService jwtService,
+                       Bitacora bitacora) {
         this.usuarioRepository = usuarioRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
+        this.bitacora = bitacora;
         this.hashFicticio = passwordEncoder.encode("hash-ficticio-para-igualar-tiempos");
     }
 
@@ -62,6 +67,8 @@ public class AuthService {
             if (usuario.estaBloqueado(ahora)) {
                 log.warn("Usuario {} bloqueado por {} intentos fallidos", usuario.getUsername(),
                         Usuario.MAX_INTENTOS_FALLIDOS);
+                bitacora.registrarAnonimo(AccionBitacora.USUARIO_BLOQUEADO, "USUARIO", usuario.getId(),
+                        usuario.getUsername() + " quedó bloqueado tras " + Usuario.MAX_INTENTOS_FALLIDOS + " intentos fallidos");
                 throw new AutenticacionException(mensajeBloqueo(usuario, ahora));
             }
             throw new AutenticacionException(CREDENCIALES_INCORRECTAS);

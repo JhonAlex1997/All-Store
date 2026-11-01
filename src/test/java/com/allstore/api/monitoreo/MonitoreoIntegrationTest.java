@@ -83,6 +83,10 @@ class MonitoreoIntegrationTest {
                 .andExpect(jsonPath("$.procesos", hasSize(3)))
                 .andExpect(jsonPath("$.colas.sunatPendientes").isNumber())
                 .andExpect(jsonPath("$.tiempoActivo").value(containsString("min")));
+        // La bitácora de acciones sensibles, también solo del administrador.
+        mockMvc.perform(get("/api/bitacora").header("Authorization", "Bearer " + cajero)).andExpect(status().isForbidden());
+        mockMvc.perform(get("/api/bitacora?accion=USUARIO_CREADO").header("Authorization", "Bearer " + admin))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.content").isArray());
     }
 
     @Test

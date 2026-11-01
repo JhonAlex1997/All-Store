@@ -414,6 +414,25 @@ Además, a las 8:00 y a las 18:00 se envía un **resumen por correo** si hay ale
 El plazo de envío es configurable (`app.alertas.dias-plazo-envio`, 3 por defecto): SUNAT indica 3
 días calendario para facturas y notas, y se usa el mismo para todo, porque avisar antes es lo prudente.
 
+## Bitácora de acciones sensibles
+
+`GET /api/bitacora` (solo ADMIN) responde **quién hizo qué, cuándo y desde dónde** en lo que mueve
+dinero o mercadería fuera de lo normal, o cambia accesos. Cada registro lleva usuario, fecha, IP,
+código de solicitud (para cruzarlo con el log), una descripción y el detalle (antes y después).
+
+| Área | Qué queda registrado |
+| --- | --- |
+| Ventas | Anulación (con motivo), reemisión de un rechazado, nota de crédito (cuánto se devolvió y cómo), venta **con descuento** (qué prenda y cuánto), precio por mayor dado por el cajero sin el mínimo, XML regenerado |
+| Caja | Ingresos y egresos de efectivo, cierre **con faltante o sobrante** (esperado, contado, observación) |
+| Inventario y catálogo | Ajustes manuales de stock (prendas y cantidades), carga masiva, **cambio de precio** (antes → después) |
+| Usuarios | Creación, cambio de rol o activación, contraseña reiniciada, desbloqueo y **bloqueo por intentos fallidos** |
+| Emisor | Cambios en los datos de la empresa y en las series (correlativo, activación) |
+
+Filtros: `desde`, `hasta`, `usuario`, `accion` (varias separadas por coma), y `entidad` + `entidadId`
+para la historia de algo (ej. `?entidad=COMPROBANTE&entidadId=152`). La bitácora **no se puede
+modificar ni borrar**: la base rechaza cualquier cambio. Cada registro se guarda en la misma
+transacción que la acción: si la acción falla, no queda registro de algo que no pasó.
+
 ## Monitoreo y logs
 
 Para saber si el sistema está bien sin entrar al servidor, y encontrar rápido la causa de un error.

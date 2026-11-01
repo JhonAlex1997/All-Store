@@ -2414,6 +2414,47 @@
           ]
         },
         {
+          "name": "Bitácora: anulaciones y descuentos de hoy",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/bitacora?desde={{hoy}}&accion=COMPROBANTE_ANULADO,DESCUENTO_EN_VENTA,POR_MAYOR_MANUAL",
+            "description": "Quién hizo qué: anulaciones, descuentos, por mayor manual, ajustes de stock, cambios de precio, caja con diferencia, cambios de usuarios. No se puede modificar ni borrar. Solo ADMIN."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Hay registros\", () => pm.expect(pm.response.json().totalElements > 0).to.eql(true));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Bitácora: historia de la nota de venta anulada",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/bitacora?entidad=COMPROBANTE&entidadId={{notaAnularId}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Registra la anulación\", () => pm.expect(pm.response.json().content.some(r => r.accion === \"COMPROBANTE_ANULADO\")).to.eql(true));"
+                ]
+              }
+            }
+          ]
+        },
+        {
           "name": "Errores internos recientes",
           "request": {
             "method": "GET",

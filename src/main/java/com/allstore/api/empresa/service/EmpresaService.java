@@ -1,5 +1,7 @@
 package com.allstore.api.empresa.service;
 
+import com.allstore.api.bitacora.entity.AccionBitacora;
+import com.allstore.api.bitacora.service.Bitacora;
 import com.allstore.api.cliente.entity.TipoDocumentoIdentidad;
 import com.allstore.api.common.exception.BusinessException;
 import com.allstore.api.common.exception.ResourceNotFoundException;
@@ -19,6 +21,7 @@ import java.util.Optional;
 public class EmpresaService {
 
     private final EmpresaRepository empresaRepository;
+    private final Bitacora bitacora;
 
     @Transactional(readOnly = true)
     public EmpresaResponse obtener() {
@@ -33,6 +36,7 @@ public class EmpresaService {
             throw new BusinessException(motivo);
         });
         Empresa empresa = empresaRepository.findById(Empresa.ID_UNICO).orElseGet(Empresa::new);
+        String antes = empresa.getRuc() == null ? null : resumen(empresa);
         empresa.setRuc(ruc);
         empresa.setRazonSocial(request.razonSocial().trim());
         empresa.setNombreComercial(limpiar(request.nombreComercial()));
@@ -43,7 +47,20 @@ public class EmpresaService {
         if (request.minimoPrendasPorMayor() != null) {
             empresa.setMinimoPrendasPorMayor(request.minimoPrendasPorMayor());
         }
-        return EmpresaResponse.from(empresaRepository.save(empresa));
+        Empresa guardada = empresaRepository.save(empresa);
+        String despues = resumen(guardada);
+        if (!despues.equals(antes)) {
+            bitacora.registrar(AccionBitacora.EMPRESA_MODIFICADA, "EMPRESA", guardada.getId(),
+                    antes == null ? "Registró la empresa " + guardada.getRazonSocial() : "Cambió los datos de la empresa",
+                    antes == null ? despues : "Antes: " + antes + ". Después: " + despues);
+        }
+        return EmpresaResponse.from(guardada);
+    }
+
+    /** Lo que identifica al emisor ante SUNAT y la regla del por mayor: lo que importa auditar. */
+    private static String resumen(Empresa e) {
+        return "RUC " + e.getRuc() + ", " + e.getRazonSocial() + ", " + e.getDireccionFiscal() + " (" + e.getUbigeo()
+                + "), por mayor desde " + e.getMinimoPrendasPorMayor() + " prendas";
     }
 
     /** Para ventas y facturación: los datos del emisor que van en cada comprobante. */

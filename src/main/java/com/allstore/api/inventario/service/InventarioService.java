@@ -1,5 +1,7 @@
 package com.allstore.api.inventario.service;
 
+import com.allstore.api.bitacora.entity.AccionBitacora;
+import com.allstore.api.bitacora.service.Bitacora;
 import com.allstore.api.common.dto.PageResponse;
 import com.allstore.api.common.exception.BusinessException;
 import com.allstore.api.common.idempotencia.Idempotencia;
@@ -54,6 +56,7 @@ public class InventarioService {
     private final ProductoService productoService;
     private final AuditorAware<String> usuarioActual;
     private final Idempotencia idempotencia;
+    private final Bitacora bitacora;
 
     /** Una prenda y su cantidad, como la piden ventas y ajustes. */
     public record Linea(Long varianteId, int cantidad) {
@@ -118,6 +121,12 @@ public class InventarioService {
         List<MovimientoInventario> movimientos = registrar(request.establecimientoId(), request.motivo(),
                 aLineas(request.items()), limpiar(request.observacion()));
         movimientos.forEach(m -> m.identificarSolicitud(solicitud));
+        bitacora.registrar(AccionBitacora.AJUSTE_INVENTARIO, "INVENTARIO", request.establecimientoId(),
+                request.motivo() + " en " + movimientos.getFirst().getEstablecimiento().getNombre() + ": "
+                        + movimientos.stream().mapToInt(MovimientoInventario::getCantidad).sum() + " prendas",
+                String.join(", ", movimientos.stream().map(m -> m.getVariante().getSku() + " "
+                        + (m.getTipo() == TipoMovimiento.SALIDA ? "-" : "+") + m.getCantidad()).toList())
+                        + (request.observacion() != null ? ". " + request.observacion().trim() : ""));
         return movimientos.stream().map(MovimientoResponse::from).toList();
     }
 

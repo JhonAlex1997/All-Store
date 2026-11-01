@@ -1,5 +1,7 @@
 package com.allstore.api.venta.service;
 
+import com.allstore.api.bitacora.entity.AccionBitacora;
+import com.allstore.api.bitacora.service.Bitacora;
 import com.allstore.api.caja.entity.CajaSesion;
 import com.allstore.api.caja.service.CajaService;
 import com.allstore.api.common.exception.BusinessException;
@@ -47,6 +49,7 @@ public class NotaCreditoService {
     private final VisibilidadComprobante visibilidad;
     private final InventarioService inventarioService;
     private final CajaService cajaService;
+    private final Bitacora bitacora;
 
     @Transactional
     public VentaResponse emitir(Long comprobanteId, NotaCreditoRequest request) {
@@ -105,6 +108,10 @@ public class NotaCreditoService {
                 nota.getSustento());
         emision.emitir(nota, serie, solicitud);
         emision.referenciar(movimientos, nota);
+        bitacora.registrar(AccionBitacora.NOTA_CREDITO_EMITIDA, "COMPROBANTE", nota.getId(), "Emitió la nota de crédito "
+                        + nota.getNumeroImpreso() + " sobre " + origen.getNumeroImpreso() + ": devolvió S/ " + nota.getTotal()
+                        + " en " + request.metodoReembolso(),
+                request.motivo().getDescripcion() + ". " + nota.getSustento());
         return emision.respuesta(nota, null, List.of());
     }
 

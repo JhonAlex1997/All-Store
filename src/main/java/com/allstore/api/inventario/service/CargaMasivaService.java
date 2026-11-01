@@ -1,5 +1,7 @@
 package com.allstore.api.inventario.service;
 
+import com.allstore.api.bitacora.entity.AccionBitacora;
+import com.allstore.api.bitacora.service.Bitacora;
 import com.allstore.api.common.exception.BusinessException;
 import com.allstore.api.inventario.dto.CargaMasivaResponse;
 import com.allstore.api.inventario.dto.CargaMasivaResponse.ErrorFila;
@@ -73,6 +75,7 @@ public class CargaMasivaService {
     private final CategoriaRepository categoriaRepository;
     private final TallaRepository tallaRepository;
     private final ColorRepository colorRepository;
+    private final Bitacora bitacora;
     private final Validator validator;
 
     /** Una fila del Excel ya interpretada (los nulos son datos que faltan o no se reconocieron). */
@@ -109,6 +112,9 @@ public class CargaMasivaService {
         if (!lineas.isEmpty()) {
             inventarioService.registrar(establecimientoId, MotivoMovimiento.INVENTARIO_INICIAL, lineas, "Carga masiva");
         }
+        bitacora.registrar(AccionBitacora.CARGA_MASIVA, "INVENTARIO", establecimientoId, "Cargó " + filas.size()
+                + " filas: " + plan.modelosNuevos.size() + " modelos nuevos, " + plan.variantesNuevas.size()
+                + " combinaciones y " + plan.unidades() + " prendas");
         return new CargaMasivaResponse(true, filas.size(), plan.modelosNuevos.size(), plan.variantesNuevas.size(),
                 plan.unidades(), List.of());
     }

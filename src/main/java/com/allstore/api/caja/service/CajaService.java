@@ -1,5 +1,7 @@
 package com.allstore.api.caja.service;
 
+import com.allstore.api.bitacora.entity.AccionBitacora;
+import com.allstore.api.bitacora.service.Bitacora;
 import com.allstore.api.caja.dto.AbrirCajaRequest;
 import com.allstore.api.caja.dto.CajaResponse;
 import com.allstore.api.caja.dto.CajaSesionResumenResponse;
@@ -59,6 +61,7 @@ public class CajaService {
     private final EstablecimientoService establecimientoService;
     private final AuditorAware<String> usuarioActual;
     private final Idempotencia idempotencia;
+    private final Bitacora bitacora;
 
     @Transactional
     public CajaResponse abrir(AbrirCajaRequest request) {
@@ -137,6 +140,9 @@ public class CajaService {
         movimiento.setMonto(request.monto().setScale(2));
         movimiento.setConcepto(request.concepto().trim());
         movimientoRepository.save(movimiento);
+        bitacora.registrar(AccionBitacora.MOVIMIENTO_CAJA, "CAJA", sesion.getId(),
+                (request.tipo() == TipoMovimientoCaja.EGRESO ? "Egreso" : "Ingreso") + " de S/ " + movimiento.getMonto()
+                        + " en caja: " + movimiento.getConcepto());
         return respuesta(sesion);
     }
 
@@ -173,6 +179,12 @@ public class CajaService {
         sesion.setObservacionCierre(StringUtils.hasText(request.observacion()) ? request.observacion().trim() : null);
         sesion.setEstado(EstadoCaja.CERRADA);
         sesion.setFechaCierre(OffsetDateTime.now(JpaAuditingConfig.ZONA_LIMA));
+        if (sesion.getDiferencia().signum() != 0) {
+            bitacora.registrar(AccionBitacora.CAJA_CON_DIFERENCIA, "CAJA", sesion.getId(), "Cerró la caja con "
+                            + (sesion.getDiferencia().signum() < 0 ? "faltante" : "sobrante") + " de S/ " + sesion.getDiferencia().abs(),
+                    "Esperado S/ " + resumen.efectivoEsperado() + ", contado S/ " + contado
+                            + (sesion.getObservacionCierre() != null ? ". " + sesion.getObservacionCierre() : ""));
+        }
         return CajaResponse.from(sesion, resumen, movimientoRepository.findByCajaSesionIdOrderById(sesion.getId()));
     }
 
