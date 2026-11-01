@@ -63,8 +63,22 @@ class LimiteIntentosLoginTest {
         }
     }
 
+    @Test
+    void unaRutaCodificadaTambienCuenta() throws Exception {
+        // "/api/auth/%6Cogin" es "/api/auth/login": Spring lo atiende igual, así que el límite también aplica.
+        for (int i = 0; i < 3; i++) {
+            assertThat(ingresar("200.3.3.3", "/api/auth/%6Cogin").getStatus()).isEqualTo(401);
+        }
+        assertThat(ingresar("200.3.3.3", "/api/auth/login").getStatus()).isEqualTo(429);
+        assertThat(ingresar("200.3.3.3", "/api/auth/%6c%6fgin").getStatus()).isEqualTo(429);
+    }
+
     private MockHttpServletResponse ingresar(String ip) throws Exception {
-        MockHttpServletRequest request = new MockHttpServletRequest("POST", "/api/auth/login");
+        return ingresar(ip, "/api/auth/login");
+    }
+
+    private MockHttpServletResponse ingresar(String ip, String ruta) throws Exception {
+        MockHttpServletRequest request = new MockHttpServletRequest("POST", ruta);
         request.setRemoteAddr(ip);
         MockHttpServletResponse response = new MockHttpServletResponse();
         FilterChain login = (req, res) -> {

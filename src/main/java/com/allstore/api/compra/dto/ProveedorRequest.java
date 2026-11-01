@@ -5,6 +5,7 @@ import com.allstore.api.common.validacion.TextoSeguro;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
 public record ProveedorRequest(
@@ -21,6 +22,7 @@ public record ProveedorRequest(
         @TextoSeguro
         String direccion,
         @Size(max = 20, message = "El teléfono no puede superar 20 caracteres")
+        @Pattern(regexp = "[0-9+ ()-]*", message = "El teléfono solo puede tener números, espacios, +, - y paréntesis")
         String telefono,
         @Email(message = "El correo no es válido")
         @Size(max = 120, message = "El correo no puede superar 120 caracteres")

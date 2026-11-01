@@ -1,5 +1,6 @@
 package com.allstore.api.monitoreo;
 
+import com.allstore.api.seguridad.config.RutaSolicitud;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -62,7 +63,7 @@ public class RegistroSolicitudes extends OncePerRequestFilter {
     }
 
     private static void registrar(HttpServletRequest request, int estado, long ms) {
-        String ruta = request.getRequestURI();
+        String ruta = RutaSolicitud.de(request);
         // La revisión de salud y las métricas se consultan cada pocos segundos: llenarían el log.
         if (ruta.startsWith("/actuator")) {
             return;

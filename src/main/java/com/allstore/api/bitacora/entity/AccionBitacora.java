@@ -23,6 +23,9 @@ public enum AccionBitacora {
     // Inventario y catálogo
     AJUSTE_INVENTARIO("Ajustó el stock a mano"),
     CONTEO_CERRADO("Cerró un conteo físico y ajustó sus diferencias"),
+    AJUSTE_INSUMO("Ajustó el stock de un insumo a mano"),
+    COMPRA_ANULADA("Anuló una compra"),
+    PRODUCCION_ANULADA("Anuló una orden de producción"),
     CARGA_MASIVA("Cargó catálogo y stock desde Excel"),
     PRECIO_CAMBIADO("Cambió un precio"),
     COSTO_CAMBIADO("Cambió un costo"),

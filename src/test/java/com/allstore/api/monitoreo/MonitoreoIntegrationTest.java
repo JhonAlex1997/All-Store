@@ -98,6 +98,8 @@ class MonitoreoIntegrationTest {
         // Ni siquiera un administrador con su sesión: Prometheus usa su propia clave.
         mockMvc.perform(get(AccesoMetricas.RUTA).header("Authorization", "Bearer " + admin))
                 .andExpect(status().isUnauthorized());
+        // Una ruta codificada (%70 = p) es la misma para Spring: también pide la clave.
+        mockMvc.perform(get("/actuator/%70rometheus")).andExpect(status().is4xxClientError());
         mockMvc.perform(get(AccesoMetricas.RUTA).header("Authorization", basica(TOKEN)))
                 .andExpect(status().isOk())
                 .andExpect(content().string(containsString("allstore_sunat_envios")))

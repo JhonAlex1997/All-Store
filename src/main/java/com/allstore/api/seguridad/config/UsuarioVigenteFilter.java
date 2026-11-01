@@ -59,7 +59,7 @@ public class UsuarioVigenteFilter extends OncePerRequestFilter {
             return;
         }
         if (usuario.get().isDebeCambiarPassword()
-                && !RUTAS_PERMITIDAS_SIN_CAMBIAR_PASSWORD.contains(request.getRequestURI())) {
+                && !RUTAS_PERMITIDAS_SIN_CAMBIAR_PASSWORD.contains(RutaSolicitud.de(request))) {
             respuestaErrorJson.escribir(request, response, HttpStatus.FORBIDDEN,
                     "Debes cambiar tu contraseña antes de continuar");
             return;

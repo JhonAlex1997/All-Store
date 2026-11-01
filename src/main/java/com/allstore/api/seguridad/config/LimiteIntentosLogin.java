@@ -50,7 +50,7 @@ public class LimiteIntentosLogin extends OncePerRequestFilter {
 
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
-        return !"POST".equals(request.getMethod()) || !RUTAS.contains(request.getRequestURI());
+        return !"POST".equals(request.getMethod()) || !RUTAS.contains(RutaSolicitud.de(request));
     }
 
     @Override

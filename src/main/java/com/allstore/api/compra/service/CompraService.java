@@ -1,5 +1,7 @@
 package com.allstore.api.compra.service;
 
+import com.allstore.api.bitacora.entity.AccionBitacora;
+import com.allstore.api.bitacora.service.Bitacora;
 import com.allstore.api.common.dto.PageResponse;
 import com.allstore.api.common.exception.BusinessException;
 import com.allstore.api.common.exception.ResourceNotFoundException;
@@ -46,6 +48,8 @@ public class CompraService {
 
     public static final String REFERENCIA_COMPRA = "COMPRA";
     static final BigDecimal TASA_IGV = new BigDecimal("0.18");
+    /** Lo que cabe en numeric(12,2): 10 enteros. */
+    static final BigDecimal MAXIMO_IMPORTE = new BigDecimal("9999999999.99");
 
     private final CompraRepository compraRepository;
     private final ProveedorService proveedorService;
@@ -53,6 +57,7 @@ public class CompraService {
     private final ProductoService productoService;
     private final InventarioService inventarioService;
     private final InsumoService insumoService;
+    private final Bitacora bitacora;
 
     @Transactional
     public CompraResponse registrar(CompraRequest request) {
@@ -142,6 +147,9 @@ public class CompraService {
         compra.setIgv(igv);
         compra.setNoGravado(noGravado);
         compra.setTotal(base.add(igv).add(noGravado));
+        if (compra.getTotal().compareTo(MAXIMO_IMPORTE) > 0) {
+            throw new BusinessException("El total de la compra supera el máximo permitido (S/ " + MAXIMO_IMPORTE.toPlainString() + ")");
+        }
         if (compra.getTotal().signum() <= 0) {
             throw new BusinessException("El total de la compra debe ser mayor a cero");
         }
@@ -182,6 +190,8 @@ public class CompraService {
         }
         compra.setEstado(Compra.ANULADA);
         compra.setMotivoAnulacion(request.motivo().trim());
+        bitacora.registrar(AccionBitacora.COMPRA_ANULADA, "COMPRA", compra.getId(), "Anuló la compra " + compra.getDocumento()
+                + " de " + compra.getProveedor().getRazonSocial() + " por S/ " + compra.getTotal(), "Motivo: " + request.motivo().trim());
         return CompraResponse.from(compra, true);
     }
 

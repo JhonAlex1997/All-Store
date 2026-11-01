@@ -1,5 +1,6 @@
 package com.allstore.api.promocion.controller;
 
+import com.allstore.api.common.exception.BusinessException;
 import com.allstore.api.promocion.dto.CampanaRequest;
 import com.allstore.api.promocion.dto.CampanaResponse;
 import com.allstore.api.promocion.dto.PrecioCampanaResponse;
@@ -25,6 +26,8 @@ import java.util.List;
 @RequiredArgsConstructor
 public class CampanaController {
 
+    static final int MAXIMO_PRENDAS = 200;
+
     private final CampanaService campanaService;
 
     /** Todas, o solo las vigentes hoy con ?vigentes=true. */
@@ -41,6 +44,9 @@ public class CampanaController {
     /** Ej: GET /api/campanas/precios?varianteIds=15,16&establecimientoId=1: el precio de hoy con la campaña que aplica. */
     @GetMapping("/precios")
     public List<PrecioCampanaResponse> precios(@RequestParam List<Long> varianteIds, @RequestParam Long establecimientoId) {
+        if (varianteIds.size() > MAXIMO_PRENDAS) {
+            throw new BusinessException("Consulta como máximo " + MAXIMO_PRENDAS + " prendas a la vez");
+        }
         return campanaService.precios(varianteIds, establecimientoId);
     }
 

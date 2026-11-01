@@ -121,8 +121,7 @@ public class SecurityConfig {
                         // Proveedores, compras y producción: administrador y almacenero
                         .requestMatchers("/api/proveedores/**", "/api/compras/**", "/api/produccion/**").hasAnyRole(ADMIN, ALMACENERO)
 
-                        // Insumos de producción: consulta para todos; registrar y ajustar, administrador y almacenero
-                        .requestMatchers(HttpMethod.GET, "/api/insumos/**").authenticated()
+                        // Insumos de producción (con su costo): administrador y almacenero
                         .requestMatchers("/api/insumos/**").hasAnyRole(ADMIN, ALMACENERO)
 
                         // Campañas de promoción: la caja consulta precios; crear y cambiar, solo administrador

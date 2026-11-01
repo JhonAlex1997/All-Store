@@ -1,6 +1,7 @@
 package com.allstore.api.monitoreo;
 
 import com.allstore.api.seguridad.config.RespuestaErrorJson;
+import com.allstore.api.seguridad.config.RutaSolicitud;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -40,7 +41,7 @@ public class AccesoMetricas extends OncePerRequestFilter {
 
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
-        return !request.getRequestURI().equals(RUTA);
+        return !RutaSolicitud.de(request).equals(RUTA);
     }
 
     @Override

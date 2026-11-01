@@ -5,6 +5,7 @@ import com.allstore.api.monitoreo.RegistroSolicitudes;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.core.PropertyReferenceException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -89,6 +90,18 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(PropertyReferenceException.class)
     public ResponseEntity<ErrorResponse> handleSortInvalido(PropertyReferenceException ex, HttpServletRequest request) {
         return build(HttpStatus.BAD_REQUEST, "No se puede ordenar por el campo " + ex.getPropertyName(), request, null);
+    }
+
+    /**
+     * Dos solicitudes a la vez que chocan con una regla de la base (el mismo documento de compra, un
+     * segundo conteo abierto, un código repetido): la segunda pierde. Sin el detalle técnico.
+     */
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<ErrorResponse> handleIntegridad(DataIntegrityViolationException ex, HttpServletRequest request) {
+        log.warn("Conflicto de integridad en {} {}: {}", request.getMethod(), request.getRequestURI(),
+                ex.getMostSpecificCause().getMessage());
+        return build(HttpStatus.CONFLICT, "No se pudo guardar porque choca con otro registro (ya existe o se registró al mismo "
+                + "tiempo). Revisa y vuelve a intentar", request, null);
     }
 
     @ExceptionHandler(Exception.class)

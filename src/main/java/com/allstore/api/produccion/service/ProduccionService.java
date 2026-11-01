@@ -1,5 +1,7 @@
 package com.allstore.api.produccion.service;
 
+import com.allstore.api.bitacora.entity.AccionBitacora;
+import com.allstore.api.bitacora.service.Bitacora;
 import com.allstore.api.common.dto.PageResponse;
 import com.allstore.api.common.exception.BusinessException;
 import com.allstore.api.common.exception.ResourceNotFoundException;
@@ -60,6 +62,7 @@ public class ProduccionService {
     private final ProveedorService proveedorService;
     private final InventarioService inventarioService;
     private final InsumoService insumoService;
+    private final Bitacora bitacora;
 
     @Transactional
     public OrdenResponse crear(OrdenRequest request) {
@@ -249,6 +252,9 @@ public class ProduccionService {
                         "Anulación " + documento(orden).toLowerCase()));
             }
         }
+        bitacora.registrar(AccionBitacora.PRODUCCION_ANULADA, "PRODUCCION", orden.getId(), "Anuló la " + documento(orden).toLowerCase()
+                + " (" + orden.getProducto().getCodigo() + ", " + orden.getEstado().name().toLowerCase().replace('_', ' ') + ")",
+                "Motivo: " + motivo);
         orden.setEstado(EstadoOrden.ANULADA);
         orden.setMotivoAnulacion(motivo);
         return OrdenResponse.from(orden);

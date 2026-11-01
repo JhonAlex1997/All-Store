@@ -1,5 +1,7 @@
 package com.allstore.api.insumo.service;
 
+import com.allstore.api.bitacora.entity.AccionBitacora;
+import com.allstore.api.bitacora.service.Bitacora;
 import com.allstore.api.common.dto.PageResponse;
 import com.allstore.api.common.exception.BusinessException;
 import com.allstore.api.common.exception.ResourceNotFoundException;
@@ -43,6 +45,7 @@ public class InsumoService {
     private final MovimientoInsumoRepository movimientoRepository;
     private final EstablecimientoService establecimientoService;
     private final UsuarioEnSesion usuarioEnSesion;
+    private final Bitacora bitacora;
 
     /** Una cantidad de un insumo para mover. */
     public record Linea(Long insumoId, BigDecimal cantidad) {
@@ -90,9 +93,13 @@ public class InsumoService {
                     + "INVENTARIO_INICIAL, AJUSTE_ENTRADA o AJUSTE_SALIDA");
         }
         List<Linea> lineas = request.items().stream().map(i -> new Linea(i.insumoId(), i.cantidad())).toList();
-        return registrar(request.establecimientoId(), request.motivo(), lineas, null, null, "Ajuste",
-                StringUtils.hasText(request.observacion()) ? request.observacion().trim() : null)
-                .stream().map(MovimientoInsumoResponse::from).toList();
+        String observacion = StringUtils.hasText(request.observacion()) ? request.observacion().trim() : null;
+        List<MovimientoInsumo> movimientos = registrar(request.establecimientoId(), request.motivo(), lineas, null, null, "Ajuste",
+                observacion);
+        bitacora.registrar(AccionBitacora.AJUSTE_INSUMO, "INSUMO", request.establecimientoId(), request.motivo() + " de insumos",
+                String.join(", ", movimientos.stream().map(m -> m.getInsumo().getCodigo() + " " + (m.getMotivo().isEntrada() ? "+" : "-")
+                        + m.getCantidad().stripTrailingZeros().toPlainString()).toList()) + (observacion != null ? ". " + observacion : ""));
+        return movimientos.stream().map(MovimientoInsumoResponse::from).toList();
     }
 
     /**
