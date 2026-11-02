@@ -11,6 +11,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -103,6 +104,12 @@ public class GlobalExceptionHandler {
                 ex.getMostSpecificCause().getMessage());
         return build(HttpStatus.CONFLICT, "No se pudo guardar porque choca con otro registro (ya existe o se registró al mismo "
                 + "tiempo). Revisa y vuelve a intentar", request, null);
+    }
+
+    /** Archivo más grande que spring.servlet.multipart.max-file-size (1 MB por defecto). */
+    @ExceptionHandler(MaxUploadSizeExceededException.class)
+    public ResponseEntity<ErrorResponse> handleArchivoGrande(MaxUploadSizeExceededException ex, HttpServletRequest request) {
+        return build(HttpStatus.CONTENT_TOO_LARGE, "El archivo es demasiado grande (máximo 1 MB)", request, null);
     }
 
     @ExceptionHandler(Exception.class)

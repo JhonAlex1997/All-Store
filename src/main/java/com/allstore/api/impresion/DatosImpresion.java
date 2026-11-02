@@ -41,8 +41,9 @@ public record DatosImpresion(
         String observacion,
         boolean porMayor
 ) {
+    /** @param logo PNG del logo de la tienda, o null si no tiene */
     public record Emisor(String ruc, String razonSocial, String nombreComercial, String direccionFiscal,
-                         String telefono, String email) {
+                         String telefono, String email, byte[] logo) {
         /** Nombre a mostrar en grande: el comercial si existe. */
         public String nombreVisible() {
             return nombreComercial != null ? nombreComercial : razonSocial;

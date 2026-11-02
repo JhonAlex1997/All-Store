@@ -1,15 +1,16 @@
 @use 'primeicons/primeicons.css';
 
-/* Colores de AllStore (los mismos del tema de PrimeNG en core/tema/allstore-preset.ts). */
+/* Colores de la marca Kiss Me (los mismos del tema de PrimeNG en core/tema/allstore-preset.ts). */
 :root {
-  --as-denim-900: #13253f;
-  --as-denim-700: #1f3b63;
-  --as-denim-100: #d5e1f1;
-  --as-cobre: #d9902f;
-  --as-fondo: #f4f6fa;
-  --as-borde: #e3e8ef;
-  --as-texto: #1d2633;
-  --as-texto-suave: #64748b;
+  --as-tinta: #1d1d1b;          /* negro del logo: botones, títulos */
+  --as-rosa: #f4c4cd;           /* rosado del "Km" */
+  --as-rosa-claro: #fbeef1;     /* fondos suaves, opción activa */
+  --as-rosa-fuerte: #b84d6c;    /* rosado legible sobre blanco: íconos y acentos de texto */
+  --as-fondo: #faf8f8;
+  --as-borde: #ece6e7;
+  --as-texto: #1d1d1b;
+  --as-texto-suave: #6f6a6b;
+  --as-serif: Georgia, 'Times New Roman', serif;  /* títulos, en la línea de la letra del logo */
 }
 
 *, *::before, *::after { box-sizing: border-box; }
@@ -28,6 +29,8 @@ body {
 }
 
 h1, h2, h3 { margin: 0; font-weight: 650; }
+
+h1 { font-family: var(--as-serif); font-weight: 600; letter-spacing: .01em; }
 
 /* Encabezado estándar de cada pantalla. */
 .as-pagina-titulo {

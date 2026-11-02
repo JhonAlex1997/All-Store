@@ -7,6 +7,8 @@ import { SIN_AVISO } from '../http/errores.interceptor';
 interface Marca {
   nombre: string;
   configurada: boolean;
+  /** null si la tienda no tiene logo. */
+  logoVersion?: number | null;
 }
 
 const CLAVE = 'allstore.marca';
@@ -21,12 +23,18 @@ export class MarcaService {
   private readonly http = inject(HttpClient);
 
   /** Arranca con el último nombre conocido para que el login no parpadee mientras responde la API. */
-  private readonly marca = signal<Marca>({ nombre: leerGuardada() ?? SIN_CONFIGURAR, configurada: true });
+  private readonly marca = signal<Marca>(leerGuardada() ?? { nombre: SIN_CONFIGURAR, configurada: true });
 
   readonly nombre = computed(() => this.marca().nombre);
   readonly configurada = computed(() => this.marca().configurada);
 
-  /** Primera palabra y resto, para pintar el resto en cobre: "KISSME" + "JEANS". */
+  /** URL del logo con su versión (cambia al subir otro, así no se muestra el anterior), o null. */
+  readonly logoUrl = computed(() => {
+    const v = this.marca().logoVersion;
+    return v ? `/api/publico/marca/logo?v=${v}` : null;
+  });
+
+  /** Palabras iniciales y última, para resaltar la última: "KISSME" + "JEANS" (cuando no hay logo). */
   readonly partes = computed(() => {
     const palabras = this.nombre().trim().split(/\s+/);
     return palabras.length > 1
@@ -45,7 +53,7 @@ export class MarcaService {
       const m = await firstValueFrom(this.http.get<Marca>('/api/publico/marca', { context }).pipe(timeout(3000)));
       if (m?.nombre) {
         this.marca.set(m);
-        guardar(m.nombre);
+        guardar(m);
       }
     } catch {
       // sin conexión: se mantiene el nombre guardado
@@ -53,17 +61,22 @@ export class MarcaService {
   }
 }
 
-function leerGuardada(): string | null {
+function leerGuardada(): Marca | null {
   try {
-    return localStorage.getItem(CLAVE);
+    const texto = localStorage.getItem(CLAVE);
+    if (!texto) {
+      return null;
+    }
+    // Versiones anteriores guardaban solo el nombre como texto.
+    return texto.startsWith('{') ? (JSON.parse(texto) as Marca) : { nombre: texto, configurada: true };
   } catch {
     return null;
   }
 }
 
-function guardar(nombre: string): void {
+function guardar(marca: Marca): void {
   try {
-    localStorage.setItem(CLAVE, nombre);
+    localStorage.setItem(CLAVE, JSON.stringify(marca));
   } catch {
     // sin almacenamiento: se vuelve a pedir en cada carga
   }

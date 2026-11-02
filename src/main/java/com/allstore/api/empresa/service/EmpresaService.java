@@ -23,6 +23,7 @@ public class EmpresaService {
 
     private final EmpresaRepository empresaRepository;
     private final Bitacora bitacora;
+    private final LogoService logoService;
 
     @Transactional(readOnly = true)
     public EmpresaResponse obtener() {
@@ -60,7 +61,9 @@ public class EmpresaService {
 
     /** Lo que identifica al emisor ante SUNAT y la regla del por mayor: lo que importa auditar. */
     private static String resumen(Empresa e) {
-        return "RUC " + e.getRuc() + ", " + e.getRazonSocial() + ", " + e.getDireccionFiscal() + " (" + e.getUbigeo()
+        return "RUC " + e.getRuc() + ", " + e.getRazonSocial()
+                + (e.getNombreComercial() != null ? " (" + e.getNombreComercial() + ")" : "")
+                + ", " + e.getDireccionFiscal() + " (" + e.getUbigeo()
                 + "), por mayor desde " + e.getMinimoPrendasPorMayor() + " prendas";
     }
 
@@ -85,9 +88,10 @@ public class EmpresaService {
     /** Nombre con que se presenta la tienda en el sistema, los correos y las alertas. */
     @Transactional(readOnly = true)
     public MarcaResponse marca() {
+        Long logo = logoService.version().orElse(null);
         return buscarEntidad()
-                .map(e -> new MarcaResponse(nombreVisible(e), true))
-                .orElseGet(() -> new MarcaResponse(MarcaResponse.SIN_CONFIGURAR, false));
+                .map(e -> new MarcaResponse(nombreVisible(e), true, logo))
+                .orElseGet(() -> new MarcaResponse(MarcaResponse.SIN_CONFIGURAR, false, logo));
     }
 
     /** Nombre comercial; si no se registró, la razón social. */

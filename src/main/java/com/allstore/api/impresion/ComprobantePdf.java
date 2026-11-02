@@ -76,6 +76,14 @@ public class ComprobantePdf {
         t.setLockedWidth(true);
 
         DatosImpresion.Emisor e = d.emisor();
+        Image logoTicket = logo(e, 120, 60, Element.ALIGN_CENTER);
+        if (logoTicket != null) {
+            PdfPCell celdaLogo = new PdfPCell(logoTicket, false);
+            celdaLogo.setBorder(Rectangle.NO_BORDER);
+            celdaLogo.setHorizontalAlignment(Element.ALIGN_CENTER);
+            celdaLogo.setPaddingBottom(4);
+            t.addCell(celdaLogo);
+        }
         centrado(t, e.nombreVisible(), fuente(10, Font.BOLD));
         if (e.nombreComercial() != null) {
             centrado(t, e.razonSocial(), normal);
@@ -173,6 +181,10 @@ public class ComprobantePdf {
             cabecera.setWidthPercentage(100);
             DatosImpresion.Emisor e = d.emisor();
             PdfPCell emisor = sinBorde();
+            Image logoA4 = logo(e, 170, 70, Element.ALIGN_LEFT);
+            if (logoA4 != null) {
+                emisor.addElement(logoA4);
+            }
             emisor.addElement(new Paragraph(e.nombreVisible(), fuente(15, Font.BOLD)));
             if (e.nombreComercial() != null) {
                 emisor.addElement(new Paragraph(e.razonSocial(), negrita));
@@ -349,6 +361,17 @@ public class ComprobantePdf {
                     new Phrase(texto, new Font(Font.HELVETICA, tamano, Font.BOLD, MARCA)),
                     pagina.getWidth() / 2, pagina.getHeight() / 2, angulo);
         }
+    }
+
+    /** Logo de la tienda ajustado al recuadro, o null si no tiene. */
+    static Image logo(DatosImpresion.Emisor e, float anchoMaximo, float altoMaximo, int alineacion) throws IOException {
+        if (e.logo() == null) {
+            return null;
+        }
+        Image imagen = Image.getInstance(e.logo());
+        imagen.scaleToFit(anchoMaximo, altoMaximo);
+        imagen.setAlignment(alineacion);
+        return imagen;
     }
 
     static Image qr(String texto, float lado) throws IOException {

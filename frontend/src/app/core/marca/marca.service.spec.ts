@@ -25,12 +25,13 @@ describe('MarcaService', () => {
 
   it('toma el nombre comercial y separa la última palabra para el logo', async () => {
     const carga = servicio.cargar();
-    servidor.expectOne('/api/publico/marca').flush({ nombre: 'KISSME JEANS', configurada: true });
+    servidor.expectOne('/api/publico/marca').flush({ nombre: 'KISSME JEANS', configurada: true, logoVersion: 123 });
     await carga;
     expect(servicio.nombre()).toBe('KISSME JEANS');
     expect(servicio.partes()).toEqual({ inicio: 'KISSME', fin: 'JEANS' });
     expect(servicio.inicial()).toBe('K');
-    expect(localStorage.getItem('allstore.marca')).toBe('KISSME JEANS');
+    expect(servicio.logoUrl()).toBe('/api/publico/marca/logo?v=123');
+    expect(JSON.parse(localStorage.getItem('allstore.marca')!).nombre).toBe('KISSME JEANS');
   });
 
   it('si la API falla, se queda con el nombre anterior y no muestra avisos', async () => {

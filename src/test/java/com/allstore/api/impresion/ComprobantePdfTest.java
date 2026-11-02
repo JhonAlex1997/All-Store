@@ -62,11 +62,34 @@ class ComprobantePdfTest {
         assertThat(ComprobantePdf.dinero(new BigDecimal("1234.5"))).isEqualTo("1,234.50");
     }
 
+    @Test
+    void conLogoLoDibujaEnElTicketYEnElA4() throws Exception {
+        java.awt.image.BufferedImage img = new java.awt.image.BufferedImage(300, 120, java.awt.image.BufferedImage.TYPE_INT_ARGB);
+        java.io.ByteArrayOutputStream png = new java.io.ByteArrayOutputStream();
+        ImageIO.write(img, "png", png);
+
+        for (FormatoImpresion formato : FormatoImpresion.values()) {
+            int sinLogo = imagenes(generador.generar(boleta(null), formato));
+            int conLogo = imagenes(generador.generar(boleta(null, png.toByteArray()), formato));
+            assertThat(conLogo).as("logo en " + formato).isEqualTo(sinLogo + 1);
+        }
+    }
+
+    /** Imágenes del PDF (el QR y, si hay, el logo): cada una es un objeto /Subtype /Image. */
+    private static int imagenes(byte[] pdf) {
+        String crudo = new String(pdf, java.nio.charset.StandardCharsets.ISO_8859_1);
+        return crudo.split("/Subtype\\s*/Image", -1).length - 1;
+    }
+
     private static DatosImpresion boleta(String marcaDeAgua) {
+        return boleta(marcaDeAgua, null);
+    }
+
+    private static DatosImpresion boleta(String marcaDeAgua, byte[] logo) {
         return new DatosImpresion(
                 "BOLETA DE VENTA ELECTRÓNICA", "B001-00000015", marcaDeAgua,
                 new DatosImpresion.Emisor("20000000001", "EMPRESA DEMO S.A.C.", "AllStore Jeans", "Jr. Gamarra 100",
-                        "014567890", null),
+                        "014567890", null, logo),
                 "Tienda principal", "Jr. Gamarra 100",
                 OffsetDateTime.of(2026, 10, 10, 15, 30, 0, 0, ZoneOffset.ofHours(-5)), "cajero",
                 new DatosImpresion.Cliente("DNI", "45678912", "Juan Pérez Rojas", null),

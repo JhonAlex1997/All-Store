@@ -1,6 +1,10 @@
 <section class="marca">
   <div class="costura"></div>
-  <div class="logo"><span class="remache"></span>{{ marca.nombre() }}</div>
+  @if (marca.logoUrl(); as logo) {
+    <img class="logo-imagen" [src]="logo" [alt]="marca.nombre()" />
+  } @else {
+    <div class="logo-texto">{{ marca.nombre() }}</div>
+  }
   <div class="lema">
     <h1>Vende, factura y controla tu tienda <span>en un solo lugar</span>.</h1>
     <p>Caja, boletas y facturas electrónicas ante SUNAT, inventario por talla y color, y el comprobante al cliente

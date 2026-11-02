@@ -20,7 +20,7 @@ import { ButtonModule } from 'primeng/button';
   styles: `
     :host { display: flex; justify-content: center; padding: 3rem 1rem; }
     .aviso { max-width: 460px; text-align: center; padding: 2.5rem 2rem; }
-    i { font-size: 2.4rem; color: var(--as-cobre); }
+    i { font-size: 2.4rem; color: var(--as-rosa-fuerte); }
     h1 { font-size: 1.3rem; margin-top: 1rem; }
     p { color: var(--as-texto-suave); margin: .6rem 0 1.5rem; }
   `,

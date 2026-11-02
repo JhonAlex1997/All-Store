@@ -5,91 +5,78 @@
   background: #fff;
 }
 
-/* Panel de marca: tela de jean con costura cobre, como en el mockup. */
+/* Panel de marca: fondo rosado suave con una costura, como el pespunte de un jean. */
 .marca {
   position: relative;
   overflow: hidden;
-  color: #fff;
+  color: var(--as-tinta);
   padding: 56px 64px;
   display: flex;
   flex-direction: column;
-  background: linear-gradient(160deg, #24467a 0%, #1f3b63 45%, #162c4b 100%);
-
-  &::before {
-    content: "";
-    position: absolute;
-    inset: 0;
-    opacity: .09;
-    background-image: repeating-linear-gradient(45deg, #fff 0 1px, transparent 1px 7px),
-      repeating-linear-gradient(-45deg, #fff 0 1px, transparent 1px 9px);
-  }
+  align-items: center;
+  text-align: center;
+  background: linear-gradient(165deg, #fdf6f8 0%, var(--as-rosa-claro) 55%, #f8e1e7 100%);
 }
 
 .costura {
   position: absolute;
   inset: 36px;
-  border: 2px dashed rgba(217, 144, 47, .55);
+  border: 2px dashed rgba(184, 77, 108, .35);
   border-radius: 22px;
   pointer-events: none;
 }
 
-.logo {
+.logo-imagen {
   position: relative;
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  font-size: 30px;
-  font-weight: 700;
-
-  small {
-    font-size: 13px;
-    font-weight: 600;
-    background: rgba(255, 255, 255, .14);
-    padding: 3px 10px;
-    border-radius: 99px;
-  }
+  width: min(380px, 70%);
+  height: auto;
+  margin-top: 6vh;
 }
 
-.remache {
-  width: 42px;
-  height: 42px;
-  border-radius: 50%;
-  background: radial-gradient(circle at 35% 35%, #f6cf8e, var(--as-cobre) 58%, #8f5512);
-  box-shadow: inset 0 0 0 4px rgba(0, 0, 0, .14), 0 2px 6px rgba(0, 0, 0, .3);
+.logo-texto {
+  position: relative;
+  margin-top: 8vh;
+  font-family: var(--as-serif);
+  font-size: 44px;
+  letter-spacing: .06em;
 }
 
 .lema {
   position: relative;
   margin-top: auto;
   max-width: 560px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 
-  h1 { font-size: 40px; line-height: 1.15; font-weight: 700; letter-spacing: -.3px; }
-  h1 span { color: #f3c37a; }
-  p { margin: 16px 0 0; color: #c9d6ea; font-size: 16px; max-width: 470px; }
+  h1 { font-size: 34px; line-height: 1.2; letter-spacing: -.2px; }
+  h1 span { color: var(--as-rosa-fuerte); }
+  p { margin: 14px 0 0; color: var(--as-texto-suave); font-size: 15.5px; max-width: 470px; }
 }
 
 .rasgos {
   display: flex;
-  gap: 12px;
-  margin-top: 34px;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 28px;
   flex-wrap: wrap;
 
   div {
     display: flex;
     align-items: center;
     gap: 9px;
-    background: rgba(255, 255, 255, .09);
-    border: 1px solid rgba(255, 255, 255, .16);
-    padding: 9px 14px;
-    border-radius: 12px;
-    font-size: 13.5px;
-    color: #e4ecf7;
+    background: rgba(255, 255, 255, .75);
+    border: 1px solid #f1d5dc;
+    padding: 8px 14px;
+    border-radius: 999px;
+    font-size: 13px;
+    color: var(--as-tinta);
   }
 
-  i { width: 8px; height: 8px; border-radius: 50%; background: #f3c37a; }
+  i { width: 8px; height: 8px; border-radius: 50%; background: var(--as-rosa-fuerte); }
 }
 
-.pie-marca { margin-top: 46px; color: #9fb3d1; font-size: 12.5px; }
+.pie-marca { margin-top: 36px; color: var(--as-texto-suave); font-size: 12.5px; }
 
 /* Formulario */
 .panel {
@@ -105,9 +92,9 @@
   border: 1px solid var(--as-borde);
   border-radius: 18px;
   padding: 40px 38px;
-  box-shadow: 0 10px 30px rgba(16, 24, 40, .07);
+  box-shadow: 0 10px 30px rgba(29, 29, 27, .06);
 
-  h2 { font-size: 24px; }
+  h2 { font-size: 26px; font-family: var(--as-serif); font-weight: 600; }
   .sub { color: var(--as-texto-suave); margin: 6px 0 26px; }
   > label { display: block; font-weight: 600; font-size: 13px; margin-bottom: 7px; }
   p-iconfield { display: block; margin-bottom: 18px; }
@@ -146,7 +133,7 @@ input[pInputText] { padding-top: .75rem; padding-bottom: .75rem; font-size: 15px
   font-size: 16px;
   font-weight: 700;
   border-radius: 11px;
-  box-shadow: 0 6px 16px rgba(31, 59, 99, .25);
+  box-shadow: 0 6px 16px rgba(29, 29, 27, .18);
 }
 
 .aviso {

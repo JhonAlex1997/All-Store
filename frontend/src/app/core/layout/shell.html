@@ -1,8 +1,12 @@
 <div class="shell" [class.menu-abierto]="menuAbierto()">
   <aside class="lateral" aria-label="Menú principal">
-    <a class="marca" routerLink="/" (click)="menuAbierto.set(false)">
-      <span class="logo">{{ marca.inicial() }}</span>
-      <span class="nombre">{{ marca.partes().inicio }} <b>{{ marca.partes().fin }}</b></span>
+    <a class="marca" routerLink="/" (click)="menuAbierto.set(false)" [attr.aria-label]="marca.nombre() + ', inicio'">
+      @if (marca.logoUrl(); as logo) {
+        <img class="logo-imagen" [src]="logo" [alt]="marca.nombre()" />
+      } @else {
+        <span class="logo">{{ marca.inicial() }}</span>
+        <span class="nombre">{{ marca.partes().inicio }} <b>{{ marca.partes().fin }}</b></span>
+      }
     </a>
 
     <nav>

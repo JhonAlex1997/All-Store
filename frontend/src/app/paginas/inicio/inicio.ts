@@ -34,8 +34,8 @@ import { menuPara } from '../../core/layout/menu';
     .accesos { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: .75rem; }
     .acceso { display: flex; align-items: center; gap: .75rem; padding: 1rem; color: inherit; text-decoration: none;
               font-weight: 600; transition: border-color .15s, box-shadow .15s; }
-    .acceso:hover { border-color: var(--p-primary-300); box-shadow: 0 4px 14px rgba(16, 24, 40, .06); }
-    .acceso i { font-size: 1.2rem; color: var(--p-primary-700); background: var(--as-denim-100);
+    .acceso:hover { border-color: var(--as-rosa); box-shadow: 0 4px 14px rgba(29, 29, 27, .06); }
+    .acceso i { font-size: 1.2rem; color: var(--as-rosa-fuerte); background: var(--as-rosa-claro);
                 width: 38px; height: 38px; border-radius: 10px; display: grid; place-items: center; }
   `,
   changeDetection: ChangeDetectionStrategy.OnPush,

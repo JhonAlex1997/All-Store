@@ -4,6 +4,7 @@ import org.openpdf.text.Document;
 import org.openpdf.text.DocumentException;
 import org.openpdf.text.Element;
 import org.openpdf.text.Font;
+import org.openpdf.text.Image;
 import org.openpdf.text.PageSize;
 import org.openpdf.text.Paragraph;
 import org.openpdf.text.Rectangle;
@@ -58,6 +59,10 @@ public class GuiaPdf {
             cabecera.setWidthPercentage(100);
             DatosImpresion.Emisor e = d.emisor();
             PdfPCell emisor = sinBorde();
+            Image logoGuia = ComprobantePdf.logo(e, 170, 70, Element.ALIGN_LEFT);
+            if (logoGuia != null) {
+                emisor.addElement(logoGuia);
+            }
             emisor.addElement(new Paragraph(e.nombreVisible(), fuente(15, Font.BOLD)));
             if (e.nombreComercial() != null) {
                 emisor.addElement(new Paragraph(e.razonSocial(), negrita));

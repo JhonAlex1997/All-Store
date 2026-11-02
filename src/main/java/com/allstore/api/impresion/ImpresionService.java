@@ -7,6 +7,7 @@ import com.allstore.api.empresa.entity.Empresa;
 import com.allstore.api.empresa.entity.Establecimiento;
 import com.allstore.api.empresa.entity.TipoComprobante;
 import com.allstore.api.empresa.service.EmpresaService;
+import com.allstore.api.empresa.service.LogoService;
 import com.allstore.api.empresa.service.EstablecimientoService;
 import com.allstore.api.facturacion.config.EntornoSunat;
 import com.allstore.api.facturacion.config.SunatProperties;
@@ -35,6 +36,7 @@ public class ImpresionService {
 
     private final VentaService ventaService;
     private final EmpresaService empresaService;
+    private final LogoService logoService;
     private final EstablecimientoService establecimientoService;
     private final SunatProperties sunatProperties;
     private final ComprobantePdf comprobantePdf;
@@ -120,9 +122,9 @@ public class ImpresionService {
         return TipoDocumentoIdentidad.desdeCodigoSunat(codigoSunat).getDescripcion() + " " + numero;
     }
 
-    private static DatosImpresion.Emisor emisor(Empresa empresa) {
+    private DatosImpresion.Emisor emisor(Empresa empresa) {
         return new DatosImpresion.Emisor(empresa.getRuc(), empresa.getRazonSocial(), empresa.getNombreComercial(),
-                empresa.getDireccionFiscal(), empresa.getTelefono(), empresa.getEmail());
+                empresa.getDireccionFiscal(), empresa.getTelefono(), empresa.getEmail(), logoService.pngParaImpresion());
     }
 
     DatosImpresion datos(VentaResponse v, Empresa empresa, Establecimiento local) {
