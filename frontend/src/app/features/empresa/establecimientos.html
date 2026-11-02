@@ -76,6 +76,6 @@
   </form>
   <ng-template #footer>
     <p-button label="Cancelar" severity="secondary" [text]="true" (onClick)="dialogo.set(false)" />
-    <p-button label="Guardar" icon="pi pi-check" type="submit" form="form-local" [loading]="guardando()" />
+    <p-button label="Guardar" icon="pi pi-check" (onClick)="guardar()" [loading]="guardando()" />
   </ng-template>
 </p-dialog>
