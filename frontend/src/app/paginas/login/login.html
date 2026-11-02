@@ -7,7 +7,7 @@
       por WhatsApp o correo.</p>
     <div class="rasgos">
       <div><i></i>Facturación electrónica SUNAT</div>
-      <div><i></i>Precio por mayor automático</div>
+      <div><i></i>Promociones por temporada</div>
       <div><i></i>Stock por talla y color</div>
     </div>
     <div class="pie-marca">{{ marca.nombre() }} · Sistema de ventas y facturación</div>
@@ -17,7 +17,7 @@
 <section class="panel">
   <form class="tarjeta" [formGroup]="form" (ngSubmit)="ingresar()" novalidate>
     <h2>Ingresar</h2>
-    <p class="sub">Usa el usuario y la contraseña que te dio el administrador.</p>
+    <p class="sub">Usa el usuario y la contraseña proporcionado por tu administrador.</p>
 
     @if (error(); as mensaje) {
       <div class="aviso" role="alert">
@@ -38,7 +38,7 @@
       <p-inputicon class="pi pi-lock" />
       <input pInputText id="password" formControlName="password" autocomplete="current-password"
              [type]="verPassword() ? 'text' : 'password'" [attr.autofocus]="enfocarPassword ? '' : null"
-             (keydown)="detectarMayusculas($event)" (keyup)="detectarMayusculas($event)" fluid />
+             fluid />
       <button type="button" class="ojo" (click)="verPassword.set(!verPassword())"
               [attr.aria-label]="verPassword() ? 'Ocultar contraseña' : 'Mostrar contraseña'">
         {{ verPassword() ? 'Ocultar' : 'Mostrar' }}
@@ -50,9 +50,9 @@
         <p-checkbox formControlName="recordar" [binary]="true" inputId="recordar" />
         <span>Recordar mi usuario</span>
       </label>
-      <span class="mayus" [class.activo]="mayusculas()">
-        Bloq Mayús {{ mayusculas() ? 'activado' : 'desactivado' }}
-      </span>
+      @if (mayusculas()) {
+        <span class="mayus" role="status"><i class="pi pi-exclamation-triangle" aria-hidden="true"></i> Bloq Mayús activado</span>
+      }
     </div>
 
     <p-button type="submit" label="Ingresar" [loading]="enviando()" [disabled]="form.invalid" styleClass="boton" fluid />
@@ -62,5 +62,5 @@
       Tu sesión se cierra al cerrar la pestaña o cuando vence el acceso.
     </div>
   </form>
-  <p class="nota">¿Olvidaste tu contraseña? Pídele al <b>administrador</b> que la reinicie.</p>
+  <p class="nota">¿Olvidaste tu contraseña? contacta con tu <b>administrador</b> para restablecerla.</p>
 </section>

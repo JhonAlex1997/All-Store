@@ -139,8 +139,7 @@ input[pInputText] { padding-top: .75rem; padding-bottom: .75rem; font-size: 15px
 }
 
 .recordar { display: flex; align-items: center; gap: 8px; color: var(--as-texto-suave); cursor: pointer; }
-.mayus { color: var(--as-texto-suave); font-size: 12.5px; }
-.mayus.activo { color: #b45309; font-weight: 600; }
+.mayus { color: #b45309; font-size: 12.5px; font-weight: 600; }
 
 :host ::ng-deep .boton {
   padding: 14px;

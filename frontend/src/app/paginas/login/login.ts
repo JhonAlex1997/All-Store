@@ -20,6 +20,12 @@ const CLAVE_USUARIO = 'allstore.usuario-recordado';
   templateUrl: './login.html',
   styleUrl: './login.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
+  // Bloq Mayús se lee en cualquier tecla o clic de la página, no solo en el campo de contraseña.
+  host: {
+    '(document:keydown)': 'detectarMayusculas($event)',
+    '(document:keyup)': 'detectarMayusculas($event)',
+    '(document:mousedown)': 'detectarMayusculas($event)',
+  },
 })
 export class Login {
   private readonly sesion = inject(SesionService);
@@ -43,7 +49,8 @@ export class Login {
   protected readonly mayusculas = signal(false);
   protected readonly enfocarPassword = this.recordado !== '';
 
-  protected detectarMayusculas(evento: KeyboardEvent): void {
+  /** El navegador solo informa el estado de Bloq Mayús dentro de un evento de teclado o mouse. */
+  protected detectarMayusculas(evento: KeyboardEvent | MouseEvent): void {
     if (typeof evento.getModifierState === 'function') {
       this.mayusculas.set(evento.getModifierState('CapsLock'));
     }
