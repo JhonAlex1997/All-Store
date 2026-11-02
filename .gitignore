@@ -46,3 +46,4 @@ build/
 ### Documentación generada (PDF, mockups): se comparte aparte, no va al repositorio ###
 docs/*.pdf
 docs/mockup/
+docs/marca/
