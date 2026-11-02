@@ -9,7 +9,9 @@ import com.allstore.api.empresa.dto.EmpresaRequest;
 import com.allstore.api.empresa.dto.EmpresaResponse;
 import com.allstore.api.empresa.dto.MarcaResponse;
 import com.allstore.api.empresa.entity.Empresa;
+import com.allstore.api.empresa.entity.Establecimiento;
 import com.allstore.api.empresa.repository.EmpresaRepository;
+import com.allstore.api.empresa.repository.EstablecimientoRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -24,6 +26,7 @@ public class EmpresaService {
     private final EmpresaRepository empresaRepository;
     private final Bitacora bitacora;
     private final LogoService logoService;
+    private final EstablecimientoRepository establecimientoRepository;
 
     @Transactional(readOnly = true)
     public EmpresaResponse obtener() {
@@ -50,6 +53,12 @@ public class EmpresaService {
             empresa.setMinimoPrendasPorMayor(request.minimoPrendasPorMayor());
         }
         Empresa guardada = empresaRepository.save(empresa);
+        // El local 0000 es el domicilio fiscal: su dirección es la de la empresa. Si quedara otra, el
+        // comprobante la imprimiría como dirección del local, distinta de la fiscal.
+        establecimientoRepository.findByCodigo(Establecimiento.CODIGO_DOMICILIO_FISCAL).ifPresent(local -> {
+            local.setDireccion(guardada.getDireccionFiscal());
+            local.setUbigeo(guardada.getUbigeo());
+        });
         String despues = resumen(guardada);
         if (!despues.equals(antes)) {
             bitacora.registrar(AccionBitacora.EMPRESA_MODIFICADA, "EMPRESA", guardada.getId(),

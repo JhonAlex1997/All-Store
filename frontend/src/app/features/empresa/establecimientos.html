@@ -21,7 +21,10 @@
     <ng-template #body let-e>
       <tr>
         <td class="codigo">{{ e.codigo }}</td>
-        <td><b>{{ e.nombre }}</b></td>
+        <td>
+          <b>{{ e.nombre }}</b>
+          @if (e.codigo === domicilioFiscal) { <p-tag value="Domicilio fiscal" severity="contrast" styleClass="etiqueta-fiscal" /> }
+        </td>
         <td>{{ etiquetaTipo(e.tipo) }}</td>
         <td class="direccion">{{ e.direccion }} <span class="ubigeo">· {{ e.ubigeo }}</span></td>
         <td><p-tag [value]="e.activo ? 'Activo' : 'Inactivo'" [severity]="e.activo ? 'success' : 'secondary'" /></td>
@@ -55,7 +58,8 @@
       <div class="campo ancho-3">
         <label for="l-direccion">Dirección</label>
         <input pInputText id="l-direccion" formControlName="direccion" fluid />
-        @if (invalido('direccion')) { <small class="error">La dirección es obligatoria.</small> }
+        @if (esFiscal()) { <small class="ayuda"><i class="pi pi-info-circle"></i> Es la dirección fiscal: se cambia en la pestaña Datos.</small> }
+        @else if (invalido('direccion')) { <small class="error">La dirección es obligatoria.</small> }
       </div>
       <div class="campo">
         <label for="l-ubigeo">Ubigeo</label>

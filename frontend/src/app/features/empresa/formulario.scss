@@ -74,3 +74,5 @@ small { font-size: 12px; }
   .rejilla.dos { grid-template-columns: 1fr; }
   .cabecera { flex-direction: column; }
 }
+
+:host ::ng-deep .etiqueta-fiscal { margin-left: .5rem; font-size: 11px; padding: .1rem .45rem; }

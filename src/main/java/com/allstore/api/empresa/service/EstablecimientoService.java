@@ -5,6 +5,8 @@ import com.allstore.api.common.exception.ResourceNotFoundException;
 import com.allstore.api.empresa.dto.EstablecimientoRequest;
 import com.allstore.api.empresa.dto.EstablecimientoResponse;
 import com.allstore.api.empresa.entity.Establecimiento;
+import com.allstore.api.empresa.entity.Empresa;
+import com.allstore.api.empresa.repository.EmpresaRepository;
 import com.allstore.api.empresa.repository.EstablecimientoRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -17,6 +19,7 @@ import java.util.List;
 public class EstablecimientoService {
 
     private final EstablecimientoRepository establecimientoRepository;
+    private final EmpresaRepository empresaRepository;
 
     @Transactional(readOnly = true)
     public List<EstablecimientoResponse> listar(boolean soloActivos) {
@@ -62,5 +65,12 @@ public class EstablecimientoService {
         establecimiento.setTipo(request.tipo());
         establecimiento.setDireccion(request.direccion().trim());
         establecimiento.setUbigeo(request.ubigeo());
+        // El domicilio fiscal (0000) siempre lleva la dirección de la empresa: se cambia en sus datos.
+        if (Establecimiento.CODIGO_DOMICILIO_FISCAL.equals(request.codigo())) {
+            empresaRepository.findById(Empresa.ID_UNICO).ifPresent(empresa -> {
+                establecimiento.setDireccion(empresa.getDireccionFiscal());
+                establecimiento.setUbigeo(empresa.getUbigeo());
+            });
+        }
     }
 }

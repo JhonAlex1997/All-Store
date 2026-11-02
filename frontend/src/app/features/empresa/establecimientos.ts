@@ -49,8 +49,16 @@ export class Establecimientos implements OnInit {
     await this.cargar();
   }
 
+  /** Código del domicilio fiscal: su dirección es la de la empresa (se cambia en la pestaña Datos). */
+  protected readonly domicilioFiscal = '0000';
+
+  protected esFiscal(): boolean {
+    return this.editando()?.codigo === this.domicilioFiscal;
+  }
+
   protected nuevo(): void {
     this.editando.set(null);
+    this.habilitarDireccion(true);
     const siguiente = String(this.lista().length).padStart(4, '0');
     this.form.reset({ codigo: siguiente, nombre: '', tipo: 'TIENDA', direccion: '', ubigeo: '', activo: true });
     this.dialogo.set(true);
@@ -62,6 +70,7 @@ export class Establecimientos implements OnInit {
       codigo: e.codigo ?? '', nombre: e.nombre ?? '', tipo: e.tipo ?? 'TIENDA', direccion: e.direccion ?? '',
       ubigeo: e.ubigeo ?? '', activo: e.activo ?? true,
     });
+    this.habilitarDireccion(e.codigo !== this.domicilioFiscal);
     this.dialogo.set(true);
   }
 
@@ -89,6 +98,16 @@ export class Establecimientos implements OnInit {
       await this.cargar();
     } finally {
       this.guardando.set(false);
+    }
+  }
+
+  private habilitarDireccion(habilitar: boolean): void {
+    for (const control of [this.form.controls.direccion, this.form.controls.ubigeo, this.form.controls.codigo]) {
+      if (habilitar) {
+        control.enable();
+      } else {
+        control.disable();
+      }
     }
   }
 
