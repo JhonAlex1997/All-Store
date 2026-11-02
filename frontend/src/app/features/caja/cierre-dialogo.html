@@ -1,0 +1,55 @@
+<p-dialog [visible]="visible()" (visibleChange)="cerrada() ? terminar() : visible.set($event)" (onShow)="alAbrir()"
+          [modal]="true" [draggable]="false" [header]="cerrada() ? 'Caja cerrada' : 'Cerrar caja'"
+          [style]="{ width: 'min(520px, 96vw)' }">
+  @if (cerrada(); as c) {
+    <div class="final">
+      <i class="pi pi-lock"></i>
+      <p>Contaste <b>{{ c.efectivoContado | soles }}</b>.</p>
+      @if (!c.diferencia) {
+        <p class="cuadra">La caja cuadra exacto.</p>
+      } @else {
+        <p [class.faltante]="c.diferencia! < 0" [class.sobrante]="c.diferencia! > 0">
+          {{ c.diferencia! < 0 ? 'Faltante' : 'Sobrante' }} de {{ (c.diferencia! < 0 ? -c.diferencia! : c.diferencia!) | soles }}
+        </p>
+      }
+    </div>
+  } @else {
+    @if (resumen(); as r) {
+      <div class="resumen">
+        <div class="fila"><span>Monto inicial</span><span>{{ r.montoApertura | soles }}</span></div>
+        <div class="fila"><span>Ventas ({{ r.cantidadVentas ?? 0 }})</span><span>{{ r.totalVentas | soles }}</span></div>
+        @for (m of porMetodo(); track m.metodo) {
+          <div class="fila sub"><span>{{ m.metodo }}</span><span>{{ m.monto | soles }}</span></div>
+        }
+        @if (r.totalIngresos) { <div class="fila"><span>Ingresos de efectivo</span><span>+ {{ r.totalIngresos | soles }}</span></div> }
+        @if (r.totalEgresos) { <div class="fila"><span>Egresos de efectivo</span><span>− {{ r.totalEgresos | soles }}</span></div> }
+        @if (r.totalNotasCredito) { <div class="fila"><span>Devoluciones ({{ r.cantidadNotasCredito }})</span><span>− {{ r.totalNotasCredito | soles }}</span></div> }
+        <div class="fila esperado"><span>Efectivo que debería haber</span><span>{{ esperado() | soles }}</span></div>
+      </div>
+    }
+
+    <label for="contado">¿Cuánto efectivo contaste?</label>
+    <p-inputnumber id="contado" [ngModel]="contado" (ngModelChange)="alContar($event)" mode="currency" currency="PEN"
+                   locale="es-PE" [min]="0" [minFractionDigits]="2" [maxFractionDigits]="2" placeholder="S/ 0.00"
+                   (keydown.enter)="cerrar()" fluid />
+    @if (diferencia(); as d) {
+      <div class="diferencia" [class.faltante]="d < 0" [class.sobrante]="d > 0">
+        {{ d < 0 ? 'Faltante' : 'Sobrante' }} de {{ (d < 0 ? -d : d) | soles }}
+      </div>
+      <label for="obs">Explica la diferencia</label>
+      <input pInputText id="obs" [(ngModel)]="observacion" maxlength="250" placeholder="Obligatorio si no cuadra" />
+    } @else if (diferencia() === 0) {
+      <div class="diferencia cuadra">La caja cuadra exacto.</div>
+    }
+  }
+
+  <ng-template #footer>
+    @if (cerrada()) {
+      <p-button label="Listo" icon="pi pi-check" (onClick)="terminar()" />
+    } @else {
+      <p-button label="Cancelar" severity="secondary" [text]="true" (onClick)="visible.set(false)" />
+      <p-button label="Cerrar caja" icon="pi pi-lock" severity="danger" [loading]="cerrando()"
+                [disabled]="contado == null || (!!diferencia() && !observacion.trim())" (onClick)="cerrar()" />
+    }
+  </ng-template>
+</p-dialog>

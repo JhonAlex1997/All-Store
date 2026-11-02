@@ -63,6 +63,10 @@ public interface StockRepository extends JpaRepository<Stock, Long> {
     List<Stock> findByVariante(@Param("varianteId") Long varianteId);
 
     /** Cantidad actual de una prenda en un local (vacío si nunca tuvo movimientos ahí). */
+    /** Stock de varias prendas en un local, como pares [varianteId, cantidad] (las que no tienen fila no vienen). */
+    @Query("select s.variante.id, s.cantidad from Stock s where s.establecimiento.id = :establecimientoId and s.variante.id in :ids")
+    List<Object[]> cantidades(@Param("ids") java.util.Collection<Long> ids, @Param("establecimientoId") Long establecimientoId);
+
     @Query("select s.cantidad from Stock s where s.variante.id = :varianteId and s.establecimiento.id = :establecimientoId")
     Optional<Integer> cantidad(@Param("varianteId") Long varianteId, @Param("establecimientoId") Long establecimientoId);
 }

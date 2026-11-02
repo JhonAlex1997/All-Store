@@ -1,0 +1,38 @@
+.resumen {
+  border: 1px solid var(--as-borde);
+  border-radius: 12px;
+  padding: .5rem .9rem;
+  margin-bottom: 1rem;
+}
+
+.fila {
+  display: flex;
+  justify-content: space-between;
+  padding: .35rem 0;
+  font-variant-numeric: tabular-nums;
+
+  &.sub { padding-left: 1rem; color: var(--as-texto-suave); font-size: 13px; }
+
+  &.esperado {
+    border-top: 1px solid var(--as-borde);
+    margin-top: .3rem;
+    padding-top: .6rem;
+    font-weight: 700;
+  }
+}
+
+label { display: block; font-weight: 600; font-size: 13px; margin: .75rem 0 .4rem; }
+input[pInputText] { width: 100%; }
+
+.diferencia { margin-top: .6rem; font-weight: 600; }
+.faltante { color: #c23131; }
+.sobrante { color: #b45309; }
+.cuadra { color: #157347; }
+
+.final {
+  text-align: center;
+  padding: 1rem 0;
+
+  i { font-size: 2rem; color: var(--as-rosa-fuerte); }
+  p { margin: .5rem 0 0; font-size: 1.05rem; }
+}

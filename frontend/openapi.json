@@ -6480,6 +6480,48 @@
         }
       }
     },
+    "/api/caja/catalogo": {
+      "get": {
+        "tags": [
+          "caja-controller"
+        ],
+        "operationId": "cajaCatalogo",
+        "parameters": [
+          {
+            "name": "busqueda",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "establecimientoId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ProductoCajaResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/caja/actual": {
       "get": {
         "tags": [
@@ -11489,6 +11531,67 @@
             "format": "int64"
           },
           "totalPages": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
+      "ProductoCajaResponse": {
+        "type": "object",
+        "properties": {
+          "productoId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "codigo": {
+            "type": "string"
+          },
+          "nombre": {
+            "type": "string"
+          },
+          "categoria": {
+            "type": "string"
+          },
+          "variantes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Variante"
+            }
+          }
+        }
+      },
+      "Variante": {
+        "type": "object",
+        "properties": {
+          "varianteId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "sku": {
+            "type": "string"
+          },
+          "codigoBarras": {
+            "type": "string"
+          },
+          "talla": {
+            "type": "string"
+          },
+          "color": {
+            "type": "string"
+          },
+          "precio": {
+            "type": "number"
+          },
+          "precioPorMayor": {
+            "type": "number"
+          },
+          "precioCampana": {
+            "type": "number"
+          },
+          "campana": {
+            "type": "string"
+          },
+          "stock": {
             "type": "integer",
             "format": "int32"
           }

@@ -5,8 +5,10 @@ import com.allstore.api.caja.dto.CajaResponse;
 import com.allstore.api.caja.dto.CajaSesionResumenResponse;
 import com.allstore.api.caja.dto.CerrarCajaRequest;
 import com.allstore.api.caja.dto.MovimientoCajaRequest;
+import com.allstore.api.caja.dto.ProductoCajaResponse;
 import com.allstore.api.caja.entity.EstadoCaja;
 import com.allstore.api.caja.service.CajaService;
+import com.allstore.api.caja.service.CatalogoCajaService;
 import com.allstore.api.common.dto.PageResponse;
 import com.allstore.api.common.idempotencia.SolicitudIdempotente;
 import jakarta.validation.Valid;
@@ -28,6 +30,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.time.LocalDate;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/caja")
@@ -35,6 +38,7 @@ import java.time.LocalDate;
 public class CajaController {
 
     private final CajaService cajaService;
+    private final CatalogoCajaService catalogoCajaService;
 
     @PostMapping("/abrir")
     @ResponseStatus(HttpStatus.CREATED)
@@ -46,6 +50,15 @@ public class CajaController {
     @GetMapping("/actual")
     public CajaResponse miCaja() {
         return cajaService.miCaja();
+    }
+
+    /**
+     * Prendas para vender: busca por nombre o código del modelo, SKU o código de barras (desde 2 letras) y
+     * trae tallas, colores, stock del local y precio de campaña. Máximo 150 prendas.
+     */
+    @GetMapping("/catalogo")
+    public List<ProductoCajaResponse> catalogo(@RequestParam String busqueda, @RequestParam Long establecimientoId) {
+        return catalogoCajaService.buscar(busqueda, establecimientoId);
     }
 
     /** Ingreso o egreso de efectivo que no es venta (ej. pago de un taxi). */

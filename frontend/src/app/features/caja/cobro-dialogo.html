@@ -1,0 +1,74 @@
+<p-dialog [visible]="visible()" (visibleChange)="visible.set($event)" (onShow)="alAbrir()" [modal]="true"
+          [draggable]="false" header="Cobrar" [style]="{ width: 'min(620px, 96vw)' }" [closeOnEscape]="!enviando()">
+  <div class="total">
+    <span>Total a cobrar</span>
+    <strong>{{ total() | soles }}</strong>
+    <small>{{ store.totales().prendas }} prenda{{ store.totales().prendas === 1 ? '' : 's' }}
+      @if (store.totales().porMayor) { · precio por mayor }
+      · {{ store.tipo() === 'FACTURA' ? 'Factura' : store.tipo() === 'BOLETA' ? 'Boleta' : 'Nota de venta' }} {{ store.serie()?.codigo }}
+    </small>
+  </div>
+
+  <div class="metodos" role="group" aria-label="Medio de pago">
+    @for (m of metodos; track m.valor) {
+      <button type="button" class="metodo" [class.activo]="pagos().length === 1 && pagos()[0].metodo === m.valor"
+              (click)="elegirMetodo(m.valor)">
+        <i [class]="m.icono"></i>{{ m.etiqueta }}
+      </button>
+    }
+  </div>
+
+  @for (p of pagos(); track $index; let i = $index) {
+    <div class="pago">
+      <div class="fila">
+        <b>{{ etiqueta(p.metodo) }}</b>
+        @if (pagos().length > 1) {
+          <p-inputnumber [ngModel]="p.monto" (ngModelChange)="actualizar(i, { monto: $event ?? 0 })" mode="currency"
+                         currency="PEN" locale="es-PE" [min]="0" [minFractionDigits]="2" [maxFractionDigits]="2"
+                         inputStyleClass="monto" />
+          <p-button icon="pi pi-trash" [text]="true" severity="secondary" (onClick)="quitar(i)" ariaLabel="Quitar pago" />
+        } @else {
+          <span class="monto-fijo">{{ p.monto | soles }}</span>
+        }
+      </div>
+
+      @if (p.metodo === 'EFECTIVO') {
+        <div class="efectivo">
+          <label for="recibido">Recibido</label>
+          <p-inputnumber id="recibido" [ngModel]="p.recibido" (ngModelChange)="actualizar(i, { recibido: $event })"
+                         mode="currency" currency="PEN" locale="es-PE" [min]="0" [minFractionDigits]="2" [maxFractionDigits]="2"
+                         (keydown.enter)="confirmar()"
+                         placeholder="¿Con cuánto paga?" />
+          <div class="billetes">
+            @for (b of billetes(); track b) {
+              <button type="button" (click)="recibir(b)">{{ b === p.monto ? 'Exacto' : (b | soles) }}</button>
+            }
+          </div>
+          <div class="vuelto" [class.hay]="vuelto() > 0">Vuelto <strong>{{ vuelto() | soles }}</strong></div>
+        </div>
+      } @else {
+        <input pInputText [ngModel]="p.referencia" (ngModelChange)="actualizar(i, { referencia: $event })"
+               placeholder="N° de operación (opcional)" class="referencia" />
+      }
+    </div>
+  }
+
+  <button type="button" class="agregar" (click)="agregar()"><i class="pi pi-plus"></i> Pagar con otro medio también (pago mixto)</button>
+
+  <details class="envio">
+    <summary><i class="pi pi-send"></i> Enviar el comprobante al cliente</summary>
+    <div class="envio-campos">
+      <input pInputText [(ngModel)]="whatsapp" placeholder="WhatsApp (ej. 987654321)" inputmode="tel" />
+      <input pInputText [(ngModel)]="correo" placeholder="Correo" type="email" />
+    </div>
+  </details>
+
+  @if (problema(); as p) { <p-message severity="warn" styleClass="aviso">{{ p }}</p-message> }
+  @if (error(); as e) { <p-message severity="error" styleClass="aviso">{{ e }}</p-message> }
+
+  <ng-template #footer>
+    <p-button label="Volver" severity="secondary" [text]="true" (onClick)="visible.set(false)" [disabled]="enviando()" />
+    <p-button [label]="'Emitir ' + (store.tipo() === 'FACTURA' ? 'factura' : store.tipo() === 'BOLETA' ? 'boleta' : 'nota de venta')"
+              icon="pi pi-check" [loading]="enviando()" [disabled]="!!problema()" (onClick)="confirmar()" styleClass="emitir" />
+  </ng-template>
+</p-dialog>

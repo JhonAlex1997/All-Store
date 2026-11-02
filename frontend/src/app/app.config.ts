@@ -3,6 +3,7 @@ import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import localeEsPe from '@angular/common/locales/es-PE';
 import {
   ApplicationConfig,
+  ErrorHandler,
   inject,
   LOCALE_ID,
   provideAppInitializer,
@@ -19,6 +20,7 @@ import { provideApiConfiguration } from './core/api/api-configuration';
 import { authInterceptor } from './core/http/auth.interceptor';
 import { erroresInterceptor } from './core/http/errores.interceptor';
 import { idempotenciaInterceptor } from './core/http/idempotencia.interceptor';
+import { ManejadorErrores } from './core/http/manejador-errores';
 import { MarcaService } from './core/marca/marca.service';
 import { TituloConMarca } from './core/marca/titulo-con-marca';
 import { AllStorePreset } from './core/tema/allstore-preset';
@@ -29,6 +31,7 @@ registerLocaleData(localeEsPe);
 export const appConfig: ApplicationConfig = {
   providers: [
     provideBrowserGlobalErrorListeners(),
+    { provide: ErrorHandler, useClass: ManejadorErrores },
     provideZoneChangeDetection({ eventCoalescing: true }),
     provideRouter(routes, withComponentInputBinding()),
     { provide: TitleStrategy, useClass: TituloConMarca },

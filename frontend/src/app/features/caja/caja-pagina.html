@@ -1,0 +1,143 @@
+@switch (store.estado()) {
+  @case ('cargando') {
+    <div class="cargando"><i class="pi pi-spin pi-spinner"></i> Cargando la caja…</div>
+  }
+  @case ('cerrada') {
+    <as-abrir-caja />
+  }
+  @case ('abierta') {
+    <div class="pos" asEscaner (codigo)="alEscanear($event)">
+      <!-- Barra de la caja -->
+      <header class="barra-caja">
+        <div class="info">
+          <span class="punto"></span>
+          <b>{{ store.sesion()?.establecimiento }}</b>
+          <span class="sutil">Caja abierta desde {{ store.sesion()?.fechaApertura | fechaLima: 'hora' }}</span>
+        </div>
+        <div class="cifras">
+          <span class="sutil">Hoy:</span>
+          @let ventas = store.sesion()?.resumen?.cantidadVentas ?? 0;
+          <b>{{ ventas }} venta{{ ventas === 1 ? '' : 's' }}</b>
+          <b>{{ store.sesion()?.resumen?.totalVentas ?? 0 | soles }}</b>
+        </div>
+        <div class="acciones">
+          <p-button label="Movimiento" icon="pi pi-arrow-right-arrow-left" severity="secondary" [outlined]="true" size="small"
+                    (onClick)="movimiento.set(true)" />
+          <p-button label="Cerrar caja" icon="pi pi-lock" severity="secondary" [outlined]="true" size="small"
+                    (onClick)="cierre.set(true)" />
+        </div>
+      </header>
+
+      <div class="cuerpo">
+        <!-- Buscador y resultados -->
+        <section class="catalogo">
+          <div class="busqueda">
+            <i class="pi pi-search"></i>
+            <input #buscador pInputText [(ngModel)]="texto" (ngModelChange)="alEscribir()" (keydown.enter)="alEnter()"
+                   placeholder="Busca por modelo o código, o escanea la etiqueta" autocomplete="off" spellcheck="false"
+                   aria-label="Buscar prenda" />
+            @if (buscando()) { <i class="pi pi-spin pi-spinner girando"></i> }
+            <kbd>F2</kbd>
+          </div>
+
+          <div class="resultados">
+            @for (p of resultados(); track p.productoId) {
+              <as-producto-caja [producto]="p" (elegir)="agregar(p, $event)" />
+            } @empty {
+              <div class="vacio">
+                @if (buscado()) {
+                  <i class="pi pi-inbox"></i>
+                  <p>No hay prendas para «{{ buscado() }}».</p>
+                } @else {
+                  <i class="pi pi-barcode"></i>
+                  <p><b>Escanea la etiqueta</b> o escribe el nombre del modelo.</p>
+                  <p class="sutil">Haz clic en la talla y el color para agregarlos. El número es el stock de este local.</p>
+                }
+              </div>
+            }
+          </div>
+        </section>
+
+        <!-- Carrito -->
+        <aside class="carrito">
+          <p-selectbutton [options]="tipos" [ngModel]="store.tipo()" (ngModelChange)="cambiarTipo($event)" optionLabel="etiqueta"
+                          optionValue="valor" [allowEmpty]="false" styleClass="tipos" />
+          @if (!store.serie()) {
+            <small class="alerta">No hay serie activa de este comprobante en el local.</small>
+          }
+
+          <div class="seccion"><as-cliente-caja /></div>
+
+          <div class="lineas">
+            @for (l of store.totales().lineas; track l.varianteId) {
+              <div class="linea">
+                <div class="descripcion">
+                  <b>{{ l.modelo }}</b>
+                  <span>{{ l.talla }} · {{ l.color }}</span>
+                  @if (l.conCampana) { <span class="campana"><i class="pi pi-tag"></i> {{ l.campana }}</span> }
+                  @if (l.cantidad > l.stock) { <span class="alerta">Solo hay {{ l.stock }}</span> }
+                </div>
+                <div class="cantidad">
+                  <button type="button" (click)="store.cambiarCantidad(l.varianteId, l.cantidad - 1)" aria-label="Quitar una">−</button>
+                  <span>{{ l.cantidad }}</span>
+                  <button type="button" (click)="store.cambiarCantidad(l.varianteId, l.cantidad + 1)" aria-label="Agregar una"
+                          [disabled]="l.cantidad >= l.stock">+</button>
+                </div>
+                <div class="importe">
+                  @if (l.conCampana) { <s>{{ l.precioLista * l.cantidad | soles }}</s> }
+                  <b>{{ l.importe | soles }}</b>
+                  <span class="unitario">{{ l.precioFinal | soles }} c/u</span>
+                </div>
+                <button type="button" class="quitar" (click)="store.quitar(l.varianteId)" aria-label="Quitar prenda">
+                  <i class="pi pi-times"></i>
+                </button>
+              </div>
+            } @empty {
+              <div class="carrito-vacio"><i class="pi pi-shopping-bag"></i>La venta está vacía</div>
+            }
+          </div>
+
+          @if (!store.vacio()) {
+            <div class="por-mayor">
+              <label>
+                <p-toggleswitch [ngModel]="store.totales().porMayor" (ngModelChange)="store.porMayorManual.set($event)"
+                                [disabled]="store.totales().porMayorPorCantidad" />
+                Precio por mayor
+              </label>
+              <small>
+                @if (store.totales().porMayorPorCantidad) { Aplicado por llevar {{ store.totales().prendas }} prendas }
+                @else if (store.porMayorManual()) { Marcado a mano }
+                @else { Faltan {{ store.totales().faltanParaPorMayor }} prenda{{ store.totales().faltanParaPorMayor === 1 ? '' : 's' }} }
+              </small>
+            </div>
+          }
+
+          <div class="totales">
+            @if (store.totales().ahorroCampana > 0) {
+              <div class="fila"><span>Subtotal</span><span>{{ store.totales().subtotal | soles }}</span></div>
+              <div class="fila ahorro"><span>Descuento campaña</span><span>− {{ store.totales().ahorroCampana | soles }}</span></div>
+            }
+            <div class="fila total"><span>Total</span><span>{{ store.totales().total | soles }}</span></div>
+            <small class="sutil">IGV incluido · {{ store.totales().prendas }} prenda{{ store.totales().prendas === 1 ? '' : 's' }}</small>
+          </div>
+
+          @if (store.impedimento(); as motivo) {
+            @if (!store.vacio()) { <small class="alerta">{{ motivo }}</small> }
+          }
+          <p-button label="Cobrar" icon="pi pi-wallet" [disabled]="!!store.impedimento()" (onClick)="cobrar()"
+                    styleClass="cobrar" fluid>
+          </p-button>
+          <div class="pie-carrito">
+            <kbd>F9</kbd> cobrar
+            @if (!store.vacio()) { <button type="button" class="vaciar" (click)="vaciar()">Vaciar venta</button> }
+          </div>
+        </aside>
+      </div>
+    </div>
+
+    <as-cobro-dialogo [(visible)]="cobrando" (emitida)="alEmitir($event)" />
+    <as-resultado-dialogo [(visible)]="mostrarResultado" [venta]="ultimaVenta()" (nuevaVenta)="despuesDeVenta()" />
+    <as-movimiento-dialogo [(visible)]="movimiento" />
+    <as-cierre-dialogo [(visible)]="cierre" />
+  }
+}

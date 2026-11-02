@@ -1,0 +1,108 @@
+.total {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: .75rem 0 1rem;
+
+  span { color: var(--as-texto-suave); font-size: 13px; }
+  strong { font-size: 2.4rem; font-variant-numeric: tabular-nums; letter-spacing: -.5px; }
+  small { color: var(--as-texto-suave); }
+}
+
+.metodos {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: .4rem;
+  margin-bottom: 1rem;
+}
+
+.metodo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: .45rem;
+  padding: .6rem .4rem;
+  border: 1px solid var(--as-borde);
+  border-radius: 10px;
+  background: #fff;
+  font: 600 13px inherit;
+  cursor: pointer;
+
+  &:hover { border-color: var(--as-tinta); }
+
+  &.activo { background: var(--as-tinta); color: #fff; border-color: var(--as-tinta); }
+}
+
+.pago {
+  border: 1px solid var(--as-borde);
+  border-radius: 12px;
+  padding: .75rem .9rem;
+  margin-bottom: .5rem;
+}
+
+.fila { display: flex; align-items: center; gap: .5rem; justify-content: space-between; }
+.monto-fijo { font-weight: 700; font-variant-numeric: tabular-nums; }
+
+.efectivo {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: .5rem .75rem;
+  align-items: center;
+  margin-top: .6rem;
+
+  label { font-size: 13px; font-weight: 600; }
+}
+
+.billetes {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: .35rem;
+
+  button {
+    padding: .4rem .75rem;
+    border-radius: 99px;
+    border: 1px solid var(--as-borde);
+    background: var(--as-fondo);
+    font: 600 12.5px inherit;
+    cursor: pointer;
+
+    &:hover { background: var(--as-rosa-claro); border-color: var(--as-rosa); }
+  }
+}
+
+.vuelto {
+  grid-column: 1 / -1;
+  text-align: right;
+  color: var(--as-texto-suave);
+
+  strong { font-size: 1.3rem; color: var(--as-tinta); margin-left: .4rem; font-variant-numeric: tabular-nums; }
+  &.hay strong { color: #157347; }
+}
+
+.referencia { width: 100%; margin-top: .5rem; }
+
+.agregar {
+  border: 0;
+  background: none;
+  color: var(--as-rosa-fuerte);
+  font: 600 13px inherit;
+  cursor: pointer;
+  padding: .3rem 0;
+}
+
+.envio {
+  margin-top: .5rem;
+
+  summary { cursor: pointer; color: var(--as-texto-suave); font-size: 13px; padding: .3rem 0; }
+}
+
+.envio-campos { display: grid; grid-template-columns: 1fr 1fr; gap: .5rem; margin-top: .4rem; }
+
+:host ::ng-deep .aviso { margin-top: .75rem; }
+:host ::ng-deep .emitir { padding: .7rem 1.2rem; font-weight: 600; }
+
+@media (max-width: 560px) {
+  .metodos { grid-template-columns: repeat(2, 1fr); }
+  .envio-campos { grid-template-columns: 1fr; }
+}

@@ -11,6 +11,8 @@ import { StrictHttpResponse } from '../strict-http-response';
 
 import { cajaAbrir } from '../fn/caja-controller/caja-abrir';
 import { CajaAbrir$Params } from '../fn/caja-controller/caja-abrir';
+import { cajaCatalogo } from '../fn/caja-controller/caja-catalogo';
+import { CajaCatalogo$Params } from '../fn/caja-controller/caja-catalogo';
 import { cajaCerrar } from '../fn/caja-controller/caja-cerrar';
 import { CajaCerrar$Params } from '../fn/caja-controller/caja-cerrar';
 import { cajaListar } from '../fn/caja-controller/caja-listar';
@@ -23,6 +25,7 @@ import { cajaRegistrarMovimiento } from '../fn/caja-controller/caja-registrar-mo
 import { CajaRegistrarMovimiento$Params } from '../fn/caja-controller/caja-registrar-movimiento';
 import { CajaResponse } from '../models/caja-response';
 import { PageResponseCajaSesionResumenResponse } from '../models/page-response-caja-sesion-resumen-response';
+import { ProductoCajaResponse } from '../models/producto-caja-response';
 
 @Injectable({ providedIn: 'root' })
 export class CajaControllerService extends BaseService {
@@ -153,6 +156,31 @@ export class CajaControllerService extends BaseService {
   cajaObtener(params: CajaObtener$Params, context?: HttpContext): Promise<CajaResponse> {
     const resp = this.cajaObtener$Response(params, context);
     return resp.then((r: StrictHttpResponse<CajaResponse>): CajaResponse => r.body);
+  }
+
+  /** Path part for operation `cajaCatalogo()` */
+  static readonly CajaCatalogoPath = '/api/caja/catalogo';
+
+  /**
+   * This method provides access to the full `HttpResponse`, allowing access to response headers.
+   * To access only the response body, use `cajaCatalogo()` instead.
+   *
+   * This method doesn't expect any request body.
+   */
+  cajaCatalogo$Response(params: CajaCatalogo$Params, context?: HttpContext): Promise<StrictHttpResponse<Array<ProductoCajaResponse>>> {
+    const obs = cajaCatalogo(this.http, this.rootUrl, params, context);
+    return firstValueFrom(obs);
+  }
+
+  /**
+   * This method provides access only to the response body.
+   * To access the full response (for headers, for example), `cajaCatalogo$Response()` instead.
+   *
+   * This method doesn't expect any request body.
+   */
+  cajaCatalogo(params: CajaCatalogo$Params, context?: HttpContext): Promise<Array<ProductoCajaResponse>> {
+    const resp = this.cajaCatalogo$Response(params, context);
+    return resp.then((r: StrictHttpResponse<Array<ProductoCajaResponse>>): Array<ProductoCajaResponse> => r.body);
   }
 
   /** Path part for operation `cajaMiCaja()` */

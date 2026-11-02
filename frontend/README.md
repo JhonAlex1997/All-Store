@@ -51,6 +51,16 @@ src/app/
 - **Roles**: `MENU` (core/layout/menu.ts) define qué ve cada rol y de ahí salen también las rutas, con
   `rolGuard`. Es solo navegación: el backend vuelve a validar el rol en cada llamada.
 
+## Módulos construidos
+
+- **Empresa y series** (`features/empresa`, solo ADMIN): datos ante SUNAT con vista previa del ticket, logo,
+  locales (el 0000 sigue la dirección fiscal) y series.
+- **Caja** (`features/caja`, ADMIN y CAJERO): apertura, búsqueda por modelo o código con cuadrícula de
+  tallas y colores (stock del local), lector de códigos de barras, precio por mayor y campañas con las mismas
+  reglas que el backend (`calculo.ts`), cliente por DNI/RUC, cobro mixto con vuelto, impresión del ticket,
+  movimientos de efectivo y cierre con arqueo. Atajos: F2 buscar, F9 cobrar. El carrito se guarda en la
+  pestaña por si se recarga.
+
 ## Agregar un módulo
 
 1. Crear `src/app/features/<modulo>/<modulo>.routes.ts` con sus rutas.

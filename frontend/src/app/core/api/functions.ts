@@ -233,6 +233,8 @@ export type { CajaListar$Params as CajaListar$Params } from './fn/caja-controlle
 export { cajaListar as cajaListar } from './fn/caja-controller/caja-listar';
 export type { CajaObtener$Params as CajaObtener$Params } from './fn/caja-controller/caja-obtener';
 export { cajaObtener as cajaObtener } from './fn/caja-controller/caja-obtener';
+export type { CajaCatalogo$Params as CajaCatalogo$Params } from './fn/caja-controller/caja-catalogo';
+export { cajaCatalogo as cajaCatalogo } from './fn/caja-controller/caja-catalogo';
 export type { CajaMiCaja$Params as CajaMiCaja$Params } from './fn/caja-controller/caja-mi-caja';
 export { cajaMiCaja as cajaMiCaja } from './fn/caja-controller/caja-mi-caja';
 export type { AuthLogin$Params as AuthLogin$Params } from './fn/auth-controller/auth-login';
