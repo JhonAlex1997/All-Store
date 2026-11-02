@@ -64,7 +64,8 @@
       <div class="campo">
         <label for="l-ubigeo">Ubigeo</label>
         <input pInputText id="l-ubigeo" formControlName="ubigeo" maxlength="6" inputmode="numeric" fluid />
-        @if (invalido('ubigeo')) { <small class="error">Son 6 dígitos.</small> }
+        @if (invalido('ubigeo')) { <small class="error">Son 6 dígitos (ej. 150111 El Agustino).</small> }
+        @else if (!esFiscal()) { <small class="ayuda">Código INEI del distrito, 6 dígitos. No es el código postal.</small> }
       </div>
       @if (editando()) {
         <div class="campo">
