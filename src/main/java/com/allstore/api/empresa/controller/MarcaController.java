@@ -40,8 +40,10 @@ public class MarcaController {
      * el navegador puede guardarlo un año sin volver a pedirlo.
      */
     @GetMapping(value = "/logo", produces = MediaType.IMAGE_PNG_VALUE)
-    public ResponseEntity<byte[]> logo(@RequestParam(name = "v", required = false) Long version) {
-        LogoService.Logo logo = logoService.obtener()
+    public ResponseEntity<byte[]> logo(@RequestParam(name = "v", required = false) Long version,
+                                       @RequestParam(name = "fondo", defaultValue = "claro") String fondo) {
+        // fondo=oscuro: versión con el texto en blanco, para el menú y el login (que son negros).
+        LogoService.Logo logo = ("oscuro".equals(fondo) ? logoService.obtenerParaFondoOscuro() : logoService.obtener())
                 .orElseThrow(() -> new ResourceNotFoundException("La tienda no tiene logo"));
         CacheControl cache = version != null && version == logo.version()
                 ? CacheControl.maxAge(Duration.ofDays(365)).cachePublic().immutable()

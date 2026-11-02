@@ -34,6 +34,12 @@ export class MarcaService {
     return v ? `/api/publico/marca/logo?v=${v}` : null;
   });
 
+  /** Versión clara del logo (texto en blanco) para el menú y el login, que son negros. */
+  readonly logoUrlOscuro = computed(() => {
+    const url = this.logoUrl();
+    return url ? `${url}&fondo=oscuro` : null;
+  });
+
   /** Palabras iniciales y última, para resaltar la última: "KISSME" + "JEANS" (cuando no hay logo). */
   readonly partes = computed(() => {
     const palabras = this.nombre().trim().split(/\s+/);

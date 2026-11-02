@@ -57,8 +57,12 @@ export class Login {
   }
 
   protected async ingresar(): Promise<void> {
-    if (this.form.invalid || this.enviando()) {
+    if (this.enviando()) {
+      return;
+    }
+    if (this.form.invalid) {
       this.form.markAllAsTouched();
+      this.error.set('Escribe tu usuario y tu contraseña.');
       return;
     }
     const { username, password, recordar } = this.form.getRawValue();

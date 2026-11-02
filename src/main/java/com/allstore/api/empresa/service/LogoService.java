@@ -58,6 +58,26 @@ public class LogoService {
         return repository.fechaActualizacion().map(f -> f.toInstant().toEpochMilli());
     }
 
+    /** Versión clara para fondos oscuros, calculada una vez por cada logo (se guarda en memoria por versión). */
+    private volatile Logo claroEnMemoria;
+    private volatile long versionClara = -1;
+
+    @Transactional(readOnly = true)
+    public Optional<Logo> obtenerParaFondoOscuro() {
+        return obtener().map(logo -> {
+            if (versionClara != logo.version()) {
+                try {
+                    BufferedImage img = ImageIO.read(new ByteArrayInputStream(logo.png()));
+                    claroEnMemoria = new Logo(png(TratamientoLogo.paraFondoOscuro(img)), logo.actualizado());
+                    versionClara = logo.version();
+                } catch (IOException e) {
+                    throw new IllegalStateException("No se pudo preparar el logo para fondo oscuro", e);
+                }
+            }
+            return claroEnMemoria;
+        });
+    }
+
     /** Bytes del PNG para los comprobantes, o null si no hay logo. */
     @Transactional(readOnly = true)
     public byte[] pngParaImpresion() {
@@ -73,7 +93,7 @@ public class LogoService {
             throw new BusinessException("El logo no puede pesar más de 1 MB");
         }
         BufferedImage original = leer(archivo);
-        BufferedImage ajustada = ajustar(original);
+        BufferedImage ajustada = TratamientoLogo.quitarFondoBlanco(ajustar(original));
         EmpresaLogo logo = repository.findById(Empresa.ID_UNICO).orElseGet(EmpresaLogo::new);
         boolean nuevo = logo.getContenido() == null;
         logo.setContenido(png(ajustada));

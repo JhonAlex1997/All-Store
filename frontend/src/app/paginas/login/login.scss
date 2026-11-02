@@ -5,53 +5,66 @@
   background: #fff;
 }
 
-/* Panel de marca: fondo rosado suave con una costura, como el pespunte de un jean. */
+/* Panel de marca: negro con la trama de un tejido de jean, un resplandor rosado y una costura. */
 .marca {
   position: relative;
   overflow: hidden;
-  color: var(--as-tinta);
+  color: #fff;
   padding: 56px 64px;
   display: flex;
   flex-direction: column;
   align-items: center;
   text-align: center;
-  background: linear-gradient(165deg, #fdf6f8 0%, var(--as-rosa-claro) 55%, #f8e1e7 100%);
+  background:
+    radial-gradient(ellipse 70% 55% at 50% 30%, rgba(244, 196, 205, .16), transparent 70%),
+    radial-gradient(ellipse 60% 50% at 85% 100%, rgba(184, 77, 108, .22), transparent 70%),
+    var(--as-negro);
+
+  &::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    opacity: .05;
+    background-image: repeating-linear-gradient(45deg, #fff 0 1px, transparent 1px 7px),
+      repeating-linear-gradient(-45deg, #fff 0 1px, transparent 1px 9px);
+  }
 }
 
 .costura {
   position: absolute;
-  inset: 36px;
-  border: 2px dashed rgba(184, 77, 108, .35);
+  inset: 32px;
+  border: 1.5px dashed rgba(244, 196, 205, .35);
   border-radius: 22px;
   pointer-events: none;
 }
 
 .logo-imagen {
   position: relative;
-  width: min(380px, 70%);
+  width: min(400px, 68%);
   height: auto;
-  margin-top: 6vh;
+  margin-top: 5vh;
+  filter: drop-shadow(0 6px 24px rgba(0, 0, 0, .35));
 }
 
 .logo-texto {
   position: relative;
   margin-top: 8vh;
   font-family: var(--as-serif);
-  font-size: 44px;
-  letter-spacing: .06em;
+  font-size: 46px;
+  letter-spacing: .08em;
 }
 
 .lema {
   position: relative;
   margin-top: auto;
-  max-width: 560px;
+  max-width: 580px;
   display: flex;
   flex-direction: column;
   align-items: center;
 
-  h1 { font-size: 34px; line-height: 1.2; letter-spacing: -.2px; }
-  h1 span { color: var(--as-rosa-fuerte); }
-  p { margin: 14px 0 0; color: var(--as-texto-suave); font-size: 15.5px; max-width: 470px; }
+  h1 { font-size: 36px; line-height: 1.18; letter-spacing: -.2px; color: #fff; }
+  h1 span { color: var(--as-rosa); font-style: italic; }
+  p { margin: 14px 0 0; color: #bdb6b6; font-size: 15.5px; max-width: 480px; line-height: 1.5; }
 }
 
 .rasgos {
@@ -65,18 +78,18 @@
     display: flex;
     align-items: center;
     gap: 9px;
-    background: rgba(255, 255, 255, .75);
-    border: 1px solid #f1d5dc;
-    padding: 8px 14px;
+    background: rgba(255, 255, 255, .06);
+    border: 1px solid rgba(255, 255, 255, .12);
+    padding: 8px 15px;
     border-radius: 999px;
     font-size: 13px;
-    color: var(--as-tinta);
+    color: #ece7e7;
   }
 
-  i { width: 8px; height: 8px; border-radius: 50%; background: var(--as-rosa-fuerte); }
+  i { width: 7px; height: 7px; border-radius: 50%; background: var(--as-rosa); box-shadow: 0 0 8px var(--as-rosa); }
 }
 
-.pie-marca { margin-top: 36px; color: var(--as-texto-suave); font-size: 12.5px; }
+.pie-marca { margin-top: 36px; color: #8d8787; font-size: 12.5px; letter-spacing: .02em; }
 
 /* Formulario */
 .panel {
@@ -84,7 +97,7 @@
   flex-direction: column;
   justify-content: center;
   padding: 2rem clamp(1rem, 6vw, 76px);
-  background: var(--as-fondo);
+  background: #fff;
 }
 
 .tarjeta {

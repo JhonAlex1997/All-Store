@@ -31,6 +31,7 @@ describe('MarcaService', () => {
     expect(servicio.partes()).toEqual({ inicio: 'KISSME', fin: 'JEANS' });
     expect(servicio.inicial()).toBe('K');
     expect(servicio.logoUrl()).toBe('/api/publico/marca/logo?v=123');
+    expect(servicio.logoUrlOscuro()).toBe('/api/publico/marca/logo?v=123&fondo=oscuro');
     expect(JSON.parse(localStorage.getItem('allstore.marca')!).nombre).toBe('KISSME JEANS');
   });
 
