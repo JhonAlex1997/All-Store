@@ -26,6 +26,7 @@ export { AuthControllerService } from './services/auth-controller.service';
 export { AlertaControllerService } from './services/alerta-controller.service';
 export { SistemaControllerService } from './services/sistema-controller.service';
 export { ReporteControllerService } from './services/reporte-controller.service';
+export { MarcaControllerService } from './services/marca-controller.service';
 export { ConsultaPublicaControllerService } from './services/consulta-publica-controller.service';
 export { RegistroVentasControllerService } from './services/registro-ventas-controller.service';
 export { RegistroComprasControllerService } from './services/registro-compras-controller.service';

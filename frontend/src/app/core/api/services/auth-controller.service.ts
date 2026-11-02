@@ -9,15 +9,15 @@ import { BaseService } from '../base-service';
 import { ApiConfiguration } from '../api-configuration';
 import { StrictHttpResponse } from '../strict-http-response';
 
-import { cambiarPassword } from '../fn/auth-controller/cambiar-password';
-import { CambiarPassword$Params } from '../fn/auth-controller/cambiar-password';
-import { cerrarSesion } from '../fn/auth-controller/cerrar-sesion';
-import { CerrarSesion$Params } from '../fn/auth-controller/cerrar-sesion';
-import { login } from '../fn/auth-controller/login';
-import { Login$Params } from '../fn/auth-controller/login';
+import { authCambiarPassword } from '../fn/auth-controller/auth-cambiar-password';
+import { AuthCambiarPassword$Params } from '../fn/auth-controller/auth-cambiar-password';
+import { authCerrarSesion } from '../fn/auth-controller/auth-cerrar-sesion';
+import { AuthCerrarSesion$Params } from '../fn/auth-controller/auth-cerrar-sesion';
+import { authLogin } from '../fn/auth-controller/auth-login';
+import { AuthLogin$Params } from '../fn/auth-controller/auth-login';
+import { authPerfil } from '../fn/auth-controller/auth-perfil';
+import { AuthPerfil$Params } from '../fn/auth-controller/auth-perfil';
 import { LoginResponse } from '../models/login-response';
-import { perfil } from '../fn/auth-controller/perfil';
-import { Perfil$Params } from '../fn/auth-controller/perfil';
 import { UsuarioResponse } from '../models/usuario-response';
 
 @Injectable({ providedIn: 'root' })
@@ -26,103 +26,103 @@ export class AuthControllerService extends BaseService {
     super(config, http);
   }
 
-  /** Path part for operation `login()` */
-  static readonly LoginPath = '/api/auth/login';
+  /** Path part for operation `authLogin()` */
+  static readonly AuthLoginPath = '/api/auth/login';
 
   /**
    * This method provides access to the full `HttpResponse`, allowing access to response headers.
-   * To access only the response body, use `login()` instead.
+   * To access only the response body, use `authLogin()` instead.
    *
    * This method sends `application/json` and handles request body of type `application/json`.
    */
-  login$Response(params: Login$Params, context?: HttpContext): Promise<StrictHttpResponse<LoginResponse>> {
-    const obs = login(this.http, this.rootUrl, params, context);
+  authLogin$Response(params: AuthLogin$Params, context?: HttpContext): Promise<StrictHttpResponse<LoginResponse>> {
+    const obs = authLogin(this.http, this.rootUrl, params, context);
     return firstValueFrom(obs);
   }
 
   /**
    * This method provides access only to the response body.
-   * To access the full response (for headers, for example), `login$Response()` instead.
+   * To access the full response (for headers, for example), `authLogin$Response()` instead.
    *
    * This method sends `application/json` and handles request body of type `application/json`.
    */
-  login(params: Login$Params, context?: HttpContext): Promise<LoginResponse> {
-    const resp = this.login$Response(params, context);
+  authLogin(params: AuthLogin$Params, context?: HttpContext): Promise<LoginResponse> {
+    const resp = this.authLogin$Response(params, context);
     return resp.then((r: StrictHttpResponse<LoginResponse>): LoginResponse => r.body);
   }
 
-  /** Path part for operation `cerrarSesion()` */
-  static readonly CerrarSesionPath = '/api/auth/cerrar-sesion';
+  /** Path part for operation `authCerrarSesion()` */
+  static readonly AuthCerrarSesionPath = '/api/auth/cerrar-sesion';
 
   /**
    * This method provides access to the full `HttpResponse`, allowing access to response headers.
-   * To access only the response body, use `cerrarSesion()` instead.
+   * To access only the response body, use `authCerrarSesion()` instead.
    *
    * This method doesn't expect any request body.
    */
-  cerrarSesion$Response(params?: CerrarSesion$Params, context?: HttpContext): Promise<StrictHttpResponse<void>> {
-    const obs = cerrarSesion(this.http, this.rootUrl, params, context);
+  authCerrarSesion$Response(params?: AuthCerrarSesion$Params, context?: HttpContext): Promise<StrictHttpResponse<void>> {
+    const obs = authCerrarSesion(this.http, this.rootUrl, params, context);
     return firstValueFrom(obs);
   }
 
   /**
    * This method provides access only to the response body.
-   * To access the full response (for headers, for example), `cerrarSesion$Response()` instead.
+   * To access the full response (for headers, for example), `authCerrarSesion$Response()` instead.
    *
    * This method doesn't expect any request body.
    */
-  cerrarSesion(params?: CerrarSesion$Params, context?: HttpContext): Promise<void> {
-    const resp = this.cerrarSesion$Response(params, context);
+  authCerrarSesion(params?: AuthCerrarSesion$Params, context?: HttpContext): Promise<void> {
+    const resp = this.authCerrarSesion$Response(params, context);
     return resp.then((r: StrictHttpResponse<void>): void => r.body);
   }
 
-  /** Path part for operation `cambiarPassword()` */
-  static readonly CambiarPasswordPath = '/api/auth/cambiar-password';
+  /** Path part for operation `authCambiarPassword()` */
+  static readonly AuthCambiarPasswordPath = '/api/auth/cambiar-password';
 
   /**
    * This method provides access to the full `HttpResponse`, allowing access to response headers.
-   * To access only the response body, use `cambiarPassword()` instead.
+   * To access only the response body, use `authCambiarPassword()` instead.
    *
    * This method sends `application/json` and handles request body of type `application/json`.
    */
-  cambiarPassword$Response(params: CambiarPassword$Params, context?: HttpContext): Promise<StrictHttpResponse<LoginResponse>> {
-    const obs = cambiarPassword(this.http, this.rootUrl, params, context);
+  authCambiarPassword$Response(params: AuthCambiarPassword$Params, context?: HttpContext): Promise<StrictHttpResponse<LoginResponse>> {
+    const obs = authCambiarPassword(this.http, this.rootUrl, params, context);
     return firstValueFrom(obs);
   }
 
   /**
    * This method provides access only to the response body.
-   * To access the full response (for headers, for example), `cambiarPassword$Response()` instead.
+   * To access the full response (for headers, for example), `authCambiarPassword$Response()` instead.
    *
    * This method sends `application/json` and handles request body of type `application/json`.
    */
-  cambiarPassword(params: CambiarPassword$Params, context?: HttpContext): Promise<LoginResponse> {
-    const resp = this.cambiarPassword$Response(params, context);
+  authCambiarPassword(params: AuthCambiarPassword$Params, context?: HttpContext): Promise<LoginResponse> {
+    const resp = this.authCambiarPassword$Response(params, context);
     return resp.then((r: StrictHttpResponse<LoginResponse>): LoginResponse => r.body);
   }
 
-  /** Path part for operation `perfil()` */
-  static readonly PerfilPath = '/api/auth/me';
+  /** Path part for operation `authPerfil()` */
+  static readonly AuthPerfilPath = '/api/auth/me';
 
   /**
    * This method provides access to the full `HttpResponse`, allowing access to response headers.
-   * To access only the response body, use `perfil()` instead.
+   * To access only the response body, use `authPerfil()` instead.
    *
    * This method doesn't expect any request body.
    */
-  perfil$Response(params?: Perfil$Params, context?: HttpContext): Promise<StrictHttpResponse<UsuarioResponse>> {
-    const obs = perfil(this.http, this.rootUrl, params, context);
+  authPerfil$Response(params?: AuthPerfil$Params, context?: HttpContext): Promise<StrictHttpResponse<UsuarioResponse>> {
+    const obs = authPerfil(this.http, this.rootUrl, params, context);
     return firstValueFrom(obs);
   }
 
   /**
    * This method provides access only to the response body.
-   * To access the full response (for headers, for example), `perfil$Response()` instead.
+   * To access the full response (for headers, for example), `authPerfil$Response()` instead.
    *
    * This method doesn't expect any request body.
    */
-  perfil(params?: Perfil$Params, context?: HttpContext): Promise<UsuarioResponse> {
-    const resp = this.perfil$Response(params, context);
+  authPerfil(params?: AuthPerfil$Params, context?: HttpContext): Promise<UsuarioResponse> {
+    const resp = this.authPerfil$Response(params, context);
     return resp.then((r: StrictHttpResponse<UsuarioResponse>): UsuarioResponse => r.body);
   }
 

@@ -9,12 +9,12 @@ import { BaseService } from '../base-service';
 import { ApiConfiguration } from '../api-configuration';
 import { StrictHttpResponse } from '../strict-http-response';
 
-import { alertas } from '../fn/alerta-controller/alertas';
-import { Alertas$Params } from '../fn/alerta-controller/alertas';
+import { alertaAlertas } from '../fn/alerta-controller/alerta-alertas';
+import { AlertaAlertas$Params } from '../fn/alerta-controller/alerta-alertas';
+import { alertaEnviarCorreo } from '../fn/alerta-controller/alerta-enviar-correo';
+import { AlertaEnviarCorreo$Params } from '../fn/alerta-controller/alerta-enviar-correo';
 import { AlertasResponse } from '../models/alertas-response';
 import { Aviso } from '../models/aviso';
-import { enviarCorreo1 } from '../fn/alerta-controller/enviar-correo-1';
-import { EnviarCorreo1$Params } from '../fn/alerta-controller/enviar-correo-1';
 
 @Injectable({ providedIn: 'root' })
 export class AlertaControllerService extends BaseService {
@@ -22,53 +22,53 @@ export class AlertaControllerService extends BaseService {
     super(config, http);
   }
 
-  /** Path part for operation `enviarCorreo1()` */
-  static readonly EnviarCorreo1Path = '/api/alertas/correo';
+  /** Path part for operation `alertaEnviarCorreo()` */
+  static readonly AlertaEnviarCorreoPath = '/api/alertas/correo';
 
   /**
    * This method provides access to the full `HttpResponse`, allowing access to response headers.
-   * To access only the response body, use `enviarCorreo1()` instead.
+   * To access only the response body, use `alertaEnviarCorreo()` instead.
    *
    * This method doesn't expect any request body.
    */
-  enviarCorreo1$Response(params?: EnviarCorreo1$Params, context?: HttpContext): Promise<StrictHttpResponse<Aviso>> {
-    const obs = enviarCorreo1(this.http, this.rootUrl, params, context);
+  alertaEnviarCorreo$Response(params?: AlertaEnviarCorreo$Params, context?: HttpContext): Promise<StrictHttpResponse<Aviso>> {
+    const obs = alertaEnviarCorreo(this.http, this.rootUrl, params, context);
     return firstValueFrom(obs);
   }
 
   /**
    * This method provides access only to the response body.
-   * To access the full response (for headers, for example), `enviarCorreo1$Response()` instead.
+   * To access the full response (for headers, for example), `alertaEnviarCorreo$Response()` instead.
    *
    * This method doesn't expect any request body.
    */
-  enviarCorreo1(params?: EnviarCorreo1$Params, context?: HttpContext): Promise<Aviso> {
-    const resp = this.enviarCorreo1$Response(params, context);
+  alertaEnviarCorreo(params?: AlertaEnviarCorreo$Params, context?: HttpContext): Promise<Aviso> {
+    const resp = this.alertaEnviarCorreo$Response(params, context);
     return resp.then((r: StrictHttpResponse<Aviso>): Aviso => r.body);
   }
 
-  /** Path part for operation `alertas()` */
-  static readonly AlertasPath = '/api/alertas';
+  /** Path part for operation `alertaAlertas()` */
+  static readonly AlertaAlertasPath = '/api/alertas';
 
   /**
    * This method provides access to the full `HttpResponse`, allowing access to response headers.
-   * To access only the response body, use `alertas()` instead.
+   * To access only the response body, use `alertaAlertas()` instead.
    *
    * This method doesn't expect any request body.
    */
-  alertas$Response(params?: Alertas$Params, context?: HttpContext): Promise<StrictHttpResponse<AlertasResponse>> {
-    const obs = alertas(this.http, this.rootUrl, params, context);
+  alertaAlertas$Response(params?: AlertaAlertas$Params, context?: HttpContext): Promise<StrictHttpResponse<AlertasResponse>> {
+    const obs = alertaAlertas(this.http, this.rootUrl, params, context);
     return firstValueFrom(obs);
   }
 
   /**
    * This method provides access only to the response body.
-   * To access the full response (for headers, for example), `alertas$Response()` instead.
+   * To access the full response (for headers, for example), `alertaAlertas$Response()` instead.
    *
    * This method doesn't expect any request body.
    */
-  alertas(params?: Alertas$Params, context?: HttpContext): Promise<AlertasResponse> {
-    const resp = this.alertas$Response(params, context);
+  alertaAlertas(params?: AlertaAlertas$Params, context?: HttpContext): Promise<AlertasResponse> {
+    const resp = this.alertaAlertas$Response(params, context);
     return resp.then((r: StrictHttpResponse<AlertasResponse>): AlertasResponse => r.body);
   }
 

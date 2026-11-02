@@ -10,7 +10,9 @@ const aviso = () => import('./paginas/aviso/aviso').then((m) => m.Aviso);
  * Módulos aún no construidos: muestran "en construcción" con los roles del menú.
  * Cuando se construya uno, se agrega en MODULOS con su loadChildren y deja de usar este marcador.
  */
-const MODULOS: Partial<Record<string, Route['loadChildren']>> = {};
+const MODULOS: Partial<Record<string, Route['loadChildren']>> = {
+  empresa: () => import('./features/empresa/empresa.routes').then((m) => m.routes),
+};
 
 function rutaDeModulo(op: OpcionMenu): Route {
   const cargar = MODULOS[op.ruta];

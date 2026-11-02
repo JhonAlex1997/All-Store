@@ -9,12 +9,12 @@ import { BaseService } from '../base-service';
 import { ApiConfiguration } from '../api-configuration';
 import { StrictHttpResponse } from '../strict-http-response';
 
-import { actualizar3 } from '../fn/proveedor-controller/actualizar-3';
-import { Actualizar3$Params } from '../fn/proveedor-controller/actualizar-3';
-import { crear4 } from '../fn/proveedor-controller/crear-4';
-import { Crear4$Params } from '../fn/proveedor-controller/crear-4';
-import { listar4 } from '../fn/proveedor-controller/listar-4';
-import { Listar4$Params } from '../fn/proveedor-controller/listar-4';
+import { proveedorActualizar } from '../fn/proveedor-controller/proveedor-actualizar';
+import { ProveedorActualizar$Params } from '../fn/proveedor-controller/proveedor-actualizar';
+import { proveedorCrear } from '../fn/proveedor-controller/proveedor-crear';
+import { ProveedorCrear$Params } from '../fn/proveedor-controller/proveedor-crear';
+import { proveedorListar } from '../fn/proveedor-controller/proveedor-listar';
+import { ProveedorListar$Params } from '../fn/proveedor-controller/proveedor-listar';
 import { ProveedorResponse } from '../models/proveedor-response';
 
 @Injectable({ providedIn: 'root' })
@@ -23,78 +23,78 @@ export class ProveedorControllerService extends BaseService {
     super(config, http);
   }
 
-  /** Path part for operation `actualizar3()` */
-  static readonly Actualizar3Path = '/api/proveedores/{id}';
+  /** Path part for operation `proveedorActualizar()` */
+  static readonly ProveedorActualizarPath = '/api/proveedores/{id}';
 
   /**
    * This method provides access to the full `HttpResponse`, allowing access to response headers.
-   * To access only the response body, use `actualizar3()` instead.
+   * To access only the response body, use `proveedorActualizar()` instead.
    *
    * This method sends `application/json` and handles request body of type `application/json`.
    */
-  actualizar3$Response(params: Actualizar3$Params, context?: HttpContext): Promise<StrictHttpResponse<ProveedorResponse>> {
-    const obs = actualizar3(this.http, this.rootUrl, params, context);
+  proveedorActualizar$Response(params: ProveedorActualizar$Params, context?: HttpContext): Promise<StrictHttpResponse<ProveedorResponse>> {
+    const obs = proveedorActualizar(this.http, this.rootUrl, params, context);
     return firstValueFrom(obs);
   }
 
   /**
    * This method provides access only to the response body.
-   * To access the full response (for headers, for example), `actualizar3$Response()` instead.
+   * To access the full response (for headers, for example), `proveedorActualizar$Response()` instead.
    *
    * This method sends `application/json` and handles request body of type `application/json`.
    */
-  actualizar3(params: Actualizar3$Params, context?: HttpContext): Promise<ProveedorResponse> {
-    const resp = this.actualizar3$Response(params, context);
+  proveedorActualizar(params: ProveedorActualizar$Params, context?: HttpContext): Promise<ProveedorResponse> {
+    const resp = this.proveedorActualizar$Response(params, context);
     return resp.then((r: StrictHttpResponse<ProveedorResponse>): ProveedorResponse => r.body);
   }
 
-  /** Path part for operation `listar4()` */
-  static readonly Listar4Path = '/api/proveedores';
+  /** Path part for operation `proveedorListar()` */
+  static readonly ProveedorListarPath = '/api/proveedores';
 
   /**
    * This method provides access to the full `HttpResponse`, allowing access to response headers.
-   * To access only the response body, use `listar4()` instead.
+   * To access only the response body, use `proveedorListar()` instead.
    *
    * This method doesn't expect any request body.
    */
-  listar4$Response(params?: Listar4$Params, context?: HttpContext): Promise<StrictHttpResponse<Array<ProveedorResponse>>> {
-    const obs = listar4(this.http, this.rootUrl, params, context);
+  proveedorListar$Response(params?: ProveedorListar$Params, context?: HttpContext): Promise<StrictHttpResponse<Array<ProveedorResponse>>> {
+    const obs = proveedorListar(this.http, this.rootUrl, params, context);
     return firstValueFrom(obs);
   }
 
   /**
    * This method provides access only to the response body.
-   * To access the full response (for headers, for example), `listar4$Response()` instead.
+   * To access the full response (for headers, for example), `proveedorListar$Response()` instead.
    *
    * This method doesn't expect any request body.
    */
-  listar4(params?: Listar4$Params, context?: HttpContext): Promise<Array<ProveedorResponse>> {
-    const resp = this.listar4$Response(params, context);
+  proveedorListar(params?: ProveedorListar$Params, context?: HttpContext): Promise<Array<ProveedorResponse>> {
+    const resp = this.proveedorListar$Response(params, context);
     return resp.then((r: StrictHttpResponse<Array<ProveedorResponse>>): Array<ProveedorResponse> => r.body);
   }
 
-  /** Path part for operation `crear4()` */
-  static readonly Crear4Path = '/api/proveedores';
+  /** Path part for operation `proveedorCrear()` */
+  static readonly ProveedorCrearPath = '/api/proveedores';
 
   /**
    * This method provides access to the full `HttpResponse`, allowing access to response headers.
-   * To access only the response body, use `crear4()` instead.
+   * To access only the response body, use `proveedorCrear()` instead.
    *
    * This method sends `application/json` and handles request body of type `application/json`.
    */
-  crear4$Response(params: Crear4$Params, context?: HttpContext): Promise<StrictHttpResponse<ProveedorResponse>> {
-    const obs = crear4(this.http, this.rootUrl, params, context);
+  proveedorCrear$Response(params: ProveedorCrear$Params, context?: HttpContext): Promise<StrictHttpResponse<ProveedorResponse>> {
+    const obs = proveedorCrear(this.http, this.rootUrl, params, context);
     return firstValueFrom(obs);
   }
 
   /**
    * This method provides access only to the response body.
-   * To access the full response (for headers, for example), `crear4$Response()` instead.
+   * To access the full response (for headers, for example), `proveedorCrear$Response()` instead.
    *
    * This method sends `application/json` and handles request body of type `application/json`.
    */
-  crear4(params: Crear4$Params, context?: HttpContext): Promise<ProveedorResponse> {
-    const resp = this.crear4$Response(params, context);
+  proveedorCrear(params: ProveedorCrear$Params, context?: HttpContext): Promise<ProveedorResponse> {
+    const resp = this.proveedorCrear$Response(params, context);
     return resp.then((r: StrictHttpResponse<ProveedorResponse>): ProveedorResponse => r.body);
   }
 

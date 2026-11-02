@@ -9,16 +9,16 @@ import { BaseService } from '../base-service';
 import { ApiConfiguration } from '../api-configuration';
 import { StrictHttpResponse } from '../strict-http-response';
 
-import { anular3 } from '../fn/compra-controller/anular-3';
-import { Anular3$Params } from '../fn/compra-controller/anular-3';
+import { compraAnular } from '../fn/compra-controller/compra-anular';
+import { CompraAnular$Params } from '../fn/compra-controller/compra-anular';
+import { compraListar } from '../fn/compra-controller/compra-listar';
+import { CompraListar$Params } from '../fn/compra-controller/compra-listar';
+import { compraObtener } from '../fn/compra-controller/compra-obtener';
+import { CompraObtener$Params } from '../fn/compra-controller/compra-obtener';
+import { compraRegistrar } from '../fn/compra-controller/compra-registrar';
+import { CompraRegistrar$Params } from '../fn/compra-controller/compra-registrar';
 import { CompraResponse } from '../models/compra-response';
-import { listar11 } from '../fn/compra-controller/listar-11';
-import { Listar11$Params } from '../fn/compra-controller/listar-11';
-import { obtener8 } from '../fn/compra-controller/obtener-8';
-import { Obtener8$Params } from '../fn/compra-controller/obtener-8';
 import { PageResponseCompraResponse } from '../models/page-response-compra-response';
-import { registrar1 } from '../fn/compra-controller/registrar-1';
-import { Registrar1$Params } from '../fn/compra-controller/registrar-1';
 
 @Injectable({ providedIn: 'root' })
 export class CompraControllerService extends BaseService {
@@ -26,103 +26,103 @@ export class CompraControllerService extends BaseService {
     super(config, http);
   }
 
-  /** Path part for operation `listar11()` */
-  static readonly Listar11Path = '/api/compras';
+  /** Path part for operation `compraListar()` */
+  static readonly CompraListarPath = '/api/compras';
 
   /**
    * This method provides access to the full `HttpResponse`, allowing access to response headers.
-   * To access only the response body, use `listar11()` instead.
+   * To access only the response body, use `compraListar()` instead.
    *
    * This method doesn't expect any request body.
    */
-  listar11$Response(params?: Listar11$Params, context?: HttpContext): Promise<StrictHttpResponse<PageResponseCompraResponse>> {
-    const obs = listar11(this.http, this.rootUrl, params, context);
+  compraListar$Response(params?: CompraListar$Params, context?: HttpContext): Promise<StrictHttpResponse<PageResponseCompraResponse>> {
+    const obs = compraListar(this.http, this.rootUrl, params, context);
     return firstValueFrom(obs);
   }
 
   /**
    * This method provides access only to the response body.
-   * To access the full response (for headers, for example), `listar11$Response()` instead.
+   * To access the full response (for headers, for example), `compraListar$Response()` instead.
    *
    * This method doesn't expect any request body.
    */
-  listar11(params?: Listar11$Params, context?: HttpContext): Promise<PageResponseCompraResponse> {
-    const resp = this.listar11$Response(params, context);
+  compraListar(params?: CompraListar$Params, context?: HttpContext): Promise<PageResponseCompraResponse> {
+    const resp = this.compraListar$Response(params, context);
     return resp.then((r: StrictHttpResponse<PageResponseCompraResponse>): PageResponseCompraResponse => r.body);
   }
 
-  /** Path part for operation `registrar1()` */
-  static readonly Registrar1Path = '/api/compras';
+  /** Path part for operation `compraRegistrar()` */
+  static readonly CompraRegistrarPath = '/api/compras';
 
   /**
    * This method provides access to the full `HttpResponse`, allowing access to response headers.
-   * To access only the response body, use `registrar1()` instead.
+   * To access only the response body, use `compraRegistrar()` instead.
    *
    * This method sends `application/json` and handles request body of type `application/json`.
    */
-  registrar1$Response(params: Registrar1$Params, context?: HttpContext): Promise<StrictHttpResponse<CompraResponse>> {
-    const obs = registrar1(this.http, this.rootUrl, params, context);
+  compraRegistrar$Response(params: CompraRegistrar$Params, context?: HttpContext): Promise<StrictHttpResponse<CompraResponse>> {
+    const obs = compraRegistrar(this.http, this.rootUrl, params, context);
     return firstValueFrom(obs);
   }
 
   /**
    * This method provides access only to the response body.
-   * To access the full response (for headers, for example), `registrar1$Response()` instead.
+   * To access the full response (for headers, for example), `compraRegistrar$Response()` instead.
    *
    * This method sends `application/json` and handles request body of type `application/json`.
    */
-  registrar1(params: Registrar1$Params, context?: HttpContext): Promise<CompraResponse> {
-    const resp = this.registrar1$Response(params, context);
+  compraRegistrar(params: CompraRegistrar$Params, context?: HttpContext): Promise<CompraResponse> {
+    const resp = this.compraRegistrar$Response(params, context);
     return resp.then((r: StrictHttpResponse<CompraResponse>): CompraResponse => r.body);
   }
 
-  /** Path part for operation `anular3()` */
-  static readonly Anular3Path = '/api/compras/{id}/anular';
+  /** Path part for operation `compraAnular()` */
+  static readonly CompraAnularPath = '/api/compras/{id}/anular';
 
   /**
    * This method provides access to the full `HttpResponse`, allowing access to response headers.
-   * To access only the response body, use `anular3()` instead.
+   * To access only the response body, use `compraAnular()` instead.
    *
    * This method sends `application/json` and handles request body of type `application/json`.
    */
-  anular3$Response(params: Anular3$Params, context?: HttpContext): Promise<StrictHttpResponse<CompraResponse>> {
-    const obs = anular3(this.http, this.rootUrl, params, context);
+  compraAnular$Response(params: CompraAnular$Params, context?: HttpContext): Promise<StrictHttpResponse<CompraResponse>> {
+    const obs = compraAnular(this.http, this.rootUrl, params, context);
     return firstValueFrom(obs);
   }
 
   /**
    * This method provides access only to the response body.
-   * To access the full response (for headers, for example), `anular3$Response()` instead.
+   * To access the full response (for headers, for example), `compraAnular$Response()` instead.
    *
    * This method sends `application/json` and handles request body of type `application/json`.
    */
-  anular3(params: Anular3$Params, context?: HttpContext): Promise<CompraResponse> {
-    const resp = this.anular3$Response(params, context);
+  compraAnular(params: CompraAnular$Params, context?: HttpContext): Promise<CompraResponse> {
+    const resp = this.compraAnular$Response(params, context);
     return resp.then((r: StrictHttpResponse<CompraResponse>): CompraResponse => r.body);
   }
 
-  /** Path part for operation `obtener8()` */
-  static readonly Obtener8Path = '/api/compras/{id}';
+  /** Path part for operation `compraObtener()` */
+  static readonly CompraObtenerPath = '/api/compras/{id}';
 
   /**
    * This method provides access to the full `HttpResponse`, allowing access to response headers.
-   * To access only the response body, use `obtener8()` instead.
+   * To access only the response body, use `compraObtener()` instead.
    *
    * This method doesn't expect any request body.
    */
-  obtener8$Response(params: Obtener8$Params, context?: HttpContext): Promise<StrictHttpResponse<CompraResponse>> {
-    const obs = obtener8(this.http, this.rootUrl, params, context);
+  compraObtener$Response(params: CompraObtener$Params, context?: HttpContext): Promise<StrictHttpResponse<CompraResponse>> {
+    const obs = compraObtener(this.http, this.rootUrl, params, context);
     return firstValueFrom(obs);
   }
 
   /**
    * This method provides access only to the response body.
-   * To access the full response (for headers, for example), `obtener8$Response()` instead.
+   * To access the full response (for headers, for example), `compraObtener$Response()` instead.
    *
    * This method doesn't expect any request body.
    */
-  obtener8(params: Obtener8$Params, context?: HttpContext): Promise<CompraResponse> {
-    const resp = this.obtener8$Response(params, context);
+  compraObtener(params: CompraObtener$Params, context?: HttpContext): Promise<CompraResponse> {
+    const resp = this.compraObtener$Response(params, context);
     return resp.then((r: StrictHttpResponse<CompraResponse>): CompraResponse => r.body);
   }
 

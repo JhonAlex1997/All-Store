@@ -1,0 +1,76 @@
+/* Estilos compartidos por las secciones de Empresa y series. */
+:host { display: block; }
+
+form, .as-tarjeta { max-width: 980px; }
+
+h2 {
+  font-size: .95rem;
+  margin: 1.5rem 0 .25rem;
+
+  &:first-of-type { margin-top: 0; }
+}
+
+.ayuda-seccion { color: var(--as-texto-suave); margin: 0 0 1rem; font-size: 13px; }
+
+.rejilla {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem 1.25rem;
+  margin-top: .75rem;
+}
+
+.campo {
+  display: flex;
+  flex-direction: column;
+  gap: .35rem;
+  min-width: 0;
+
+  label { font-weight: 600; font-size: 13px; }
+}
+
+.ancho-2 { grid-column: span 2; }
+.ancho-3 { grid-column: 1 / -1; }
+
+small { font-size: 12px; }
+.ayuda { color: var(--as-texto-suave); }
+.error { color: #c23131; }
+
+.acciones {
+  display: flex;
+  justify-content: flex-end;
+  gap: .5rem;
+  margin-top: 1.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--as-borde);
+}
+
+.cargando { color: var(--as-texto-suave); }
+:host ::ng-deep .mb { margin-bottom: 1rem; }
+
+@media (max-width: 760px) {
+  .rejilla { grid-template-columns: 1fr; }
+  .ancho-2, .ancho-3 { grid-column: auto; }
+}
+
+/* Tablas y diálogos */
+.cabecera {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+
+  h2 { margin-top: 0; }
+}
+
+.rejilla.dos { grid-template-columns: repeat(2, minmax(0, 1fr)); margin-top: 0; }
+
+.codigo { font-family: ui-monospace, 'Cascadia Mono', Consolas, monospace; font-weight: 600; }
+.direccion { color: var(--as-texto-suave); }
+.ubigeo { font-size: 12px; }
+.vacio { text-align: center; color: var(--as-texto-suave); padding: 2rem 1rem !important; }
+.mayusculas { text-transform: uppercase; }
+
+@media (max-width: 760px) {
+  .rejilla.dos { grid-template-columns: 1fr; }
+  .cabecera { flex-direction: column; }
+}

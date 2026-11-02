@@ -9,26 +9,26 @@ import { BaseService } from '../base-service';
 import { ApiConfiguration } from '../api-configuration';
 import { StrictHttpResponse } from '../strict-http-response';
 
-import { anular1 } from '../fn/produccion-controller/anular-1';
-import { Anular1$Params } from '../fn/produccion-controller/anular-1';
-import { consumir } from '../fn/produccion-controller/consumir';
-import { Consumir$Params } from '../fn/produccion-controller/consumir';
-import { crear6 } from '../fn/produccion-controller/crear-6';
-import { Crear6$Params } from '../fn/produccion-controller/crear-6';
-import { devolver } from '../fn/produccion-controller/devolver';
-import { Devolver$Params } from '../fn/produccion-controller/devolver';
-import { iniciarEtapa } from '../fn/produccion-controller/iniciar-etapa';
-import { IniciarEtapa$Params } from '../fn/produccion-controller/iniciar-etapa';
-import { listar6 } from '../fn/produccion-controller/listar-6';
-import { Listar6$Params } from '../fn/produccion-controller/listar-6';
-import { obtener5 } from '../fn/produccion-controller/obtener-5';
-import { Obtener5$Params } from '../fn/produccion-controller/obtener-5';
 import { OrdenResponse } from '../models/orden-response';
 import { PageResponseOrdenResponse } from '../models/page-response-orden-response';
-import { terminar } from '../fn/produccion-controller/terminar';
-import { Terminar$Params } from '../fn/produccion-controller/terminar';
-import { terminarEtapa } from '../fn/produccion-controller/terminar-etapa';
-import { TerminarEtapa$Params } from '../fn/produccion-controller/terminar-etapa';
+import { produccionAnular } from '../fn/produccion-controller/produccion-anular';
+import { ProduccionAnular$Params } from '../fn/produccion-controller/produccion-anular';
+import { produccionConsumir } from '../fn/produccion-controller/produccion-consumir';
+import { ProduccionConsumir$Params } from '../fn/produccion-controller/produccion-consumir';
+import { produccionCrear } from '../fn/produccion-controller/produccion-crear';
+import { ProduccionCrear$Params } from '../fn/produccion-controller/produccion-crear';
+import { produccionDevolver } from '../fn/produccion-controller/produccion-devolver';
+import { ProduccionDevolver$Params } from '../fn/produccion-controller/produccion-devolver';
+import { produccionIniciarEtapa } from '../fn/produccion-controller/produccion-iniciar-etapa';
+import { ProduccionIniciarEtapa$Params } from '../fn/produccion-controller/produccion-iniciar-etapa';
+import { produccionListar } from '../fn/produccion-controller/produccion-listar';
+import { ProduccionListar$Params } from '../fn/produccion-controller/produccion-listar';
+import { produccionObtener } from '../fn/produccion-controller/produccion-obtener';
+import { ProduccionObtener$Params } from '../fn/produccion-controller/produccion-obtener';
+import { produccionTerminar } from '../fn/produccion-controller/produccion-terminar';
+import { ProduccionTerminar$Params } from '../fn/produccion-controller/produccion-terminar';
+import { produccionTerminarEtapa } from '../fn/produccion-controller/produccion-terminar-etapa';
+import { ProduccionTerminarEtapa$Params } from '../fn/produccion-controller/produccion-terminar-etapa';
 
 @Injectable({ providedIn: 'root' })
 export class ProduccionControllerService extends BaseService {
@@ -36,228 +36,228 @@ export class ProduccionControllerService extends BaseService {
     super(config, http);
   }
 
-  /** Path part for operation `listar6()` */
-  static readonly Listar6Path = '/api/produccion/ordenes';
+  /** Path part for operation `produccionListar()` */
+  static readonly ProduccionListarPath = '/api/produccion/ordenes';
 
   /**
    * This method provides access to the full `HttpResponse`, allowing access to response headers.
-   * To access only the response body, use `listar6()` instead.
+   * To access only the response body, use `produccionListar()` instead.
    *
    * This method doesn't expect any request body.
    */
-  listar6$Response(params?: Listar6$Params, context?: HttpContext): Promise<StrictHttpResponse<PageResponseOrdenResponse>> {
-    const obs = listar6(this.http, this.rootUrl, params, context);
+  produccionListar$Response(params?: ProduccionListar$Params, context?: HttpContext): Promise<StrictHttpResponse<PageResponseOrdenResponse>> {
+    const obs = produccionListar(this.http, this.rootUrl, params, context);
     return firstValueFrom(obs);
   }
 
   /**
    * This method provides access only to the response body.
-   * To access the full response (for headers, for example), `listar6$Response()` instead.
+   * To access the full response (for headers, for example), `produccionListar$Response()` instead.
    *
    * This method doesn't expect any request body.
    */
-  listar6(params?: Listar6$Params, context?: HttpContext): Promise<PageResponseOrdenResponse> {
-    const resp = this.listar6$Response(params, context);
+  produccionListar(params?: ProduccionListar$Params, context?: HttpContext): Promise<PageResponseOrdenResponse> {
+    const resp = this.produccionListar$Response(params, context);
     return resp.then((r: StrictHttpResponse<PageResponseOrdenResponse>): PageResponseOrdenResponse => r.body);
   }
 
-  /** Path part for operation `crear6()` */
-  static readonly Crear6Path = '/api/produccion/ordenes';
+  /** Path part for operation `produccionCrear()` */
+  static readonly ProduccionCrearPath = '/api/produccion/ordenes';
 
   /**
    * This method provides access to the full `HttpResponse`, allowing access to response headers.
-   * To access only the response body, use `crear6()` instead.
+   * To access only the response body, use `produccionCrear()` instead.
    *
    * This method sends `application/json` and handles request body of type `application/json`.
    */
-  crear6$Response(params: Crear6$Params, context?: HttpContext): Promise<StrictHttpResponse<OrdenResponse>> {
-    const obs = crear6(this.http, this.rootUrl, params, context);
+  produccionCrear$Response(params: ProduccionCrear$Params, context?: HttpContext): Promise<StrictHttpResponse<OrdenResponse>> {
+    const obs = produccionCrear(this.http, this.rootUrl, params, context);
     return firstValueFrom(obs);
   }
 
   /**
    * This method provides access only to the response body.
-   * To access the full response (for headers, for example), `crear6$Response()` instead.
+   * To access the full response (for headers, for example), `produccionCrear$Response()` instead.
    *
    * This method sends `application/json` and handles request body of type `application/json`.
    */
-  crear6(params: Crear6$Params, context?: HttpContext): Promise<OrdenResponse> {
-    const resp = this.crear6$Response(params, context);
+  produccionCrear(params: ProduccionCrear$Params, context?: HttpContext): Promise<OrdenResponse> {
+    const resp = this.produccionCrear$Response(params, context);
     return resp.then((r: StrictHttpResponse<OrdenResponse>): OrdenResponse => r.body);
   }
 
-  /** Path part for operation `terminar()` */
-  static readonly TerminarPath = '/api/produccion/ordenes/{id}/terminar';
+  /** Path part for operation `produccionTerminar()` */
+  static readonly ProduccionTerminarPath = '/api/produccion/ordenes/{id}/terminar';
 
   /**
    * This method provides access to the full `HttpResponse`, allowing access to response headers.
-   * To access only the response body, use `terminar()` instead.
+   * To access only the response body, use `produccionTerminar()` instead.
    *
    * This method sends `application/json` and handles request body of type `application/json`.
    */
-  terminar$Response(params: Terminar$Params, context?: HttpContext): Promise<StrictHttpResponse<OrdenResponse>> {
-    const obs = terminar(this.http, this.rootUrl, params, context);
+  produccionTerminar$Response(params: ProduccionTerminar$Params, context?: HttpContext): Promise<StrictHttpResponse<OrdenResponse>> {
+    const obs = produccionTerminar(this.http, this.rootUrl, params, context);
     return firstValueFrom(obs);
   }
 
   /**
    * This method provides access only to the response body.
-   * To access the full response (for headers, for example), `terminar$Response()` instead.
+   * To access the full response (for headers, for example), `produccionTerminar$Response()` instead.
    *
    * This method sends `application/json` and handles request body of type `application/json`.
    */
-  terminar(params: Terminar$Params, context?: HttpContext): Promise<OrdenResponse> {
-    const resp = this.terminar$Response(params, context);
+  produccionTerminar(params: ProduccionTerminar$Params, context?: HttpContext): Promise<OrdenResponse> {
+    const resp = this.produccionTerminar$Response(params, context);
     return resp.then((r: StrictHttpResponse<OrdenResponse>): OrdenResponse => r.body);
   }
 
-  /** Path part for operation `consumir()` */
-  static readonly ConsumirPath = '/api/produccion/ordenes/{id}/insumos';
+  /** Path part for operation `produccionConsumir()` */
+  static readonly ProduccionConsumirPath = '/api/produccion/ordenes/{id}/insumos';
 
   /**
    * This method provides access to the full `HttpResponse`, allowing access to response headers.
-   * To access only the response body, use `consumir()` instead.
+   * To access only the response body, use `produccionConsumir()` instead.
    *
    * This method sends `application/json` and handles request body of type `application/json`.
    */
-  consumir$Response(params: Consumir$Params, context?: HttpContext): Promise<StrictHttpResponse<OrdenResponse>> {
-    const obs = consumir(this.http, this.rootUrl, params, context);
+  produccionConsumir$Response(params: ProduccionConsumir$Params, context?: HttpContext): Promise<StrictHttpResponse<OrdenResponse>> {
+    const obs = produccionConsumir(this.http, this.rootUrl, params, context);
     return firstValueFrom(obs);
   }
 
   /**
    * This method provides access only to the response body.
-   * To access the full response (for headers, for example), `consumir$Response()` instead.
+   * To access the full response (for headers, for example), `produccionConsumir$Response()` instead.
    *
    * This method sends `application/json` and handles request body of type `application/json`.
    */
-  consumir(params: Consumir$Params, context?: HttpContext): Promise<OrdenResponse> {
-    const resp = this.consumir$Response(params, context);
+  produccionConsumir(params: ProduccionConsumir$Params, context?: HttpContext): Promise<OrdenResponse> {
+    const resp = this.produccionConsumir$Response(params, context);
     return resp.then((r: StrictHttpResponse<OrdenResponse>): OrdenResponse => r.body);
   }
 
-  /** Path part for operation `devolver()` */
-  static readonly DevolverPath = '/api/produccion/ordenes/{id}/insumos/devolver';
+  /** Path part for operation `produccionDevolver()` */
+  static readonly ProduccionDevolverPath = '/api/produccion/ordenes/{id}/insumos/devolver';
 
   /**
    * This method provides access to the full `HttpResponse`, allowing access to response headers.
-   * To access only the response body, use `devolver()` instead.
+   * To access only the response body, use `produccionDevolver()` instead.
    *
    * This method sends `application/json` and handles request body of type `application/json`.
    */
-  devolver$Response(params: Devolver$Params, context?: HttpContext): Promise<StrictHttpResponse<OrdenResponse>> {
-    const obs = devolver(this.http, this.rootUrl, params, context);
+  produccionDevolver$Response(params: ProduccionDevolver$Params, context?: HttpContext): Promise<StrictHttpResponse<OrdenResponse>> {
+    const obs = produccionDevolver(this.http, this.rootUrl, params, context);
     return firstValueFrom(obs);
   }
 
   /**
    * This method provides access only to the response body.
-   * To access the full response (for headers, for example), `devolver$Response()` instead.
+   * To access the full response (for headers, for example), `produccionDevolver$Response()` instead.
    *
    * This method sends `application/json` and handles request body of type `application/json`.
    */
-  devolver(params: Devolver$Params, context?: HttpContext): Promise<OrdenResponse> {
-    const resp = this.devolver$Response(params, context);
+  produccionDevolver(params: ProduccionDevolver$Params, context?: HttpContext): Promise<OrdenResponse> {
+    const resp = this.produccionDevolver$Response(params, context);
     return resp.then((r: StrictHttpResponse<OrdenResponse>): OrdenResponse => r.body);
   }
 
-  /** Path part for operation `terminarEtapa()` */
-  static readonly TerminarEtapaPath = '/api/produccion/ordenes/{id}/etapas/{etapa}/terminar';
+  /** Path part for operation `produccionTerminarEtapa()` */
+  static readonly ProduccionTerminarEtapaPath = '/api/produccion/ordenes/{id}/etapas/{etapa}/terminar';
 
   /**
    * This method provides access to the full `HttpResponse`, allowing access to response headers.
-   * To access only the response body, use `terminarEtapa()` instead.
+   * To access only the response body, use `produccionTerminarEtapa()` instead.
    *
    * This method sends `application/json` and handles request body of type `application/json`.
    */
-  terminarEtapa$Response(params: TerminarEtapa$Params, context?: HttpContext): Promise<StrictHttpResponse<OrdenResponse>> {
-    const obs = terminarEtapa(this.http, this.rootUrl, params, context);
+  produccionTerminarEtapa$Response(params: ProduccionTerminarEtapa$Params, context?: HttpContext): Promise<StrictHttpResponse<OrdenResponse>> {
+    const obs = produccionTerminarEtapa(this.http, this.rootUrl, params, context);
     return firstValueFrom(obs);
   }
 
   /**
    * This method provides access only to the response body.
-   * To access the full response (for headers, for example), `terminarEtapa$Response()` instead.
+   * To access the full response (for headers, for example), `produccionTerminarEtapa$Response()` instead.
    *
    * This method sends `application/json` and handles request body of type `application/json`.
    */
-  terminarEtapa(params: TerminarEtapa$Params, context?: HttpContext): Promise<OrdenResponse> {
-    const resp = this.terminarEtapa$Response(params, context);
+  produccionTerminarEtapa(params: ProduccionTerminarEtapa$Params, context?: HttpContext): Promise<OrdenResponse> {
+    const resp = this.produccionTerminarEtapa$Response(params, context);
     return resp.then((r: StrictHttpResponse<OrdenResponse>): OrdenResponse => r.body);
   }
 
-  /** Path part for operation `iniciarEtapa()` */
-  static readonly IniciarEtapaPath = '/api/produccion/ordenes/{id}/etapas/{etapa}/iniciar';
+  /** Path part for operation `produccionIniciarEtapa()` */
+  static readonly ProduccionIniciarEtapaPath = '/api/produccion/ordenes/{id}/etapas/{etapa}/iniciar';
 
   /**
    * This method provides access to the full `HttpResponse`, allowing access to response headers.
-   * To access only the response body, use `iniciarEtapa()` instead.
+   * To access only the response body, use `produccionIniciarEtapa()` instead.
    *
    * This method sends `application/json` and handles request body of type `application/json`.
    */
-  iniciarEtapa$Response(params: IniciarEtapa$Params, context?: HttpContext): Promise<StrictHttpResponse<OrdenResponse>> {
-    const obs = iniciarEtapa(this.http, this.rootUrl, params, context);
+  produccionIniciarEtapa$Response(params: ProduccionIniciarEtapa$Params, context?: HttpContext): Promise<StrictHttpResponse<OrdenResponse>> {
+    const obs = produccionIniciarEtapa(this.http, this.rootUrl, params, context);
     return firstValueFrom(obs);
   }
 
   /**
    * This method provides access only to the response body.
-   * To access the full response (for headers, for example), `iniciarEtapa$Response()` instead.
+   * To access the full response (for headers, for example), `produccionIniciarEtapa$Response()` instead.
    *
    * This method sends `application/json` and handles request body of type `application/json`.
    */
-  iniciarEtapa(params: IniciarEtapa$Params, context?: HttpContext): Promise<OrdenResponse> {
-    const resp = this.iniciarEtapa$Response(params, context);
+  produccionIniciarEtapa(params: ProduccionIniciarEtapa$Params, context?: HttpContext): Promise<OrdenResponse> {
+    const resp = this.produccionIniciarEtapa$Response(params, context);
     return resp.then((r: StrictHttpResponse<OrdenResponse>): OrdenResponse => r.body);
   }
 
-  /** Path part for operation `anular1()` */
-  static readonly Anular1Path = '/api/produccion/ordenes/{id}/anular';
+  /** Path part for operation `produccionAnular()` */
+  static readonly ProduccionAnularPath = '/api/produccion/ordenes/{id}/anular';
 
   /**
    * This method provides access to the full `HttpResponse`, allowing access to response headers.
-   * To access only the response body, use `anular1()` instead.
+   * To access only the response body, use `produccionAnular()` instead.
    *
    * This method sends `application/json` and handles request body of type `application/json`.
    */
-  anular1$Response(params: Anular1$Params, context?: HttpContext): Promise<StrictHttpResponse<OrdenResponse>> {
-    const obs = anular1(this.http, this.rootUrl, params, context);
+  produccionAnular$Response(params: ProduccionAnular$Params, context?: HttpContext): Promise<StrictHttpResponse<OrdenResponse>> {
+    const obs = produccionAnular(this.http, this.rootUrl, params, context);
     return firstValueFrom(obs);
   }
 
   /**
    * This method provides access only to the response body.
-   * To access the full response (for headers, for example), `anular1$Response()` instead.
+   * To access the full response (for headers, for example), `produccionAnular$Response()` instead.
    *
    * This method sends `application/json` and handles request body of type `application/json`.
    */
-  anular1(params: Anular1$Params, context?: HttpContext): Promise<OrdenResponse> {
-    const resp = this.anular1$Response(params, context);
+  produccionAnular(params: ProduccionAnular$Params, context?: HttpContext): Promise<OrdenResponse> {
+    const resp = this.produccionAnular$Response(params, context);
     return resp.then((r: StrictHttpResponse<OrdenResponse>): OrdenResponse => r.body);
   }
 
-  /** Path part for operation `obtener5()` */
-  static readonly Obtener5Path = '/api/produccion/ordenes/{id}';
+  /** Path part for operation `produccionObtener()` */
+  static readonly ProduccionObtenerPath = '/api/produccion/ordenes/{id}';
 
   /**
    * This method provides access to the full `HttpResponse`, allowing access to response headers.
-   * To access only the response body, use `obtener5()` instead.
+   * To access only the response body, use `produccionObtener()` instead.
    *
    * This method doesn't expect any request body.
    */
-  obtener5$Response(params: Obtener5$Params, context?: HttpContext): Promise<StrictHttpResponse<OrdenResponse>> {
-    const obs = obtener5(this.http, this.rootUrl, params, context);
+  produccionObtener$Response(params: ProduccionObtener$Params, context?: HttpContext): Promise<StrictHttpResponse<OrdenResponse>> {
+    const obs = produccionObtener(this.http, this.rootUrl, params, context);
     return firstValueFrom(obs);
   }
 
   /**
    * This method provides access only to the response body.
-   * To access the full response (for headers, for example), `obtener5$Response()` instead.
+   * To access the full response (for headers, for example), `produccionObtener$Response()` instead.
    *
    * This method doesn't expect any request body.
    */
-  obtener5(params: Obtener5$Params, context?: HttpContext): Promise<OrdenResponse> {
-    const resp = this.obtener5$Response(params, context);
+  produccionObtener(params: ProduccionObtener$Params, context?: HttpContext): Promise<OrdenResponse> {
+    const resp = this.produccionObtener$Response(params, context);
     return resp.then((r: StrictHttpResponse<OrdenResponse>): OrdenResponse => r.body);
   }
 

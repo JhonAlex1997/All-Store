@@ -1,0 +1,63 @@
+.vistas {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+  margin: 1rem 0 1.25rem;
+}
+
+figure { margin: 0; }
+
+.lienzo {
+  height: 190px;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  padding: 1.25rem;
+  border: 1px solid var(--as-borde);
+
+  // Alto fijo: dentro de un grid, max-height: 100% no limita la imagen.
+  img { display: block; width: auto; height: auto; max-width: 100%; max-height: 140px; object-fit: contain; }
+
+  &.claro { background: #fff; }
+  &.oscuro { background: var(--as-negro); border-color: var(--as-negro); }
+}
+
+figcaption { margin-top: .45rem; font-size: 12.5px; color: var(--as-texto-suave); text-align: center; }
+
+.sin-logo {
+  display: flex;
+  align-items: center;
+  gap: .6rem;
+  padding: 1rem;
+  margin: 1rem 0 1.25rem;
+  border-radius: 12px;
+  background: var(--as-fondo);
+  color: var(--as-texto-suave);
+
+  i { font-size: 1.4rem; }
+}
+
+.zona {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.1rem 1.25rem;
+  border: 2px dashed #dccfd1;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: border-color .15s, background .15s;
+
+  i { font-size: 1.5rem; color: var(--as-rosa-fuerte); }
+  div { display: flex; flex-direction: column; gap: .15rem; }
+  span { font-size: 12.5px; color: var(--as-texto-suave); }
+
+  &:hover, &.activa, &:focus-visible {
+    border-color: var(--as-rosa-fuerte);
+    background: var(--as-rosa-claro);
+    outline: none;
+  }
+}
+
+@media (max-width: 760px) {
+  .vistas { grid-template-columns: 1fr; }
+}

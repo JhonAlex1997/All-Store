@@ -9,13 +9,13 @@ import { BaseService } from '../base-service';
 import { ApiConfiguration } from '../api-configuration';
 import { StrictHttpResponse } from '../strict-http-response';
 
-import { actualizar6 } from '../fn/establecimiento-controller/actualizar-6';
-import { Actualizar6$Params } from '../fn/establecimiento-controller/actualizar-6';
-import { crear8 } from '../fn/establecimiento-controller/crear-8';
-import { Crear8$Params } from '../fn/establecimiento-controller/crear-8';
+import { establecimientoActualizar } from '../fn/establecimiento-controller/establecimiento-actualizar';
+import { EstablecimientoActualizar$Params } from '../fn/establecimiento-controller/establecimiento-actualizar';
+import { establecimientoCrear } from '../fn/establecimiento-controller/establecimiento-crear';
+import { EstablecimientoCrear$Params } from '../fn/establecimiento-controller/establecimiento-crear';
+import { establecimientoListar } from '../fn/establecimiento-controller/establecimiento-listar';
+import { EstablecimientoListar$Params } from '../fn/establecimiento-controller/establecimiento-listar';
 import { EstablecimientoResponse } from '../models/establecimiento-response';
-import { listar10 } from '../fn/establecimiento-controller/listar-10';
-import { Listar10$Params } from '../fn/establecimiento-controller/listar-10';
 
 @Injectable({ providedIn: 'root' })
 export class EstablecimientoControllerService extends BaseService {
@@ -23,78 +23,78 @@ export class EstablecimientoControllerService extends BaseService {
     super(config, http);
   }
 
-  /** Path part for operation `actualizar6()` */
-  static readonly Actualizar6Path = '/api/establecimientos/{id}';
+  /** Path part for operation `establecimientoActualizar()` */
+  static readonly EstablecimientoActualizarPath = '/api/establecimientos/{id}';
 
   /**
    * This method provides access to the full `HttpResponse`, allowing access to response headers.
-   * To access only the response body, use `actualizar6()` instead.
+   * To access only the response body, use `establecimientoActualizar()` instead.
    *
    * This method sends `application/json` and handles request body of type `application/json`.
    */
-  actualizar6$Response(params: Actualizar6$Params, context?: HttpContext): Promise<StrictHttpResponse<EstablecimientoResponse>> {
-    const obs = actualizar6(this.http, this.rootUrl, params, context);
+  establecimientoActualizar$Response(params: EstablecimientoActualizar$Params, context?: HttpContext): Promise<StrictHttpResponse<EstablecimientoResponse>> {
+    const obs = establecimientoActualizar(this.http, this.rootUrl, params, context);
     return firstValueFrom(obs);
   }
 
   /**
    * This method provides access only to the response body.
-   * To access the full response (for headers, for example), `actualizar6$Response()` instead.
+   * To access the full response (for headers, for example), `establecimientoActualizar$Response()` instead.
    *
    * This method sends `application/json` and handles request body of type `application/json`.
    */
-  actualizar6(params: Actualizar6$Params, context?: HttpContext): Promise<EstablecimientoResponse> {
-    const resp = this.actualizar6$Response(params, context);
+  establecimientoActualizar(params: EstablecimientoActualizar$Params, context?: HttpContext): Promise<EstablecimientoResponse> {
+    const resp = this.establecimientoActualizar$Response(params, context);
     return resp.then((r: StrictHttpResponse<EstablecimientoResponse>): EstablecimientoResponse => r.body);
   }
 
-  /** Path part for operation `listar10()` */
-  static readonly Listar10Path = '/api/establecimientos';
+  /** Path part for operation `establecimientoListar()` */
+  static readonly EstablecimientoListarPath = '/api/establecimientos';
 
   /**
    * This method provides access to the full `HttpResponse`, allowing access to response headers.
-   * To access only the response body, use `listar10()` instead.
+   * To access only the response body, use `establecimientoListar()` instead.
    *
    * This method doesn't expect any request body.
    */
-  listar10$Response(params?: Listar10$Params, context?: HttpContext): Promise<StrictHttpResponse<Array<EstablecimientoResponse>>> {
-    const obs = listar10(this.http, this.rootUrl, params, context);
+  establecimientoListar$Response(params?: EstablecimientoListar$Params, context?: HttpContext): Promise<StrictHttpResponse<Array<EstablecimientoResponse>>> {
+    const obs = establecimientoListar(this.http, this.rootUrl, params, context);
     return firstValueFrom(obs);
   }
 
   /**
    * This method provides access only to the response body.
-   * To access the full response (for headers, for example), `listar10$Response()` instead.
+   * To access the full response (for headers, for example), `establecimientoListar$Response()` instead.
    *
    * This method doesn't expect any request body.
    */
-  listar10(params?: Listar10$Params, context?: HttpContext): Promise<Array<EstablecimientoResponse>> {
-    const resp = this.listar10$Response(params, context);
+  establecimientoListar(params?: EstablecimientoListar$Params, context?: HttpContext): Promise<Array<EstablecimientoResponse>> {
+    const resp = this.establecimientoListar$Response(params, context);
     return resp.then((r: StrictHttpResponse<Array<EstablecimientoResponse>>): Array<EstablecimientoResponse> => r.body);
   }
 
-  /** Path part for operation `crear8()` */
-  static readonly Crear8Path = '/api/establecimientos';
+  /** Path part for operation `establecimientoCrear()` */
+  static readonly EstablecimientoCrearPath = '/api/establecimientos';
 
   /**
    * This method provides access to the full `HttpResponse`, allowing access to response headers.
-   * To access only the response body, use `crear8()` instead.
+   * To access only the response body, use `establecimientoCrear()` instead.
    *
    * This method sends `application/json` and handles request body of type `application/json`.
    */
-  crear8$Response(params: Crear8$Params, context?: HttpContext): Promise<StrictHttpResponse<EstablecimientoResponse>> {
-    const obs = crear8(this.http, this.rootUrl, params, context);
+  establecimientoCrear$Response(params: EstablecimientoCrear$Params, context?: HttpContext): Promise<StrictHttpResponse<EstablecimientoResponse>> {
+    const obs = establecimientoCrear(this.http, this.rootUrl, params, context);
     return firstValueFrom(obs);
   }
 
   /**
    * This method provides access only to the response body.
-   * To access the full response (for headers, for example), `crear8$Response()` instead.
+   * To access the full response (for headers, for example), `establecimientoCrear$Response()` instead.
    *
    * This method sends `application/json` and handles request body of type `application/json`.
    */
-  crear8(params: Crear8$Params, context?: HttpContext): Promise<EstablecimientoResponse> {
-    const resp = this.crear8$Response(params, context);
+  establecimientoCrear(params: EstablecimientoCrear$Params, context?: HttpContext): Promise<EstablecimientoResponse> {
+    const resp = this.establecimientoCrear$Response(params, context);
     return resp.then((r: StrictHttpResponse<EstablecimientoResponse>): EstablecimientoResponse => r.body);
   }
 

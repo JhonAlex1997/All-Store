@@ -9,8 +9,8 @@ import { BaseService } from '../base-service';
 import { ApiConfiguration } from '../api-configuration';
 import { StrictHttpResponse } from '../strict-http-response';
 
-import { consultar2 } from '../fn/bitacora-controller/consultar-2';
-import { Consultar2$Params } from '../fn/bitacora-controller/consultar-2';
+import { bitacoraConsultar } from '../fn/bitacora-controller/bitacora-consultar';
+import { BitacoraConsultar$Params } from '../fn/bitacora-controller/bitacora-consultar';
 import { PageResponseRegistroBitacoraResponse } from '../models/page-response-registro-bitacora-response';
 
 @Injectable({ providedIn: 'root' })
@@ -19,28 +19,28 @@ export class BitacoraControllerService extends BaseService {
     super(config, http);
   }
 
-  /** Path part for operation `consultar2()` */
-  static readonly Consultar2Path = '/api/bitacora';
+  /** Path part for operation `bitacoraConsultar()` */
+  static readonly BitacoraConsultarPath = '/api/bitacora';
 
   /**
    * This method provides access to the full `HttpResponse`, allowing access to response headers.
-   * To access only the response body, use `consultar2()` instead.
+   * To access only the response body, use `bitacoraConsultar()` instead.
    *
    * This method doesn't expect any request body.
    */
-  consultar2$Response(params?: Consultar2$Params, context?: HttpContext): Promise<StrictHttpResponse<PageResponseRegistroBitacoraResponse>> {
-    const obs = consultar2(this.http, this.rootUrl, params, context);
+  bitacoraConsultar$Response(params?: BitacoraConsultar$Params, context?: HttpContext): Promise<StrictHttpResponse<PageResponseRegistroBitacoraResponse>> {
+    const obs = bitacoraConsultar(this.http, this.rootUrl, params, context);
     return firstValueFrom(obs);
   }
 
   /**
    * This method provides access only to the response body.
-   * To access the full response (for headers, for example), `consultar2$Response()` instead.
+   * To access the full response (for headers, for example), `bitacoraConsultar$Response()` instead.
    *
    * This method doesn't expect any request body.
    */
-  consultar2(params?: Consultar2$Params, context?: HttpContext): Promise<PageResponseRegistroBitacoraResponse> {
-    const resp = this.consultar2$Response(params, context);
+  bitacoraConsultar(params?: BitacoraConsultar$Params, context?: HttpContext): Promise<PageResponseRegistroBitacoraResponse> {
+    const resp = this.bitacoraConsultar$Response(params, context);
     return resp.then((r: StrictHttpResponse<PageResponseRegistroBitacoraResponse>): PageResponseRegistroBitacoraResponse => r.body);
   }
 

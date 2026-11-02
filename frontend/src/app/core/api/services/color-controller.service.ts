@@ -9,13 +9,13 @@ import { BaseService } from '../base-service';
 import { ApiConfiguration } from '../api-configuration';
 import { StrictHttpResponse } from '../strict-http-response';
 
-import { actualizar7 } from '../fn/color-controller/actualizar-7';
-import { Actualizar7$Params } from '../fn/color-controller/actualizar-7';
+import { colorActualizar } from '../fn/color-controller/color-actualizar';
+import { ColorActualizar$Params } from '../fn/color-controller/color-actualizar';
+import { colorCrear } from '../fn/color-controller/color-crear';
+import { ColorCrear$Params } from '../fn/color-controller/color-crear';
+import { colorListar } from '../fn/color-controller/color-listar';
+import { ColorListar$Params } from '../fn/color-controller/color-listar';
 import { ColorResponse } from '../models/color-response';
-import { crear9 } from '../fn/color-controller/crear-9';
-import { Crear9$Params } from '../fn/color-controller/crear-9';
-import { listar12 } from '../fn/color-controller/listar-12';
-import { Listar12$Params } from '../fn/color-controller/listar-12';
 
 @Injectable({ providedIn: 'root' })
 export class ColorControllerService extends BaseService {
@@ -23,78 +23,78 @@ export class ColorControllerService extends BaseService {
     super(config, http);
   }
 
-  /** Path part for operation `actualizar7()` */
-  static readonly Actualizar7Path = '/api/colores/{id}';
+  /** Path part for operation `colorActualizar()` */
+  static readonly ColorActualizarPath = '/api/colores/{id}';
 
   /**
    * This method provides access to the full `HttpResponse`, allowing access to response headers.
-   * To access only the response body, use `actualizar7()` instead.
+   * To access only the response body, use `colorActualizar()` instead.
    *
    * This method sends `application/json` and handles request body of type `application/json`.
    */
-  actualizar7$Response(params: Actualizar7$Params, context?: HttpContext): Promise<StrictHttpResponse<ColorResponse>> {
-    const obs = actualizar7(this.http, this.rootUrl, params, context);
+  colorActualizar$Response(params: ColorActualizar$Params, context?: HttpContext): Promise<StrictHttpResponse<ColorResponse>> {
+    const obs = colorActualizar(this.http, this.rootUrl, params, context);
     return firstValueFrom(obs);
   }
 
   /**
    * This method provides access only to the response body.
-   * To access the full response (for headers, for example), `actualizar7$Response()` instead.
+   * To access the full response (for headers, for example), `colorActualizar$Response()` instead.
    *
    * This method sends `application/json` and handles request body of type `application/json`.
    */
-  actualizar7(params: Actualizar7$Params, context?: HttpContext): Promise<ColorResponse> {
-    const resp = this.actualizar7$Response(params, context);
+  colorActualizar(params: ColorActualizar$Params, context?: HttpContext): Promise<ColorResponse> {
+    const resp = this.colorActualizar$Response(params, context);
     return resp.then((r: StrictHttpResponse<ColorResponse>): ColorResponse => r.body);
   }
 
-  /** Path part for operation `listar12()` */
-  static readonly Listar12Path = '/api/colores';
+  /** Path part for operation `colorListar()` */
+  static readonly ColorListarPath = '/api/colores';
 
   /**
    * This method provides access to the full `HttpResponse`, allowing access to response headers.
-   * To access only the response body, use `listar12()` instead.
+   * To access only the response body, use `colorListar()` instead.
    *
    * This method doesn't expect any request body.
    */
-  listar12$Response(params?: Listar12$Params, context?: HttpContext): Promise<StrictHttpResponse<Array<ColorResponse>>> {
-    const obs = listar12(this.http, this.rootUrl, params, context);
+  colorListar$Response(params?: ColorListar$Params, context?: HttpContext): Promise<StrictHttpResponse<Array<ColorResponse>>> {
+    const obs = colorListar(this.http, this.rootUrl, params, context);
     return firstValueFrom(obs);
   }
 
   /**
    * This method provides access only to the response body.
-   * To access the full response (for headers, for example), `listar12$Response()` instead.
+   * To access the full response (for headers, for example), `colorListar$Response()` instead.
    *
    * This method doesn't expect any request body.
    */
-  listar12(params?: Listar12$Params, context?: HttpContext): Promise<Array<ColorResponse>> {
-    const resp = this.listar12$Response(params, context);
+  colorListar(params?: ColorListar$Params, context?: HttpContext): Promise<Array<ColorResponse>> {
+    const resp = this.colorListar$Response(params, context);
     return resp.then((r: StrictHttpResponse<Array<ColorResponse>>): Array<ColorResponse> => r.body);
   }
 
-  /** Path part for operation `crear9()` */
-  static readonly Crear9Path = '/api/colores';
+  /** Path part for operation `colorCrear()` */
+  static readonly ColorCrearPath = '/api/colores';
 
   /**
    * This method provides access to the full `HttpResponse`, allowing access to response headers.
-   * To access only the response body, use `crear9()` instead.
+   * To access only the response body, use `colorCrear()` instead.
    *
    * This method sends `application/json` and handles request body of type `application/json`.
    */
-  crear9$Response(params: Crear9$Params, context?: HttpContext): Promise<StrictHttpResponse<ColorResponse>> {
-    const obs = crear9(this.http, this.rootUrl, params, context);
+  colorCrear$Response(params: ColorCrear$Params, context?: HttpContext): Promise<StrictHttpResponse<ColorResponse>> {
+    const obs = colorCrear(this.http, this.rootUrl, params, context);
     return firstValueFrom(obs);
   }
 
   /**
    * This method provides access only to the response body.
-   * To access the full response (for headers, for example), `crear9$Response()` instead.
+   * To access the full response (for headers, for example), `colorCrear$Response()` instead.
    *
    * This method sends `application/json` and handles request body of type `application/json`.
    */
-  crear9(params: Crear9$Params, context?: HttpContext): Promise<ColorResponse> {
-    const resp = this.crear9$Response(params, context);
+  colorCrear(params: ColorCrear$Params, context?: HttpContext): Promise<ColorResponse> {
+    const resp = this.colorCrear$Response(params, context);
     return resp.then((r: StrictHttpResponse<ColorResponse>): ColorResponse => r.body);
   }
 

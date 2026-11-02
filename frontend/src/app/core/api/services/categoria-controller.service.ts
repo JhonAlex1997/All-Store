@@ -9,13 +9,13 @@ import { BaseService } from '../base-service';
 import { ApiConfiguration } from '../api-configuration';
 import { StrictHttpResponse } from '../strict-http-response';
 
-import { actualizar9 } from '../fn/categoria-controller/actualizar-9';
-import { Actualizar9$Params } from '../fn/categoria-controller/actualizar-9';
+import { categoriaActualizar } from '../fn/categoria-controller/categoria-actualizar';
+import { CategoriaActualizar$Params } from '../fn/categoria-controller/categoria-actualizar';
+import { categoriaCrear } from '../fn/categoria-controller/categoria-crear';
+import { CategoriaCrear$Params } from '../fn/categoria-controller/categoria-crear';
+import { categoriaListar } from '../fn/categoria-controller/categoria-listar';
+import { CategoriaListar$Params } from '../fn/categoria-controller/categoria-listar';
 import { CategoriaResponse } from '../models/categoria-response';
-import { crear11 } from '../fn/categoria-controller/crear-11';
-import { Crear11$Params } from '../fn/categoria-controller/crear-11';
-import { listar14 } from '../fn/categoria-controller/listar-14';
-import { Listar14$Params } from '../fn/categoria-controller/listar-14';
 
 @Injectable({ providedIn: 'root' })
 export class CategoriaControllerService extends BaseService {
@@ -23,78 +23,78 @@ export class CategoriaControllerService extends BaseService {
     super(config, http);
   }
 
-  /** Path part for operation `actualizar9()` */
-  static readonly Actualizar9Path = '/api/categorias/{id}';
+  /** Path part for operation `categoriaActualizar()` */
+  static readonly CategoriaActualizarPath = '/api/categorias/{id}';
 
   /**
    * This method provides access to the full `HttpResponse`, allowing access to response headers.
-   * To access only the response body, use `actualizar9()` instead.
+   * To access only the response body, use `categoriaActualizar()` instead.
    *
    * This method sends `application/json` and handles request body of type `application/json`.
    */
-  actualizar9$Response(params: Actualizar9$Params, context?: HttpContext): Promise<StrictHttpResponse<CategoriaResponse>> {
-    const obs = actualizar9(this.http, this.rootUrl, params, context);
+  categoriaActualizar$Response(params: CategoriaActualizar$Params, context?: HttpContext): Promise<StrictHttpResponse<CategoriaResponse>> {
+    const obs = categoriaActualizar(this.http, this.rootUrl, params, context);
     return firstValueFrom(obs);
   }
 
   /**
    * This method provides access only to the response body.
-   * To access the full response (for headers, for example), `actualizar9$Response()` instead.
+   * To access the full response (for headers, for example), `categoriaActualizar$Response()` instead.
    *
    * This method sends `application/json` and handles request body of type `application/json`.
    */
-  actualizar9(params: Actualizar9$Params, context?: HttpContext): Promise<CategoriaResponse> {
-    const resp = this.actualizar9$Response(params, context);
+  categoriaActualizar(params: CategoriaActualizar$Params, context?: HttpContext): Promise<CategoriaResponse> {
+    const resp = this.categoriaActualizar$Response(params, context);
     return resp.then((r: StrictHttpResponse<CategoriaResponse>): CategoriaResponse => r.body);
   }
 
-  /** Path part for operation `listar14()` */
-  static readonly Listar14Path = '/api/categorias';
+  /** Path part for operation `categoriaListar()` */
+  static readonly CategoriaListarPath = '/api/categorias';
 
   /**
    * This method provides access to the full `HttpResponse`, allowing access to response headers.
-   * To access only the response body, use `listar14()` instead.
+   * To access only the response body, use `categoriaListar()` instead.
    *
    * This method doesn't expect any request body.
    */
-  listar14$Response(params?: Listar14$Params, context?: HttpContext): Promise<StrictHttpResponse<Array<CategoriaResponse>>> {
-    const obs = listar14(this.http, this.rootUrl, params, context);
+  categoriaListar$Response(params?: CategoriaListar$Params, context?: HttpContext): Promise<StrictHttpResponse<Array<CategoriaResponse>>> {
+    const obs = categoriaListar(this.http, this.rootUrl, params, context);
     return firstValueFrom(obs);
   }
 
   /**
    * This method provides access only to the response body.
-   * To access the full response (for headers, for example), `listar14$Response()` instead.
+   * To access the full response (for headers, for example), `categoriaListar$Response()` instead.
    *
    * This method doesn't expect any request body.
    */
-  listar14(params?: Listar14$Params, context?: HttpContext): Promise<Array<CategoriaResponse>> {
-    const resp = this.listar14$Response(params, context);
+  categoriaListar(params?: CategoriaListar$Params, context?: HttpContext): Promise<Array<CategoriaResponse>> {
+    const resp = this.categoriaListar$Response(params, context);
     return resp.then((r: StrictHttpResponse<Array<CategoriaResponse>>): Array<CategoriaResponse> => r.body);
   }
 
-  /** Path part for operation `crear11()` */
-  static readonly Crear11Path = '/api/categorias';
+  /** Path part for operation `categoriaCrear()` */
+  static readonly CategoriaCrearPath = '/api/categorias';
 
   /**
    * This method provides access to the full `HttpResponse`, allowing access to response headers.
-   * To access only the response body, use `crear11()` instead.
+   * To access only the response body, use `categoriaCrear()` instead.
    *
    * This method sends `application/json` and handles request body of type `application/json`.
    */
-  crear11$Response(params: Crear11$Params, context?: HttpContext): Promise<StrictHttpResponse<CategoriaResponse>> {
-    const obs = crear11(this.http, this.rootUrl, params, context);
+  categoriaCrear$Response(params: CategoriaCrear$Params, context?: HttpContext): Promise<StrictHttpResponse<CategoriaResponse>> {
+    const obs = categoriaCrear(this.http, this.rootUrl, params, context);
     return firstValueFrom(obs);
   }
 
   /**
    * This method provides access only to the response body.
-   * To access the full response (for headers, for example), `crear11$Response()` instead.
+   * To access the full response (for headers, for example), `categoriaCrear$Response()` instead.
    *
    * This method sends `application/json` and handles request body of type `application/json`.
    */
-  crear11(params: Crear11$Params, context?: HttpContext): Promise<CategoriaResponse> {
-    const resp = this.crear11$Response(params, context);
+  categoriaCrear(params: CategoriaCrear$Params, context?: HttpContext): Promise<CategoriaResponse> {
+    const resp = this.categoriaCrear$Response(params, context);
     return resp.then((r: StrictHttpResponse<CategoriaResponse>): CategoriaResponse => r.body);
   }
 

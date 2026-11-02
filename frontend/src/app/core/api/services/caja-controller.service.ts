@@ -9,20 +9,20 @@ import { BaseService } from '../base-service';
 import { ApiConfiguration } from '../api-configuration';
 import { StrictHttpResponse } from '../strict-http-response';
 
-import { abrir1 } from '../fn/caja-controller/abrir-1';
-import { Abrir1$Params } from '../fn/caja-controller/abrir-1';
+import { cajaAbrir } from '../fn/caja-controller/caja-abrir';
+import { CajaAbrir$Params } from '../fn/caja-controller/caja-abrir';
+import { cajaCerrar } from '../fn/caja-controller/caja-cerrar';
+import { CajaCerrar$Params } from '../fn/caja-controller/caja-cerrar';
+import { cajaListar } from '../fn/caja-controller/caja-listar';
+import { CajaListar$Params } from '../fn/caja-controller/caja-listar';
+import { cajaMiCaja } from '../fn/caja-controller/caja-mi-caja';
+import { CajaMiCaja$Params } from '../fn/caja-controller/caja-mi-caja';
+import { cajaObtener } from '../fn/caja-controller/caja-obtener';
+import { CajaObtener$Params } from '../fn/caja-controller/caja-obtener';
+import { cajaRegistrarMovimiento } from '../fn/caja-controller/caja-registrar-movimiento';
+import { CajaRegistrarMovimiento$Params } from '../fn/caja-controller/caja-registrar-movimiento';
 import { CajaResponse } from '../models/caja-response';
-import { cerrar1 } from '../fn/caja-controller/cerrar-1';
-import { Cerrar1$Params } from '../fn/caja-controller/cerrar-1';
-import { listar17 } from '../fn/caja-controller/listar-17';
-import { Listar17$Params } from '../fn/caja-controller/listar-17';
-import { miCaja } from '../fn/caja-controller/mi-caja';
-import { MiCaja$Params } from '../fn/caja-controller/mi-caja';
-import { obtener9 } from '../fn/caja-controller/obtener-9';
-import { Obtener9$Params } from '../fn/caja-controller/obtener-9';
 import { PageResponseCajaSesionResumenResponse } from '../models/page-response-caja-sesion-resumen-response';
-import { registrarMovimiento1 } from '../fn/caja-controller/registrar-movimiento-1';
-import { RegistrarMovimiento1$Params } from '../fn/caja-controller/registrar-movimiento-1';
 
 @Injectable({ providedIn: 'root' })
 export class CajaControllerService extends BaseService {
@@ -30,153 +30,153 @@ export class CajaControllerService extends BaseService {
     super(config, http);
   }
 
-  /** Path part for operation `registrarMovimiento1()` */
-  static readonly RegistrarMovimiento1Path = '/api/caja/movimientos';
+  /** Path part for operation `cajaRegistrarMovimiento()` */
+  static readonly CajaRegistrarMovimientoPath = '/api/caja/movimientos';
 
   /**
    * This method provides access to the full `HttpResponse`, allowing access to response headers.
-   * To access only the response body, use `registrarMovimiento1()` instead.
+   * To access only the response body, use `cajaRegistrarMovimiento()` instead.
    *
    * This method sends `application/json` and handles request body of type `application/json`.
    */
-  registrarMovimiento1$Response(params: RegistrarMovimiento1$Params, context?: HttpContext): Promise<StrictHttpResponse<CajaResponse>> {
-    const obs = registrarMovimiento1(this.http, this.rootUrl, params, context);
+  cajaRegistrarMovimiento$Response(params: CajaRegistrarMovimiento$Params, context?: HttpContext): Promise<StrictHttpResponse<CajaResponse>> {
+    const obs = cajaRegistrarMovimiento(this.http, this.rootUrl, params, context);
     return firstValueFrom(obs);
   }
 
   /**
    * This method provides access only to the response body.
-   * To access the full response (for headers, for example), `registrarMovimiento1$Response()` instead.
+   * To access the full response (for headers, for example), `cajaRegistrarMovimiento$Response()` instead.
    *
    * This method sends `application/json` and handles request body of type `application/json`.
    */
-  registrarMovimiento1(params: RegistrarMovimiento1$Params, context?: HttpContext): Promise<CajaResponse> {
-    const resp = this.registrarMovimiento1$Response(params, context);
+  cajaRegistrarMovimiento(params: CajaRegistrarMovimiento$Params, context?: HttpContext): Promise<CajaResponse> {
+    const resp = this.cajaRegistrarMovimiento$Response(params, context);
     return resp.then((r: StrictHttpResponse<CajaResponse>): CajaResponse => r.body);
   }
 
-  /** Path part for operation `cerrar1()` */
-  static readonly Cerrar1Path = '/api/caja/cerrar';
+  /** Path part for operation `cajaCerrar()` */
+  static readonly CajaCerrarPath = '/api/caja/cerrar';
 
   /**
    * This method provides access to the full `HttpResponse`, allowing access to response headers.
-   * To access only the response body, use `cerrar1()` instead.
+   * To access only the response body, use `cajaCerrar()` instead.
    *
    * This method sends `application/json` and handles request body of type `application/json`.
    */
-  cerrar1$Response(params: Cerrar1$Params, context?: HttpContext): Promise<StrictHttpResponse<CajaResponse>> {
-    const obs = cerrar1(this.http, this.rootUrl, params, context);
+  cajaCerrar$Response(params: CajaCerrar$Params, context?: HttpContext): Promise<StrictHttpResponse<CajaResponse>> {
+    const obs = cajaCerrar(this.http, this.rootUrl, params, context);
     return firstValueFrom(obs);
   }
 
   /**
    * This method provides access only to the response body.
-   * To access the full response (for headers, for example), `cerrar1$Response()` instead.
+   * To access the full response (for headers, for example), `cajaCerrar$Response()` instead.
    *
    * This method sends `application/json` and handles request body of type `application/json`.
    */
-  cerrar1(params: Cerrar1$Params, context?: HttpContext): Promise<CajaResponse> {
-    const resp = this.cerrar1$Response(params, context);
+  cajaCerrar(params: CajaCerrar$Params, context?: HttpContext): Promise<CajaResponse> {
+    const resp = this.cajaCerrar$Response(params, context);
     return resp.then((r: StrictHttpResponse<CajaResponse>): CajaResponse => r.body);
   }
 
-  /** Path part for operation `abrir1()` */
-  static readonly Abrir1Path = '/api/caja/abrir';
+  /** Path part for operation `cajaAbrir()` */
+  static readonly CajaAbrirPath = '/api/caja/abrir';
 
   /**
    * This method provides access to the full `HttpResponse`, allowing access to response headers.
-   * To access only the response body, use `abrir1()` instead.
+   * To access only the response body, use `cajaAbrir()` instead.
    *
    * This method sends `application/json` and handles request body of type `application/json`.
    */
-  abrir1$Response(params: Abrir1$Params, context?: HttpContext): Promise<StrictHttpResponse<CajaResponse>> {
-    const obs = abrir1(this.http, this.rootUrl, params, context);
+  cajaAbrir$Response(params: CajaAbrir$Params, context?: HttpContext): Promise<StrictHttpResponse<CajaResponse>> {
+    const obs = cajaAbrir(this.http, this.rootUrl, params, context);
     return firstValueFrom(obs);
   }
 
   /**
    * This method provides access only to the response body.
-   * To access the full response (for headers, for example), `abrir1$Response()` instead.
+   * To access the full response (for headers, for example), `cajaAbrir$Response()` instead.
    *
    * This method sends `application/json` and handles request body of type `application/json`.
    */
-  abrir1(params: Abrir1$Params, context?: HttpContext): Promise<CajaResponse> {
-    const resp = this.abrir1$Response(params, context);
+  cajaAbrir(params: CajaAbrir$Params, context?: HttpContext): Promise<CajaResponse> {
+    const resp = this.cajaAbrir$Response(params, context);
     return resp.then((r: StrictHttpResponse<CajaResponse>): CajaResponse => r.body);
   }
 
-  /** Path part for operation `listar17()` */
-  static readonly Listar17Path = '/api/caja/sesiones';
+  /** Path part for operation `cajaListar()` */
+  static readonly CajaListarPath = '/api/caja/sesiones';
 
   /**
    * This method provides access to the full `HttpResponse`, allowing access to response headers.
-   * To access only the response body, use `listar17()` instead.
+   * To access only the response body, use `cajaListar()` instead.
    *
    * This method doesn't expect any request body.
    */
-  listar17$Response(params?: Listar17$Params, context?: HttpContext): Promise<StrictHttpResponse<PageResponseCajaSesionResumenResponse>> {
-    const obs = listar17(this.http, this.rootUrl, params, context);
+  cajaListar$Response(params?: CajaListar$Params, context?: HttpContext): Promise<StrictHttpResponse<PageResponseCajaSesionResumenResponse>> {
+    const obs = cajaListar(this.http, this.rootUrl, params, context);
     return firstValueFrom(obs);
   }
 
   /**
    * This method provides access only to the response body.
-   * To access the full response (for headers, for example), `listar17$Response()` instead.
+   * To access the full response (for headers, for example), `cajaListar$Response()` instead.
    *
    * This method doesn't expect any request body.
    */
-  listar17(params?: Listar17$Params, context?: HttpContext): Promise<PageResponseCajaSesionResumenResponse> {
-    const resp = this.listar17$Response(params, context);
+  cajaListar(params?: CajaListar$Params, context?: HttpContext): Promise<PageResponseCajaSesionResumenResponse> {
+    const resp = this.cajaListar$Response(params, context);
     return resp.then((r: StrictHttpResponse<PageResponseCajaSesionResumenResponse>): PageResponseCajaSesionResumenResponse => r.body);
   }
 
-  /** Path part for operation `obtener9()` */
-  static readonly Obtener9Path = '/api/caja/sesiones/{id}';
+  /** Path part for operation `cajaObtener()` */
+  static readonly CajaObtenerPath = '/api/caja/sesiones/{id}';
 
   /**
    * This method provides access to the full `HttpResponse`, allowing access to response headers.
-   * To access only the response body, use `obtener9()` instead.
+   * To access only the response body, use `cajaObtener()` instead.
    *
    * This method doesn't expect any request body.
    */
-  obtener9$Response(params: Obtener9$Params, context?: HttpContext): Promise<StrictHttpResponse<CajaResponse>> {
-    const obs = obtener9(this.http, this.rootUrl, params, context);
+  cajaObtener$Response(params: CajaObtener$Params, context?: HttpContext): Promise<StrictHttpResponse<CajaResponse>> {
+    const obs = cajaObtener(this.http, this.rootUrl, params, context);
     return firstValueFrom(obs);
   }
 
   /**
    * This method provides access only to the response body.
-   * To access the full response (for headers, for example), `obtener9$Response()` instead.
+   * To access the full response (for headers, for example), `cajaObtener$Response()` instead.
    *
    * This method doesn't expect any request body.
    */
-  obtener9(params: Obtener9$Params, context?: HttpContext): Promise<CajaResponse> {
-    const resp = this.obtener9$Response(params, context);
+  cajaObtener(params: CajaObtener$Params, context?: HttpContext): Promise<CajaResponse> {
+    const resp = this.cajaObtener$Response(params, context);
     return resp.then((r: StrictHttpResponse<CajaResponse>): CajaResponse => r.body);
   }
 
-  /** Path part for operation `miCaja()` */
-  static readonly MiCajaPath = '/api/caja/actual';
+  /** Path part for operation `cajaMiCaja()` */
+  static readonly CajaMiCajaPath = '/api/caja/actual';
 
   /**
    * This method provides access to the full `HttpResponse`, allowing access to response headers.
-   * To access only the response body, use `miCaja()` instead.
+   * To access only the response body, use `cajaMiCaja()` instead.
    *
    * This method doesn't expect any request body.
    */
-  miCaja$Response(params?: MiCaja$Params, context?: HttpContext): Promise<StrictHttpResponse<CajaResponse>> {
-    const obs = miCaja(this.http, this.rootUrl, params, context);
+  cajaMiCaja$Response(params?: CajaMiCaja$Params, context?: HttpContext): Promise<StrictHttpResponse<CajaResponse>> {
+    const obs = cajaMiCaja(this.http, this.rootUrl, params, context);
     return firstValueFrom(obs);
   }
 
   /**
    * This method provides access only to the response body.
-   * To access the full response (for headers, for example), `miCaja$Response()` instead.
+   * To access the full response (for headers, for example), `cajaMiCaja$Response()` instead.
    *
    * This method doesn't expect any request body.
    */
-  miCaja(params?: MiCaja$Params, context?: HttpContext): Promise<CajaResponse> {
-    const resp = this.miCaja$Response(params, context);
+  cajaMiCaja(params?: CajaMiCaja$Params, context?: HttpContext): Promise<CajaResponse> {
+    const resp = this.cajaMiCaja$Response(params, context);
     return resp.then((r: StrictHttpResponse<CajaResponse>): CajaResponse => r.body);
   }
 

@@ -9,24 +9,24 @@ import { BaseService } from '../base-service';
 import { ApiConfiguration } from '../api-configuration';
 import { StrictHttpResponse } from '../strict-http-response';
 
-import { detalle } from '../fn/reporte-controller/detalle';
-import { Detalle$Params } from '../fn/reporte-controller/detalle';
-import { porCampana } from '../fn/reporte-controller/por-campana';
-import { PorCampana$Params } from '../fn/reporte-controller/por-campana';
-import { porDia } from '../fn/reporte-controller/por-dia';
-import { PorDia$Params } from '../fn/reporte-controller/por-dia';
-import { porDiaSemana } from '../fn/reporte-controller/por-dia-semana';
-import { PorDiaSemana$Params } from '../fn/reporte-controller/por-dia-semana';
-import { porHora } from '../fn/reporte-controller/por-hora';
-import { PorHora$Params } from '../fn/reporte-controller/por-hora';
-import { porProducto } from '../fn/reporte-controller/por-producto';
-import { PorProducto$Params } from '../fn/reporte-controller/por-producto';
-import { porTallaColor } from '../fn/reporte-controller/por-talla-color';
-import { PorTallaColor$Params } from '../fn/reporte-controller/por-talla-color';
-import { porVendedor } from '../fn/reporte-controller/por-vendedor';
-import { PorVendedor$Params } from '../fn/reporte-controller/por-vendedor';
-import { sinRotacion } from '../fn/reporte-controller/sin-rotacion';
-import { SinRotacion$Params } from '../fn/reporte-controller/sin-rotacion';
+import { reporteDetalle } from '../fn/reporte-controller/reporte-detalle';
+import { ReporteDetalle$Params } from '../fn/reporte-controller/reporte-detalle';
+import { reportePorCampana } from '../fn/reporte-controller/reporte-por-campana';
+import { ReportePorCampana$Params } from '../fn/reporte-controller/reporte-por-campana';
+import { reportePorDia } from '../fn/reporte-controller/reporte-por-dia';
+import { ReportePorDia$Params } from '../fn/reporte-controller/reporte-por-dia';
+import { reportePorDiaSemana } from '../fn/reporte-controller/reporte-por-dia-semana';
+import { ReportePorDiaSemana$Params } from '../fn/reporte-controller/reporte-por-dia-semana';
+import { reportePorHora } from '../fn/reporte-controller/reporte-por-hora';
+import { ReportePorHora$Params } from '../fn/reporte-controller/reporte-por-hora';
+import { reportePorProducto } from '../fn/reporte-controller/reporte-por-producto';
+import { ReportePorProducto$Params } from '../fn/reporte-controller/reporte-por-producto';
+import { reportePorTallaColor } from '../fn/reporte-controller/reporte-por-talla-color';
+import { ReportePorTallaColor$Params } from '../fn/reporte-controller/reporte-por-talla-color';
+import { reportePorVendedor } from '../fn/reporte-controller/reporte-por-vendedor';
+import { ReportePorVendedor$Params } from '../fn/reporte-controller/reporte-por-vendedor';
+import { reporteSinRotacion } from '../fn/reporte-controller/reporte-sin-rotacion';
+import { ReporteSinRotacion$Params } from '../fn/reporte-controller/reporte-sin-rotacion';
 
 @Injectable({ providedIn: 'root' })
 export class ReporteControllerService extends BaseService {
@@ -34,262 +34,262 @@ export class ReporteControllerService extends BaseService {
     super(config, http);
   }
 
-  /** Path part for operation `porVendedor()` */
-  static readonly PorVendedorPath = '/api/reportes/ventas-por-vendedor';
+  /** Path part for operation `reportePorVendedor()` */
+  static readonly ReportePorVendedorPath = '/api/reportes/ventas-por-vendedor';
 
   /**
    * This method provides access to the full `HttpResponse`, allowing access to response headers.
-   * To access only the response body, use `porVendedor()` instead.
+   * To access only the response body, use `reportePorVendedor()` instead.
    *
    * This method doesn't expect any request body.
    */
-  porVendedor$Response(params?: PorVendedor$Params, context?: HttpContext): Promise<StrictHttpResponse<{
+  reportePorVendedor$Response(params?: ReportePorVendedor$Params, context?: HttpContext): Promise<StrictHttpResponse<{
 }>> {
-    const obs = porVendedor(this.http, this.rootUrl, params, context);
+    const obs = reportePorVendedor(this.http, this.rootUrl, params, context);
     return firstValueFrom(obs);
   }
 
   /**
    * This method provides access only to the response body.
-   * To access the full response (for headers, for example), `porVendedor$Response()` instead.
+   * To access the full response (for headers, for example), `reportePorVendedor$Response()` instead.
    *
    * This method doesn't expect any request body.
    */
-  porVendedor(params?: PorVendedor$Params, context?: HttpContext): Promise<{
+  reportePorVendedor(params?: ReportePorVendedor$Params, context?: HttpContext): Promise<{
 }> {
-    const resp = this.porVendedor$Response(params, context);
+    const resp = this.reportePorVendedor$Response(params, context);
     return resp.then((r: StrictHttpResponse<{
 }>): {
 } => r.body);
   }
 
-  /** Path part for operation `porTallaColor()` */
-  static readonly PorTallaColorPath = '/api/reportes/ventas-por-talla-color';
+  /** Path part for operation `reportePorTallaColor()` */
+  static readonly ReportePorTallaColorPath = '/api/reportes/ventas-por-talla-color';
 
   /**
    * This method provides access to the full `HttpResponse`, allowing access to response headers.
-   * To access only the response body, use `porTallaColor()` instead.
+   * To access only the response body, use `reportePorTallaColor()` instead.
    *
    * This method doesn't expect any request body.
    */
-  porTallaColor$Response(params?: PorTallaColor$Params, context?: HttpContext): Promise<StrictHttpResponse<{
+  reportePorTallaColor$Response(params?: ReportePorTallaColor$Params, context?: HttpContext): Promise<StrictHttpResponse<{
 }>> {
-    const obs = porTallaColor(this.http, this.rootUrl, params, context);
+    const obs = reportePorTallaColor(this.http, this.rootUrl, params, context);
     return firstValueFrom(obs);
   }
 
   /**
    * This method provides access only to the response body.
-   * To access the full response (for headers, for example), `porTallaColor$Response()` instead.
+   * To access the full response (for headers, for example), `reportePorTallaColor$Response()` instead.
    *
    * This method doesn't expect any request body.
    */
-  porTallaColor(params?: PorTallaColor$Params, context?: HttpContext): Promise<{
+  reportePorTallaColor(params?: ReportePorTallaColor$Params, context?: HttpContext): Promise<{
 }> {
-    const resp = this.porTallaColor$Response(params, context);
+    const resp = this.reportePorTallaColor$Response(params, context);
     return resp.then((r: StrictHttpResponse<{
 }>): {
 } => r.body);
   }
 
-  /** Path part for operation `porProducto()` */
-  static readonly PorProductoPath = '/api/reportes/ventas-por-producto';
+  /** Path part for operation `reportePorProducto()` */
+  static readonly ReportePorProductoPath = '/api/reportes/ventas-por-producto';
 
   /**
    * This method provides access to the full `HttpResponse`, allowing access to response headers.
-   * To access only the response body, use `porProducto()` instead.
+   * To access only the response body, use `reportePorProducto()` instead.
    *
    * This method doesn't expect any request body.
    */
-  porProducto$Response(params?: PorProducto$Params, context?: HttpContext): Promise<StrictHttpResponse<{
+  reportePorProducto$Response(params?: ReportePorProducto$Params, context?: HttpContext): Promise<StrictHttpResponse<{
 }>> {
-    const obs = porProducto(this.http, this.rootUrl, params, context);
+    const obs = reportePorProducto(this.http, this.rootUrl, params, context);
     return firstValueFrom(obs);
   }
 
   /**
    * This method provides access only to the response body.
-   * To access the full response (for headers, for example), `porProducto$Response()` instead.
+   * To access the full response (for headers, for example), `reportePorProducto$Response()` instead.
    *
    * This method doesn't expect any request body.
    */
-  porProducto(params?: PorProducto$Params, context?: HttpContext): Promise<{
+  reportePorProducto(params?: ReportePorProducto$Params, context?: HttpContext): Promise<{
 }> {
-    const resp = this.porProducto$Response(params, context);
+    const resp = this.reportePorProducto$Response(params, context);
     return resp.then((r: StrictHttpResponse<{
 }>): {
 } => r.body);
   }
 
-  /** Path part for operation `porHora()` */
-  static readonly PorHoraPath = '/api/reportes/ventas-por-hora';
+  /** Path part for operation `reportePorHora()` */
+  static readonly ReportePorHoraPath = '/api/reportes/ventas-por-hora';
 
   /**
    * This method provides access to the full `HttpResponse`, allowing access to response headers.
-   * To access only the response body, use `porHora()` instead.
+   * To access only the response body, use `reportePorHora()` instead.
    *
    * This method doesn't expect any request body.
    */
-  porHora$Response(params?: PorHora$Params, context?: HttpContext): Promise<StrictHttpResponse<{
+  reportePorHora$Response(params?: ReportePorHora$Params, context?: HttpContext): Promise<StrictHttpResponse<{
 }>> {
-    const obs = porHora(this.http, this.rootUrl, params, context);
+    const obs = reportePorHora(this.http, this.rootUrl, params, context);
     return firstValueFrom(obs);
   }
 
   /**
    * This method provides access only to the response body.
-   * To access the full response (for headers, for example), `porHora$Response()` instead.
+   * To access the full response (for headers, for example), `reportePorHora$Response()` instead.
    *
    * This method doesn't expect any request body.
    */
-  porHora(params?: PorHora$Params, context?: HttpContext): Promise<{
+  reportePorHora(params?: ReportePorHora$Params, context?: HttpContext): Promise<{
 }> {
-    const resp = this.porHora$Response(params, context);
+    const resp = this.reportePorHora$Response(params, context);
     return resp.then((r: StrictHttpResponse<{
 }>): {
 } => r.body);
   }
 
-  /** Path part for operation `porDia()` */
-  static readonly PorDiaPath = '/api/reportes/ventas-por-dia';
+  /** Path part for operation `reportePorDia()` */
+  static readonly ReportePorDiaPath = '/api/reportes/ventas-por-dia';
 
   /**
    * This method provides access to the full `HttpResponse`, allowing access to response headers.
-   * To access only the response body, use `porDia()` instead.
+   * To access only the response body, use `reportePorDia()` instead.
    *
    * This method doesn't expect any request body.
    */
-  porDia$Response(params?: PorDia$Params, context?: HttpContext): Promise<StrictHttpResponse<{
+  reportePorDia$Response(params?: ReportePorDia$Params, context?: HttpContext): Promise<StrictHttpResponse<{
 }>> {
-    const obs = porDia(this.http, this.rootUrl, params, context);
+    const obs = reportePorDia(this.http, this.rootUrl, params, context);
     return firstValueFrom(obs);
   }
 
   /**
    * This method provides access only to the response body.
-   * To access the full response (for headers, for example), `porDia$Response()` instead.
+   * To access the full response (for headers, for example), `reportePorDia$Response()` instead.
    *
    * This method doesn't expect any request body.
    */
-  porDia(params?: PorDia$Params, context?: HttpContext): Promise<{
+  reportePorDia(params?: ReportePorDia$Params, context?: HttpContext): Promise<{
 }> {
-    const resp = this.porDia$Response(params, context);
+    const resp = this.reportePorDia$Response(params, context);
     return resp.then((r: StrictHttpResponse<{
 }>): {
 } => r.body);
   }
 
-  /** Path part for operation `porDiaSemana()` */
-  static readonly PorDiaSemanaPath = '/api/reportes/ventas-por-dia-semana';
+  /** Path part for operation `reportePorDiaSemana()` */
+  static readonly ReportePorDiaSemanaPath = '/api/reportes/ventas-por-dia-semana';
 
   /**
    * This method provides access to the full `HttpResponse`, allowing access to response headers.
-   * To access only the response body, use `porDiaSemana()` instead.
+   * To access only the response body, use `reportePorDiaSemana()` instead.
    *
    * This method doesn't expect any request body.
    */
-  porDiaSemana$Response(params?: PorDiaSemana$Params, context?: HttpContext): Promise<StrictHttpResponse<{
+  reportePorDiaSemana$Response(params?: ReportePorDiaSemana$Params, context?: HttpContext): Promise<StrictHttpResponse<{
 }>> {
-    const obs = porDiaSemana(this.http, this.rootUrl, params, context);
+    const obs = reportePorDiaSemana(this.http, this.rootUrl, params, context);
     return firstValueFrom(obs);
   }
 
   /**
    * This method provides access only to the response body.
-   * To access the full response (for headers, for example), `porDiaSemana$Response()` instead.
+   * To access the full response (for headers, for example), `reportePorDiaSemana$Response()` instead.
    *
    * This method doesn't expect any request body.
    */
-  porDiaSemana(params?: PorDiaSemana$Params, context?: HttpContext): Promise<{
+  reportePorDiaSemana(params?: ReportePorDiaSemana$Params, context?: HttpContext): Promise<{
 }> {
-    const resp = this.porDiaSemana$Response(params, context);
+    const resp = this.reportePorDiaSemana$Response(params, context);
     return resp.then((r: StrictHttpResponse<{
 }>): {
 } => r.body);
   }
 
-  /** Path part for operation `porCampana()` */
-  static readonly PorCampanaPath = '/api/reportes/ventas-por-campana';
+  /** Path part for operation `reportePorCampana()` */
+  static readonly ReportePorCampanaPath = '/api/reportes/ventas-por-campana';
 
   /**
    * This method provides access to the full `HttpResponse`, allowing access to response headers.
-   * To access only the response body, use `porCampana()` instead.
+   * To access only the response body, use `reportePorCampana()` instead.
    *
    * This method doesn't expect any request body.
    */
-  porCampana$Response(params?: PorCampana$Params, context?: HttpContext): Promise<StrictHttpResponse<{
+  reportePorCampana$Response(params?: ReportePorCampana$Params, context?: HttpContext): Promise<StrictHttpResponse<{
 }>> {
-    const obs = porCampana(this.http, this.rootUrl, params, context);
+    const obs = reportePorCampana(this.http, this.rootUrl, params, context);
     return firstValueFrom(obs);
   }
 
   /**
    * This method provides access only to the response body.
-   * To access the full response (for headers, for example), `porCampana$Response()` instead.
+   * To access the full response (for headers, for example), `reportePorCampana$Response()` instead.
    *
    * This method doesn't expect any request body.
    */
-  porCampana(params?: PorCampana$Params, context?: HttpContext): Promise<{
+  reportePorCampana(params?: ReportePorCampana$Params, context?: HttpContext): Promise<{
 }> {
-    const resp = this.porCampana$Response(params, context);
+    const resp = this.reportePorCampana$Response(params, context);
     return resp.then((r: StrictHttpResponse<{
 }>): {
 } => r.body);
   }
 
-  /** Path part for operation `sinRotacion()` */
-  static readonly SinRotacionPath = '/api/reportes/sin-rotacion';
+  /** Path part for operation `reporteSinRotacion()` */
+  static readonly ReporteSinRotacionPath = '/api/reportes/sin-rotacion';
 
   /**
    * This method provides access to the full `HttpResponse`, allowing access to response headers.
-   * To access only the response body, use `sinRotacion()` instead.
+   * To access only the response body, use `reporteSinRotacion()` instead.
    *
    * This method doesn't expect any request body.
    */
-  sinRotacion$Response(params?: SinRotacion$Params, context?: HttpContext): Promise<StrictHttpResponse<{
+  reporteSinRotacion$Response(params?: ReporteSinRotacion$Params, context?: HttpContext): Promise<StrictHttpResponse<{
 }>> {
-    const obs = sinRotacion(this.http, this.rootUrl, params, context);
+    const obs = reporteSinRotacion(this.http, this.rootUrl, params, context);
     return firstValueFrom(obs);
   }
 
   /**
    * This method provides access only to the response body.
-   * To access the full response (for headers, for example), `sinRotacion$Response()` instead.
+   * To access the full response (for headers, for example), `reporteSinRotacion$Response()` instead.
    *
    * This method doesn't expect any request body.
    */
-  sinRotacion(params?: SinRotacion$Params, context?: HttpContext): Promise<{
+  reporteSinRotacion(params?: ReporteSinRotacion$Params, context?: HttpContext): Promise<{
 }> {
-    const resp = this.sinRotacion$Response(params, context);
+    const resp = this.reporteSinRotacion$Response(params, context);
     return resp.then((r: StrictHttpResponse<{
 }>): {
 } => r.body);
   }
 
-  /** Path part for operation `detalle()` */
-  static readonly DetallePath = '/api/reportes/detalle-ventas';
+  /** Path part for operation `reporteDetalle()` */
+  static readonly ReporteDetallePath = '/api/reportes/detalle-ventas';
 
   /**
    * This method provides access to the full `HttpResponse`, allowing access to response headers.
-   * To access only the response body, use `detalle()` instead.
+   * To access only the response body, use `reporteDetalle()` instead.
    *
    * This method doesn't expect any request body.
    */
-  detalle$Response(params?: Detalle$Params, context?: HttpContext): Promise<StrictHttpResponse<{
+  reporteDetalle$Response(params?: ReporteDetalle$Params, context?: HttpContext): Promise<StrictHttpResponse<{
 }>> {
-    const obs = detalle(this.http, this.rootUrl, params, context);
+    const obs = reporteDetalle(this.http, this.rootUrl, params, context);
     return firstValueFrom(obs);
   }
 
   /**
    * This method provides access only to the response body.
-   * To access the full response (for headers, for example), `detalle$Response()` instead.
+   * To access the full response (for headers, for example), `reporteDetalle$Response()` instead.
    *
    * This method doesn't expect any request body.
    */
-  detalle(params?: Detalle$Params, context?: HttpContext): Promise<{
+  reporteDetalle(params?: ReporteDetalle$Params, context?: HttpContext): Promise<{
 }> {
-    const resp = this.detalle$Response(params, context);
+    const resp = this.reporteDetalle$Response(params, context);
     return resp.then((r: StrictHttpResponse<{
 }>): {
 } => r.body);

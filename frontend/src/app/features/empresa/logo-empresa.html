@@ -1,0 +1,45 @@
+<div class="as-tarjeta">
+  <h2>Logo de la tienda</h2>
+  <p class="ayuda-seccion">
+    Sale en el login, en el menú y en tus boletas, facturas y guías. Lo ideal es un PNG con fondo transparente;
+    si subes un JPG con fondo blanco, el sistema quita el fondo solo.
+  </p>
+
+  @if (marca.logoUrl(); as logo) {
+    <div class="vistas">
+      <figure>
+        <div class="lienzo claro"><img [src]="logo" alt="Logo sobre fondo blanco" /></div>
+        <figcaption>En comprobantes (fondo blanco)</figcaption>
+      </figure>
+      <figure>
+        <div class="lienzo oscuro"><img [src]="marca.logoUrlOscuro()" alt="Logo sobre fondo negro" /></div>
+        <figcaption>En el menú y el login (fondo negro)</figcaption>
+      </figure>
+    </div>
+  } @else {
+    <div class="sin-logo">
+      <i class="pi pi-image" aria-hidden="true"></i>
+      <span>Todavía no hay logo. Mientras tanto se muestra el nombre: <b>{{ marca.nombre() }}</b></span>
+    </div>
+  }
+
+  <div class="zona" [class.activa]="arrastrando()" (click)="elegir()" (keydown.enter)="elegir()" tabindex="0"
+       role="button" aria-label="Elegir imagen del logo"
+       (dragover)="$event.preventDefault(); arrastrando.set(true)" (dragleave)="arrastrando.set(false)"
+       (drop)="alSoltar($event)">
+    <i class="pi" [class.pi-upload]="!subiendo()" [class.pi-spin]="subiendo()" [class.pi-spinner]="subiendo()"
+       aria-hidden="true"></i>
+    <div>
+      <b>{{ subiendo() ? 'Subiendo…' : (marca.logoUrl() ? 'Cambiar logo' : 'Subir logo') }}</b>
+      <span>Arrastra la imagen aquí o haz clic para elegirla · PNG o JPG, hasta 1 MB</span>
+    </div>
+  </div>
+  <input #selector type="file" accept="image/png,image/jpeg" hidden (change)="alElegir($event)" />
+
+  @if (marca.logoUrl()) {
+    <div class="acciones">
+      <p-button label="Quitar logo" icon="pi pi-trash" severity="danger" [text]="true" (onClick)="quitar()"
+                [disabled]="subiendo()" />
+    </div>
+  }
+</div>

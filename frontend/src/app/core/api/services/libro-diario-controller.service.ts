@@ -9,8 +9,8 @@ import { BaseService } from '../base-service';
 import { ApiConfiguration } from '../api-configuration';
 import { StrictHttpResponse } from '../strict-http-response';
 
-import { libroDiario } from '../fn/libro-diario-controller/libro-diario';
-import { LibroDiario$Params } from '../fn/libro-diario-controller/libro-diario';
+import { libroDiarioLibroDiario } from '../fn/libro-diario-controller/libro-diario-libro-diario';
+import { LibroDiarioLibroDiario$Params } from '../fn/libro-diario-controller/libro-diario-libro-diario';
 
 @Injectable({ providedIn: 'root' })
 export class LibroDiarioControllerService extends BaseService {
@@ -18,30 +18,30 @@ export class LibroDiarioControllerService extends BaseService {
     super(config, http);
   }
 
-  /** Path part for operation `libroDiario()` */
-  static readonly LibroDiarioPath = '/api/contabilidad/libro-diario';
+  /** Path part for operation `libroDiarioLibroDiario()` */
+  static readonly LibroDiarioLibroDiarioPath = '/api/contabilidad/libro-diario';
 
   /**
    * This method provides access to the full `HttpResponse`, allowing access to response headers.
-   * To access only the response body, use `libroDiario()` instead.
+   * To access only the response body, use `libroDiarioLibroDiario()` instead.
    *
    * This method doesn't expect any request body.
    */
-  libroDiario$Response(params: LibroDiario$Params, context?: HttpContext): Promise<StrictHttpResponse<{
+  libroDiarioLibroDiario$Response(params: LibroDiarioLibroDiario$Params, context?: HttpContext): Promise<StrictHttpResponse<{
 }>> {
-    const obs = libroDiario(this.http, this.rootUrl, params, context);
+    const obs = libroDiarioLibroDiario(this.http, this.rootUrl, params, context);
     return firstValueFrom(obs);
   }
 
   /**
    * This method provides access only to the response body.
-   * To access the full response (for headers, for example), `libroDiario$Response()` instead.
+   * To access the full response (for headers, for example), `libroDiarioLibroDiario$Response()` instead.
    *
    * This method doesn't expect any request body.
    */
-  libroDiario(params: LibroDiario$Params, context?: HttpContext): Promise<{
+  libroDiarioLibroDiario(params: LibroDiarioLibroDiario$Params, context?: HttpContext): Promise<{
 }> {
-    const resp = this.libroDiario$Response(params, context);
+    const resp = this.libroDiarioLibroDiario$Response(params, context);
     return resp.then((r: StrictHttpResponse<{
 }>): {
 } => r.body);

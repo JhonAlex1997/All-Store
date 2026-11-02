@@ -9,11 +9,16 @@ import { BaseService } from '../base-service';
 import { ApiConfiguration } from '../api-configuration';
 import { StrictHttpResponse } from '../strict-http-response';
 
+import { empresaGuardar } from '../fn/empresa-controller/empresa-guardar';
+import { EmpresaGuardar$Params } from '../fn/empresa-controller/empresa-guardar';
+import { empresaObtener } from '../fn/empresa-controller/empresa-obtener';
+import { EmpresaObtener$Params } from '../fn/empresa-controller/empresa-obtener';
+import { empresaQuitarLogo } from '../fn/empresa-controller/empresa-quitar-logo';
+import { EmpresaQuitarLogo$Params } from '../fn/empresa-controller/empresa-quitar-logo';
 import { EmpresaResponse } from '../models/empresa-response';
-import { guardar } from '../fn/empresa-controller/guardar';
-import { Guardar$Params } from '../fn/empresa-controller/guardar';
-import { obtener1 } from '../fn/empresa-controller/obtener-1';
-import { Obtener1$Params } from '../fn/empresa-controller/obtener-1';
+import { empresaSubirLogo } from '../fn/empresa-controller/empresa-subir-logo';
+import { EmpresaSubirLogo$Params } from '../fn/empresa-controller/empresa-subir-logo';
+import { MarcaResponse } from '../models/marca-response';
 
 @Injectable({ providedIn: 'root' })
 export class EmpresaControllerService extends BaseService {
@@ -21,54 +26,104 @@ export class EmpresaControllerService extends BaseService {
     super(config, http);
   }
 
-  /** Path part for operation `obtener1()` */
-  static readonly Obtener1Path = '/api/empresa';
+  /** Path part for operation `empresaObtener()` */
+  static readonly EmpresaObtenerPath = '/api/empresa';
 
   /**
    * This method provides access to the full `HttpResponse`, allowing access to response headers.
-   * To access only the response body, use `obtener1()` instead.
+   * To access only the response body, use `empresaObtener()` instead.
    *
    * This method doesn't expect any request body.
    */
-  obtener1$Response(params?: Obtener1$Params, context?: HttpContext): Promise<StrictHttpResponse<EmpresaResponse>> {
-    const obs = obtener1(this.http, this.rootUrl, params, context);
+  empresaObtener$Response(params?: EmpresaObtener$Params, context?: HttpContext): Promise<StrictHttpResponse<EmpresaResponse>> {
+    const obs = empresaObtener(this.http, this.rootUrl, params, context);
     return firstValueFrom(obs);
   }
 
   /**
    * This method provides access only to the response body.
-   * To access the full response (for headers, for example), `obtener1$Response()` instead.
+   * To access the full response (for headers, for example), `empresaObtener$Response()` instead.
    *
    * This method doesn't expect any request body.
    */
-  obtener1(params?: Obtener1$Params, context?: HttpContext): Promise<EmpresaResponse> {
-    const resp = this.obtener1$Response(params, context);
+  empresaObtener(params?: EmpresaObtener$Params, context?: HttpContext): Promise<EmpresaResponse> {
+    const resp = this.empresaObtener$Response(params, context);
     return resp.then((r: StrictHttpResponse<EmpresaResponse>): EmpresaResponse => r.body);
   }
 
-  /** Path part for operation `guardar()` */
-  static readonly GuardarPath = '/api/empresa';
+  /** Path part for operation `empresaGuardar()` */
+  static readonly EmpresaGuardarPath = '/api/empresa';
 
   /**
    * This method provides access to the full `HttpResponse`, allowing access to response headers.
-   * To access only the response body, use `guardar()` instead.
+   * To access only the response body, use `empresaGuardar()` instead.
    *
    * This method sends `application/json` and handles request body of type `application/json`.
    */
-  guardar$Response(params: Guardar$Params, context?: HttpContext): Promise<StrictHttpResponse<EmpresaResponse>> {
-    const obs = guardar(this.http, this.rootUrl, params, context);
+  empresaGuardar$Response(params: EmpresaGuardar$Params, context?: HttpContext): Promise<StrictHttpResponse<EmpresaResponse>> {
+    const obs = empresaGuardar(this.http, this.rootUrl, params, context);
     return firstValueFrom(obs);
   }
 
   /**
    * This method provides access only to the response body.
-   * To access the full response (for headers, for example), `guardar$Response()` instead.
+   * To access the full response (for headers, for example), `empresaGuardar$Response()` instead.
    *
    * This method sends `application/json` and handles request body of type `application/json`.
    */
-  guardar(params: Guardar$Params, context?: HttpContext): Promise<EmpresaResponse> {
-    const resp = this.guardar$Response(params, context);
+  empresaGuardar(params: EmpresaGuardar$Params, context?: HttpContext): Promise<EmpresaResponse> {
+    const resp = this.empresaGuardar$Response(params, context);
     return resp.then((r: StrictHttpResponse<EmpresaResponse>): EmpresaResponse => r.body);
+  }
+
+  /** Path part for operation `empresaSubirLogo()` */
+  static readonly EmpresaSubirLogoPath = '/api/empresa/logo';
+
+  /**
+   * This method provides access to the full `HttpResponse`, allowing access to response headers.
+   * To access only the response body, use `empresaSubirLogo()` instead.
+   *
+   * This method sends `multipart/form-data` and handles request body of type `multipart/form-data`.
+   */
+  empresaSubirLogo$Response(params?: EmpresaSubirLogo$Params, context?: HttpContext): Promise<StrictHttpResponse<MarcaResponse>> {
+    const obs = empresaSubirLogo(this.http, this.rootUrl, params, context);
+    return firstValueFrom(obs);
+  }
+
+  /**
+   * This method provides access only to the response body.
+   * To access the full response (for headers, for example), `empresaSubirLogo$Response()` instead.
+   *
+   * This method sends `multipart/form-data` and handles request body of type `multipart/form-data`.
+   */
+  empresaSubirLogo(params?: EmpresaSubirLogo$Params, context?: HttpContext): Promise<MarcaResponse> {
+    const resp = this.empresaSubirLogo$Response(params, context);
+    return resp.then((r: StrictHttpResponse<MarcaResponse>): MarcaResponse => r.body);
+  }
+
+  /** Path part for operation `empresaQuitarLogo()` */
+  static readonly EmpresaQuitarLogoPath = '/api/empresa/logo';
+
+  /**
+   * This method provides access to the full `HttpResponse`, allowing access to response headers.
+   * To access only the response body, use `empresaQuitarLogo()` instead.
+   *
+   * This method doesn't expect any request body.
+   */
+  empresaQuitarLogo$Response(params?: EmpresaQuitarLogo$Params, context?: HttpContext): Promise<StrictHttpResponse<void>> {
+    const obs = empresaQuitarLogo(this.http, this.rootUrl, params, context);
+    return firstValueFrom(obs);
+  }
+
+  /**
+   * This method provides access only to the response body.
+   * To access the full response (for headers, for example), `empresaQuitarLogo$Response()` instead.
+   *
+   * This method doesn't expect any request body.
+   */
+  empresaQuitarLogo(params?: EmpresaQuitarLogo$Params, context?: HttpContext): Promise<void> {
+    const resp = this.empresaQuitarLogo$Response(params, context);
+    return resp.then((r: StrictHttpResponse<void>): void => r.body);
   }
 
 }

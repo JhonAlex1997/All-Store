@@ -9,22 +9,22 @@ import { BaseService } from '../base-service';
 import { ApiConfiguration } from '../api-configuration';
 import { StrictHttpResponse } from '../strict-http-response';
 
-import { actualizar8 } from '../fn/cliente-controller/actualizar-8';
-import { Actualizar8$Params } from '../fn/cliente-controller/actualizar-8';
-import { buscarPorDocumento } from '../fn/cliente-controller/buscar-por-documento';
-import { BuscarPorDocumento$Params } from '../fn/cliente-controller/buscar-por-documento';
+import { clienteActualizar } from '../fn/cliente-controller/cliente-actualizar';
+import { ClienteActualizar$Params } from '../fn/cliente-controller/cliente-actualizar';
+import { clienteBuscarPorDocumento } from '../fn/cliente-controller/cliente-buscar-por-documento';
+import { ClienteBuscarPorDocumento$Params } from '../fn/cliente-controller/cliente-buscar-por-documento';
+import { clienteConsultar } from '../fn/cliente-controller/cliente-consultar';
+import { ClienteConsultar$Params } from '../fn/cliente-controller/cliente-consultar';
+import { clienteCrear } from '../fn/cliente-controller/cliente-crear';
+import { ClienteCrear$Params } from '../fn/cliente-controller/cliente-crear';
+import { clienteListar } from '../fn/cliente-controller/cliente-listar';
+import { ClienteListar$Params } from '../fn/cliente-controller/cliente-listar';
+import { clienteObtener } from '../fn/cliente-controller/cliente-obtener';
+import { ClienteObtener$Params } from '../fn/cliente-controller/cliente-obtener';
+import { clienteObtenerGenerico } from '../fn/cliente-controller/cliente-obtener-generico';
+import { ClienteObtenerGenerico$Params } from '../fn/cliente-controller/cliente-obtener-generico';
 import { ClienteResponse } from '../models/cliente-response';
 import { ConsultaDocumentoResponse } from '../models/consulta-documento-response';
-import { consultar1 } from '../fn/cliente-controller/consultar-1';
-import { Consultar1$Params } from '../fn/cliente-controller/consultar-1';
-import { crear10 } from '../fn/cliente-controller/crear-10';
-import { Crear10$Params } from '../fn/cliente-controller/crear-10';
-import { listar13 } from '../fn/cliente-controller/listar-13';
-import { Listar13$Params } from '../fn/cliente-controller/listar-13';
-import { obtener2 } from '../fn/cliente-controller/obtener-2';
-import { Obtener2$Params } from '../fn/cliente-controller/obtener-2';
-import { obtenerGenerico } from '../fn/cliente-controller/obtener-generico';
-import { ObtenerGenerico$Params } from '../fn/cliente-controller/obtener-generico';
 import { PageResponseClienteResponse } from '../models/page-response-cliente-response';
 
 @Injectable({ providedIn: 'root' })
@@ -33,178 +33,178 @@ export class ClienteControllerService extends BaseService {
     super(config, http);
   }
 
-  /** Path part for operation `obtener2()` */
-  static readonly Obtener2Path = '/api/clientes/{id}';
+  /** Path part for operation `clienteObtener()` */
+  static readonly ClienteObtenerPath = '/api/clientes/{id}';
 
   /**
    * This method provides access to the full `HttpResponse`, allowing access to response headers.
-   * To access only the response body, use `obtener2()` instead.
+   * To access only the response body, use `clienteObtener()` instead.
    *
    * This method doesn't expect any request body.
    */
-  obtener2$Response(params: Obtener2$Params, context?: HttpContext): Promise<StrictHttpResponse<ClienteResponse>> {
-    const obs = obtener2(this.http, this.rootUrl, params, context);
+  clienteObtener$Response(params: ClienteObtener$Params, context?: HttpContext): Promise<StrictHttpResponse<ClienteResponse>> {
+    const obs = clienteObtener(this.http, this.rootUrl, params, context);
     return firstValueFrom(obs);
   }
 
   /**
    * This method provides access only to the response body.
-   * To access the full response (for headers, for example), `obtener2$Response()` instead.
+   * To access the full response (for headers, for example), `clienteObtener$Response()` instead.
    *
    * This method doesn't expect any request body.
    */
-  obtener2(params: Obtener2$Params, context?: HttpContext): Promise<ClienteResponse> {
-    const resp = this.obtener2$Response(params, context);
+  clienteObtener(params: ClienteObtener$Params, context?: HttpContext): Promise<ClienteResponse> {
+    const resp = this.clienteObtener$Response(params, context);
     return resp.then((r: StrictHttpResponse<ClienteResponse>): ClienteResponse => r.body);
   }
 
-  /** Path part for operation `actualizar8()` */
-  static readonly Actualizar8Path = '/api/clientes/{id}';
+  /** Path part for operation `clienteActualizar()` */
+  static readonly ClienteActualizarPath = '/api/clientes/{id}';
 
   /**
    * This method provides access to the full `HttpResponse`, allowing access to response headers.
-   * To access only the response body, use `actualizar8()` instead.
+   * To access only the response body, use `clienteActualizar()` instead.
    *
    * This method sends `application/json` and handles request body of type `application/json`.
    */
-  actualizar8$Response(params: Actualizar8$Params, context?: HttpContext): Promise<StrictHttpResponse<ClienteResponse>> {
-    const obs = actualizar8(this.http, this.rootUrl, params, context);
+  clienteActualizar$Response(params: ClienteActualizar$Params, context?: HttpContext): Promise<StrictHttpResponse<ClienteResponse>> {
+    const obs = clienteActualizar(this.http, this.rootUrl, params, context);
     return firstValueFrom(obs);
   }
 
   /**
    * This method provides access only to the response body.
-   * To access the full response (for headers, for example), `actualizar8$Response()` instead.
+   * To access the full response (for headers, for example), `clienteActualizar$Response()` instead.
    *
    * This method sends `application/json` and handles request body of type `application/json`.
    */
-  actualizar8(params: Actualizar8$Params, context?: HttpContext): Promise<ClienteResponse> {
-    const resp = this.actualizar8$Response(params, context);
+  clienteActualizar(params: ClienteActualizar$Params, context?: HttpContext): Promise<ClienteResponse> {
+    const resp = this.clienteActualizar$Response(params, context);
     return resp.then((r: StrictHttpResponse<ClienteResponse>): ClienteResponse => r.body);
   }
 
-  /** Path part for operation `listar13()` */
-  static readonly Listar13Path = '/api/clientes';
+  /** Path part for operation `clienteListar()` */
+  static readonly ClienteListarPath = '/api/clientes';
 
   /**
    * This method provides access to the full `HttpResponse`, allowing access to response headers.
-   * To access only the response body, use `listar13()` instead.
+   * To access only the response body, use `clienteListar()` instead.
    *
    * This method doesn't expect any request body.
    */
-  listar13$Response(params?: Listar13$Params, context?: HttpContext): Promise<StrictHttpResponse<PageResponseClienteResponse>> {
-    const obs = listar13(this.http, this.rootUrl, params, context);
+  clienteListar$Response(params?: ClienteListar$Params, context?: HttpContext): Promise<StrictHttpResponse<PageResponseClienteResponse>> {
+    const obs = clienteListar(this.http, this.rootUrl, params, context);
     return firstValueFrom(obs);
   }
 
   /**
    * This method provides access only to the response body.
-   * To access the full response (for headers, for example), `listar13$Response()` instead.
+   * To access the full response (for headers, for example), `clienteListar$Response()` instead.
    *
    * This method doesn't expect any request body.
    */
-  listar13(params?: Listar13$Params, context?: HttpContext): Promise<PageResponseClienteResponse> {
-    const resp = this.listar13$Response(params, context);
+  clienteListar(params?: ClienteListar$Params, context?: HttpContext): Promise<PageResponseClienteResponse> {
+    const resp = this.clienteListar$Response(params, context);
     return resp.then((r: StrictHttpResponse<PageResponseClienteResponse>): PageResponseClienteResponse => r.body);
   }
 
-  /** Path part for operation `crear10()` */
-  static readonly Crear10Path = '/api/clientes';
+  /** Path part for operation `clienteCrear()` */
+  static readonly ClienteCrearPath = '/api/clientes';
 
   /**
    * This method provides access to the full `HttpResponse`, allowing access to response headers.
-   * To access only the response body, use `crear10()` instead.
+   * To access only the response body, use `clienteCrear()` instead.
    *
    * This method sends `application/json` and handles request body of type `application/json`.
    */
-  crear10$Response(params: Crear10$Params, context?: HttpContext): Promise<StrictHttpResponse<ClienteResponse>> {
-    const obs = crear10(this.http, this.rootUrl, params, context);
+  clienteCrear$Response(params: ClienteCrear$Params, context?: HttpContext): Promise<StrictHttpResponse<ClienteResponse>> {
+    const obs = clienteCrear(this.http, this.rootUrl, params, context);
     return firstValueFrom(obs);
   }
 
   /**
    * This method provides access only to the response body.
-   * To access the full response (for headers, for example), `crear10$Response()` instead.
+   * To access the full response (for headers, for example), `clienteCrear$Response()` instead.
    *
    * This method sends `application/json` and handles request body of type `application/json`.
    */
-  crear10(params: Crear10$Params, context?: HttpContext): Promise<ClienteResponse> {
-    const resp = this.crear10$Response(params, context);
+  clienteCrear(params: ClienteCrear$Params, context?: HttpContext): Promise<ClienteResponse> {
+    const resp = this.clienteCrear$Response(params, context);
     return resp.then((r: StrictHttpResponse<ClienteResponse>): ClienteResponse => r.body);
   }
 
-  /** Path part for operation `obtenerGenerico()` */
-  static readonly ObtenerGenericoPath = '/api/clientes/generico';
+  /** Path part for operation `clienteObtenerGenerico()` */
+  static readonly ClienteObtenerGenericoPath = '/api/clientes/generico';
 
   /**
    * This method provides access to the full `HttpResponse`, allowing access to response headers.
-   * To access only the response body, use `obtenerGenerico()` instead.
+   * To access only the response body, use `clienteObtenerGenerico()` instead.
    *
    * This method doesn't expect any request body.
    */
-  obtenerGenerico$Response(params?: ObtenerGenerico$Params, context?: HttpContext): Promise<StrictHttpResponse<ClienteResponse>> {
-    const obs = obtenerGenerico(this.http, this.rootUrl, params, context);
+  clienteObtenerGenerico$Response(params?: ClienteObtenerGenerico$Params, context?: HttpContext): Promise<StrictHttpResponse<ClienteResponse>> {
+    const obs = clienteObtenerGenerico(this.http, this.rootUrl, params, context);
     return firstValueFrom(obs);
   }
 
   /**
    * This method provides access only to the response body.
-   * To access the full response (for headers, for example), `obtenerGenerico$Response()` instead.
+   * To access the full response (for headers, for example), `clienteObtenerGenerico$Response()` instead.
    *
    * This method doesn't expect any request body.
    */
-  obtenerGenerico(params?: ObtenerGenerico$Params, context?: HttpContext): Promise<ClienteResponse> {
-    const resp = this.obtenerGenerico$Response(params, context);
+  clienteObtenerGenerico(params?: ClienteObtenerGenerico$Params, context?: HttpContext): Promise<ClienteResponse> {
+    const resp = this.clienteObtenerGenerico$Response(params, context);
     return resp.then((r: StrictHttpResponse<ClienteResponse>): ClienteResponse => r.body);
   }
 
-  /** Path part for operation `buscarPorDocumento()` */
-  static readonly BuscarPorDocumentoPath = '/api/clientes/documento/{tipo}/{numero}';
+  /** Path part for operation `clienteBuscarPorDocumento()` */
+  static readonly ClienteBuscarPorDocumentoPath = '/api/clientes/documento/{tipo}/{numero}';
 
   /**
    * This method provides access to the full `HttpResponse`, allowing access to response headers.
-   * To access only the response body, use `buscarPorDocumento()` instead.
+   * To access only the response body, use `clienteBuscarPorDocumento()` instead.
    *
    * This method doesn't expect any request body.
    */
-  buscarPorDocumento$Response(params: BuscarPorDocumento$Params, context?: HttpContext): Promise<StrictHttpResponse<ClienteResponse>> {
-    const obs = buscarPorDocumento(this.http, this.rootUrl, params, context);
+  clienteBuscarPorDocumento$Response(params: ClienteBuscarPorDocumento$Params, context?: HttpContext): Promise<StrictHttpResponse<ClienteResponse>> {
+    const obs = clienteBuscarPorDocumento(this.http, this.rootUrl, params, context);
     return firstValueFrom(obs);
   }
 
   /**
    * This method provides access only to the response body.
-   * To access the full response (for headers, for example), `buscarPorDocumento$Response()` instead.
+   * To access the full response (for headers, for example), `clienteBuscarPorDocumento$Response()` instead.
    *
    * This method doesn't expect any request body.
    */
-  buscarPorDocumento(params: BuscarPorDocumento$Params, context?: HttpContext): Promise<ClienteResponse> {
-    const resp = this.buscarPorDocumento$Response(params, context);
+  clienteBuscarPorDocumento(params: ClienteBuscarPorDocumento$Params, context?: HttpContext): Promise<ClienteResponse> {
+    const resp = this.clienteBuscarPorDocumento$Response(params, context);
     return resp.then((r: StrictHttpResponse<ClienteResponse>): ClienteResponse => r.body);
   }
 
-  /** Path part for operation `consultar1()` */
-  static readonly Consultar1Path = '/api/clientes/consulta/{tipo}/{numero}';
+  /** Path part for operation `clienteConsultar()` */
+  static readonly ClienteConsultarPath = '/api/clientes/consulta/{tipo}/{numero}';
 
   /**
    * This method provides access to the full `HttpResponse`, allowing access to response headers.
-   * To access only the response body, use `consultar1()` instead.
+   * To access only the response body, use `clienteConsultar()` instead.
    *
    * This method doesn't expect any request body.
    */
-  consultar1$Response(params: Consultar1$Params, context?: HttpContext): Promise<StrictHttpResponse<ConsultaDocumentoResponse>> {
-    const obs = consultar1(this.http, this.rootUrl, params, context);
+  clienteConsultar$Response(params: ClienteConsultar$Params, context?: HttpContext): Promise<StrictHttpResponse<ConsultaDocumentoResponse>> {
+    const obs = clienteConsultar(this.http, this.rootUrl, params, context);
     return firstValueFrom(obs);
   }
 
   /**
    * This method provides access only to the response body.
-   * To access the full response (for headers, for example), `consultar1$Response()` instead.
+   * To access the full response (for headers, for example), `clienteConsultar$Response()` instead.
    *
    * This method doesn't expect any request body.
    */
-  consultar1(params: Consultar1$Params, context?: HttpContext): Promise<ConsultaDocumentoResponse> {
-    const resp = this.consultar1$Response(params, context);
+  clienteConsultar(params: ClienteConsultar$Params, context?: HttpContext): Promise<ConsultaDocumentoResponse> {
+    const resp = this.clienteConsultar$Response(params, context);
     return resp.then((r: StrictHttpResponse<ConsultaDocumentoResponse>): ConsultaDocumentoResponse => r.body);
   }
 

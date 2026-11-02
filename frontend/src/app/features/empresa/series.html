@@ -1,0 +1,86 @@
+<div class="as-tarjeta">
+  <div class="cabecera">
+    <div>
+      <h2>Series</h2>
+      <p class="ayuda-seccion">Numeración de tus comprobantes. El siguiente número es el que saldrá en la próxima venta.</p>
+    </div>
+    <p-button label="Nueva serie" icon="pi pi-plus" (onClick)="nueva()" [disabled]="!activos().length" />
+  </div>
+
+  @if (!cargando() && !activos().length) {
+    <p-message severity="warn" styleClass="mb">Primero crea un local activo en la pestaña Locales.</p-message>
+  }
+
+  <p-table [value]="lista()" [loading]="cargando()" dataKey="id" styleClass="p-datatable-sm">
+    <ng-template #header>
+      <tr>
+        <th>Comprobante</th>
+        <th style="width: 90px">Serie</th>
+        <th>Local</th>
+        <th style="width: 150px">Siguiente número</th>
+        <th style="width: 110px">SUNAT</th>
+        <th style="width: 100px">Estado</th>
+        <th style="width: 60px"></th>
+      </tr>
+    </ng-template>
+    <ng-template #body let-s>
+      <tr>
+        <td><b>{{ etiquetaTipo(s.tipoComprobante) }}</b></td>
+        <td class="codigo">{{ s.codigo }}</td>
+        <td>{{ s.establecimiento }}</td>
+        <td class="codigo">{{ s.siguienteNumero }}</td>
+        <td>
+          <p-tag [value]="s.electronico ? 'Electrónico' : 'Interno'" [severity]="s.electronico ? 'info' : 'secondary'" />
+        </td>
+        <td><p-tag [value]="s.activo ? 'Activa' : 'Inactiva'" [severity]="s.activo ? 'success' : 'secondary'" /></td>
+        <td><p-button icon="pi pi-pencil" [text]="true" severity="secondary" (onClick)="editar(s)" ariaLabel="Editar serie" /></td>
+      </tr>
+    </ng-template>
+    <ng-template #emptymessage>
+      <tr><td colspan="7" class="vacio">Aún no hay series. Crea al menos B001 (boletas) y F001 (facturas).</td></tr>
+    </ng-template>
+  </p-table>
+</div>
+
+<p-dialog [visible]="dialogo()" (visibleChange)="dialogo.set($event)" [modal]="true" [draggable]="false"
+          [header]="editando() ? 'Editar serie ' + editando()!.codigo : 'Nueva serie'" [style]="{ width: 'min(560px, 94vw)' }">
+  <form [formGroup]="form" (ngSubmit)="guardar()" novalidate id="form-serie">
+    <div class="rejilla dos">
+      <div class="campo ancho-3">
+        <label for="s-tipo">Comprobante</label>
+        <p-select inputId="s-tipo" formControlName="tipoComprobante" [options]="tipos" optionLabel="etiqueta"
+                  optionValue="valor" fluid />
+      </div>
+      <div class="campo">
+        <label for="s-codigo">Serie</label>
+        <input pInputText id="s-codigo" formControlName="codigo" maxlength="4" class="mayusculas" fluid />
+        @if (invalido('codigo')) { <small class="error">4 letras o números.</small> }
+        @else if (!editando()) { <small class="ayuda">{{ reglaSerie() }}</small> }
+      </div>
+      <div class="campo">
+        <label for="s-local">Local</label>
+        <p-select inputId="s-local" formControlName="establecimientoId" [options]="activos()" optionLabel="nombre"
+                  optionValue="id" fluid />
+      </div>
+      <div class="campo">
+        <label for="s-correlativo">{{ editando() ? 'Último número emitido' : 'Último número emitido (si vienes de otro sistema)' }}</label>
+        <p-inputnumber inputId="s-correlativo" formControlName="correlativo" [min]="0" [max]="99999999"
+                       [useGrouping]="false" fluid />
+        <small class="ayuda">
+          @if (editando()) { Solo puede subir: SUNAT no admite números repetidos. }
+          @else { 0 si la serie es nueva: el primer comprobante será el 1. }
+        </small>
+      </div>
+      @if (editando()) {
+        <div class="campo">
+          <label for="s-activo">Activa</label>
+          <p-toggleswitch inputId="s-activo" formControlName="activo" />
+        </div>
+      }
+    </div>
+  </form>
+  <ng-template #footer>
+    <p-button label="Cancelar" severity="secondary" [text]="true" (onClick)="dialogo.set(false)" />
+    <p-button label="Guardar" icon="pi pi-check" type="submit" form="form-serie" [loading]="guardando()" />
+  </ng-template>
+</p-dialog>

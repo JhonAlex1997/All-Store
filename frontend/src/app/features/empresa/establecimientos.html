@@ -1,0 +1,77 @@
+<div class="as-tarjeta">
+  <div class="cabecera">
+    <div>
+      <h2>Locales</h2>
+      <p class="ayuda-seccion">Los establecimientos registrados en SUNAT. El código 0000 es el domicilio fiscal.</p>
+    </div>
+    <p-button label="Nuevo local" icon="pi pi-plus" (onClick)="nuevo()" />
+  </div>
+
+  <p-table [value]="lista()" [loading]="cargando()" dataKey="id" styleClass="p-datatable-sm">
+    <ng-template #header>
+      <tr>
+        <th style="width: 90px">Código</th>
+        <th>Nombre</th>
+        <th style="width: 110px">Tipo</th>
+        <th>Dirección</th>
+        <th style="width: 100px">Estado</th>
+        <th style="width: 60px"></th>
+      </tr>
+    </ng-template>
+    <ng-template #body let-e>
+      <tr>
+        <td class="codigo">{{ e.codigo }}</td>
+        <td><b>{{ e.nombre }}</b></td>
+        <td>{{ etiquetaTipo(e.tipo) }}</td>
+        <td class="direccion">{{ e.direccion }} <span class="ubigeo">· {{ e.ubigeo }}</span></td>
+        <td><p-tag [value]="e.activo ? 'Activo' : 'Inactivo'" [severity]="e.activo ? 'success' : 'secondary'" /></td>
+        <td><p-button icon="pi pi-pencil" [text]="true" severity="secondary" (onClick)="editar(e)" ariaLabel="Editar local" /></td>
+      </tr>
+    </ng-template>
+    <ng-template #emptymessage>
+      <tr><td colspan="6" class="vacio">Aún no hay locales. Crea el primero con el código 0000 (domicilio fiscal).</td></tr>
+    </ng-template>
+  </p-table>
+</div>
+
+<p-dialog [visible]="dialogo()" (visibleChange)="dialogo.set($event)" [modal]="true" [draggable]="false"
+          [header]="editando() ? 'Editar local' : 'Nuevo local'" [style]="{ width: 'min(560px, 94vw)' }">
+  <form [formGroup]="form" (ngSubmit)="guardar()" novalidate id="form-local">
+    <div class="rejilla dos">
+      <div class="campo">
+        <label for="l-codigo">Código SUNAT</label>
+        <input pInputText id="l-codigo" formControlName="codigo" maxlength="4" inputmode="numeric" fluid />
+        @if (invalido('codigo')) { <small class="error">4 dígitos (0000 = domicilio fiscal).</small> }
+      </div>
+      <div class="campo">
+        <label for="l-tipo">Tipo</label>
+        <p-select inputId="l-tipo" formControlName="tipo" [options]="tipos" optionLabel="etiqueta" optionValue="valor" fluid />
+      </div>
+      <div class="campo ancho-3">
+        <label for="l-nombre">Nombre</label>
+        <input pInputText id="l-nombre" formControlName="nombre" placeholder="Ej. Tienda Gamarra" fluid />
+        @if (invalido('nombre')) { <small class="error">El nombre es obligatorio.</small> }
+      </div>
+      <div class="campo ancho-3">
+        <label for="l-direccion">Dirección</label>
+        <input pInputText id="l-direccion" formControlName="direccion" fluid />
+        @if (invalido('direccion')) { <small class="error">La dirección es obligatoria.</small> }
+      </div>
+      <div class="campo">
+        <label for="l-ubigeo">Ubigeo</label>
+        <input pInputText id="l-ubigeo" formControlName="ubigeo" maxlength="6" inputmode="numeric" fluid />
+        @if (invalido('ubigeo')) { <small class="error">Son 6 dígitos.</small> }
+      </div>
+      @if (editando()) {
+        <div class="campo">
+          <label for="l-activo">Activo</label>
+          <p-toggleswitch inputId="l-activo" formControlName="activo" />
+        </div>
+      }
+    </div>
+  </form>
+  <ng-template #footer>
+    <p-button label="Cancelar" severity="secondary" [text]="true" (onClick)="dialogo.set(false)" />
+    <p-button label="Guardar" icon="pi pi-check" type="submit" form="form-local" [loading]="guardando()" />
+  </ng-template>
+</p-dialog>

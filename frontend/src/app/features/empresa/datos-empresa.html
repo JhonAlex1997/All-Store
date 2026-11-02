@@ -1,0 +1,73 @@
+@if (cargando()) {
+  <div class="as-tarjeta cargando"><i class="pi pi-spin pi-spinner"></i> Cargando…</div>
+} @else {
+  <form class="as-tarjeta" [formGroup]="form" (ngSubmit)="guardar()" novalidate>
+    @if (nueva()) {
+      <p-message severity="info" styleClass="mb">
+        Aún no se registraron los datos de la empresa. Complétalos para poder emitir comprobantes.
+      </p-message>
+    }
+
+    <h2>Datos ante SUNAT</h2>
+    <p class="ayuda-seccion">Copia el RUC, la razón social y la dirección fiscal tal como figuran en tu ficha RUC.</p>
+
+    <div class="rejilla">
+      <div class="campo">
+        <label for="ruc">RUC</label>
+        <input pInputText id="ruc" formControlName="ruc" maxlength="11" inputmode="numeric" fluid
+               [class.ng-dirty]="invalido('ruc')" />
+        @if (invalido('ruc')) { <small class="error">RUC no válido (revisa los 11 dígitos).</small> }
+      </div>
+      <div class="campo ancho-2">
+        <label for="razon">Razón social</label>
+        <input pInputText id="razon" formControlName="razonSocial" fluid />
+        @if (invalido('razonSocial')) { <small class="error">La razón social es obligatoria.</small> }
+      </div>
+      <div class="campo ancho-3">
+        <label for="direccion">Dirección fiscal</label>
+        <input pInputText id="direccion" formControlName="direccionFiscal" fluid />
+        @if (invalido('direccionFiscal')) { <small class="error">La dirección fiscal es obligatoria.</small> }
+      </div>
+      <div class="campo">
+        <label for="ubigeo">Ubigeo</label>
+        <input pInputText id="ubigeo" formControlName="ubigeo" maxlength="6" inputmode="numeric" fluid />
+        @if (invalido('ubigeo')) { <small class="error">Son 6 dígitos (ej. 150115 La Victoria).</small> }
+        @else { <small class="ayuda">Código INEI del distrito (está en tu ficha RUC).</small> }
+      </div>
+    </div>
+
+    <h2>Cómo te ven tus clientes</h2>
+    <div class="rejilla">
+      <div class="campo ancho-2">
+        <label for="comercial">Nombre comercial</label>
+        <input pInputText id="comercial" formControlName="nombreComercial" fluid />
+        <small class="ayuda">Sale grande en el comprobante, el menú y el login. Si lo dejas vacío, se usa la razón social.</small>
+      </div>
+      <div class="campo">
+        <label for="telefono">Teléfono</label>
+        <input pInputText id="telefono" formControlName="telefono" inputmode="tel" fluid />
+        @if (invalido('telefono')) { <small class="error">Solo números, espacios, +, - y paréntesis.</small> }
+      </div>
+      <div class="campo ancho-2">
+        <label for="email">Correo</label>
+        <input pInputText id="email" formControlName="email" type="email" fluid />
+        @if (invalido('email')) { <small class="error">El correo no es válido.</small> }
+        @else { <small class="ayuda">Sale en el comprobante y recibe las alertas de facturación.</small> }
+      </div>
+    </div>
+
+    <h2>Ventas</h2>
+    <div class="rejilla">
+      <div class="campo">
+        <label for="mayor">Precio por mayor desde</label>
+        <p-inputnumber inputId="mayor" formControlName="minimoPrendasPorMayor" [min]="1" [max]="1000" suffix=" prendas"
+                       [showButtons]="true" fluid />
+        <small class="ayuda">Con esta cantidad o más, la caja aplica el precio por mayor.</small>
+      </div>
+    </div>
+
+    <div class="acciones">
+      <p-button type="submit" label="Guardar datos" icon="pi pi-check" [loading]="guardando()" />
+    </div>
+  </form>
+}

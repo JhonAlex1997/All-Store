@@ -76,6 +76,7 @@ export type { ItemDevolucionRequest } from './models/item-devolucion-request';
 export type { Linea } from './models/linea';
 export type { LoginRequest } from './models/login-request';
 export type { LoginResponse } from './models/login-response';
+export type { MarcaResponse } from './models/marca-response';
 export type { Memoria } from './models/memoria';
 export type { Movimiento } from './models/movimiento';
 export type { MovimientoCajaRequest } from './models/movimiento-caja-request';

@@ -9,16 +9,16 @@ import { BaseService } from '../base-service';
 import { ApiConfiguration } from '../api-configuration';
 import { StrictHttpResponse } from '../strict-http-response';
 
-import { actualizar } from '../fn/usuario-controller/actualizar';
-import { Actualizar$Params } from '../fn/usuario-controller/actualizar';
-import { crear1 } from '../fn/usuario-controller/crear-1';
-import { Crear1$Params } from '../fn/usuario-controller/crear-1';
-import { desbloquear } from '../fn/usuario-controller/desbloquear';
-import { Desbloquear$Params } from '../fn/usuario-controller/desbloquear';
-import { listar1 } from '../fn/usuario-controller/listar-1';
-import { Listar1$Params } from '../fn/usuario-controller/listar-1';
-import { reiniciarPassword } from '../fn/usuario-controller/reiniciar-password';
-import { ReiniciarPassword$Params } from '../fn/usuario-controller/reiniciar-password';
+import { usuarioActualizar } from '../fn/usuario-controller/usuario-actualizar';
+import { UsuarioActualizar$Params } from '../fn/usuario-controller/usuario-actualizar';
+import { usuarioCrear } from '../fn/usuario-controller/usuario-crear';
+import { UsuarioCrear$Params } from '../fn/usuario-controller/usuario-crear';
+import { usuarioDesbloquear } from '../fn/usuario-controller/usuario-desbloquear';
+import { UsuarioDesbloquear$Params } from '../fn/usuario-controller/usuario-desbloquear';
+import { usuarioListar } from '../fn/usuario-controller/usuario-listar';
+import { UsuarioListar$Params } from '../fn/usuario-controller/usuario-listar';
+import { usuarioReiniciarPassword } from '../fn/usuario-controller/usuario-reiniciar-password';
+import { UsuarioReiniciarPassword$Params } from '../fn/usuario-controller/usuario-reiniciar-password';
 import { UsuarioResponse } from '../models/usuario-response';
 
 @Injectable({ providedIn: 'root' })
@@ -27,128 +27,128 @@ export class UsuarioControllerService extends BaseService {
     super(config, http);
   }
 
-  /** Path part for operation `actualizar()` */
-  static readonly ActualizarPath = '/api/usuarios/{id}';
+  /** Path part for operation `usuarioActualizar()` */
+  static readonly UsuarioActualizarPath = '/api/usuarios/{id}';
 
   /**
    * This method provides access to the full `HttpResponse`, allowing access to response headers.
-   * To access only the response body, use `actualizar()` instead.
+   * To access only the response body, use `usuarioActualizar()` instead.
    *
    * This method sends `application/json` and handles request body of type `application/json`.
    */
-  actualizar$Response(params: Actualizar$Params, context?: HttpContext): Promise<StrictHttpResponse<UsuarioResponse>> {
-    const obs = actualizar(this.http, this.rootUrl, params, context);
+  usuarioActualizar$Response(params: UsuarioActualizar$Params, context?: HttpContext): Promise<StrictHttpResponse<UsuarioResponse>> {
+    const obs = usuarioActualizar(this.http, this.rootUrl, params, context);
     return firstValueFrom(obs);
   }
 
   /**
    * This method provides access only to the response body.
-   * To access the full response (for headers, for example), `actualizar$Response()` instead.
+   * To access the full response (for headers, for example), `usuarioActualizar$Response()` instead.
    *
    * This method sends `application/json` and handles request body of type `application/json`.
    */
-  actualizar(params: Actualizar$Params, context?: HttpContext): Promise<UsuarioResponse> {
-    const resp = this.actualizar$Response(params, context);
+  usuarioActualizar(params: UsuarioActualizar$Params, context?: HttpContext): Promise<UsuarioResponse> {
+    const resp = this.usuarioActualizar$Response(params, context);
     return resp.then((r: StrictHttpResponse<UsuarioResponse>): UsuarioResponse => r.body);
   }
 
-  /** Path part for operation `listar1()` */
-  static readonly Listar1Path = '/api/usuarios';
+  /** Path part for operation `usuarioListar()` */
+  static readonly UsuarioListarPath = '/api/usuarios';
 
   /**
    * This method provides access to the full `HttpResponse`, allowing access to response headers.
-   * To access only the response body, use `listar1()` instead.
+   * To access only the response body, use `usuarioListar()` instead.
    *
    * This method doesn't expect any request body.
    */
-  listar1$Response(params?: Listar1$Params, context?: HttpContext): Promise<StrictHttpResponse<Array<UsuarioResponse>>> {
-    const obs = listar1(this.http, this.rootUrl, params, context);
+  usuarioListar$Response(params?: UsuarioListar$Params, context?: HttpContext): Promise<StrictHttpResponse<Array<UsuarioResponse>>> {
+    const obs = usuarioListar(this.http, this.rootUrl, params, context);
     return firstValueFrom(obs);
   }
 
   /**
    * This method provides access only to the response body.
-   * To access the full response (for headers, for example), `listar1$Response()` instead.
+   * To access the full response (for headers, for example), `usuarioListar$Response()` instead.
    *
    * This method doesn't expect any request body.
    */
-  listar1(params?: Listar1$Params, context?: HttpContext): Promise<Array<UsuarioResponse>> {
-    const resp = this.listar1$Response(params, context);
+  usuarioListar(params?: UsuarioListar$Params, context?: HttpContext): Promise<Array<UsuarioResponse>> {
+    const resp = this.usuarioListar$Response(params, context);
     return resp.then((r: StrictHttpResponse<Array<UsuarioResponse>>): Array<UsuarioResponse> => r.body);
   }
 
-  /** Path part for operation `crear1()` */
-  static readonly Crear1Path = '/api/usuarios';
+  /** Path part for operation `usuarioCrear()` */
+  static readonly UsuarioCrearPath = '/api/usuarios';
 
   /**
    * This method provides access to the full `HttpResponse`, allowing access to response headers.
-   * To access only the response body, use `crear1()` instead.
+   * To access only the response body, use `usuarioCrear()` instead.
    *
    * This method sends `application/json` and handles request body of type `application/json`.
    */
-  crear1$Response(params: Crear1$Params, context?: HttpContext): Promise<StrictHttpResponse<UsuarioResponse>> {
-    const obs = crear1(this.http, this.rootUrl, params, context);
+  usuarioCrear$Response(params: UsuarioCrear$Params, context?: HttpContext): Promise<StrictHttpResponse<UsuarioResponse>> {
+    const obs = usuarioCrear(this.http, this.rootUrl, params, context);
     return firstValueFrom(obs);
   }
 
   /**
    * This method provides access only to the response body.
-   * To access the full response (for headers, for example), `crear1$Response()` instead.
+   * To access the full response (for headers, for example), `usuarioCrear$Response()` instead.
    *
    * This method sends `application/json` and handles request body of type `application/json`.
    */
-  crear1(params: Crear1$Params, context?: HttpContext): Promise<UsuarioResponse> {
-    const resp = this.crear1$Response(params, context);
+  usuarioCrear(params: UsuarioCrear$Params, context?: HttpContext): Promise<UsuarioResponse> {
+    const resp = this.usuarioCrear$Response(params, context);
     return resp.then((r: StrictHttpResponse<UsuarioResponse>): UsuarioResponse => r.body);
   }
 
-  /** Path part for operation `reiniciarPassword()` */
-  static readonly ReiniciarPasswordPath = '/api/usuarios/{id}/reiniciar-password';
+  /** Path part for operation `usuarioReiniciarPassword()` */
+  static readonly UsuarioReiniciarPasswordPath = '/api/usuarios/{id}/reiniciar-password';
 
   /**
    * This method provides access to the full `HttpResponse`, allowing access to response headers.
-   * To access only the response body, use `reiniciarPassword()` instead.
+   * To access only the response body, use `usuarioReiniciarPassword()` instead.
    *
    * This method sends `application/json` and handles request body of type `application/json`.
    */
-  reiniciarPassword$Response(params: ReiniciarPassword$Params, context?: HttpContext): Promise<StrictHttpResponse<UsuarioResponse>> {
-    const obs = reiniciarPassword(this.http, this.rootUrl, params, context);
+  usuarioReiniciarPassword$Response(params: UsuarioReiniciarPassword$Params, context?: HttpContext): Promise<StrictHttpResponse<UsuarioResponse>> {
+    const obs = usuarioReiniciarPassword(this.http, this.rootUrl, params, context);
     return firstValueFrom(obs);
   }
 
   /**
    * This method provides access only to the response body.
-   * To access the full response (for headers, for example), `reiniciarPassword$Response()` instead.
+   * To access the full response (for headers, for example), `usuarioReiniciarPassword$Response()` instead.
    *
    * This method sends `application/json` and handles request body of type `application/json`.
    */
-  reiniciarPassword(params: ReiniciarPassword$Params, context?: HttpContext): Promise<UsuarioResponse> {
-    const resp = this.reiniciarPassword$Response(params, context);
+  usuarioReiniciarPassword(params: UsuarioReiniciarPassword$Params, context?: HttpContext): Promise<UsuarioResponse> {
+    const resp = this.usuarioReiniciarPassword$Response(params, context);
     return resp.then((r: StrictHttpResponse<UsuarioResponse>): UsuarioResponse => r.body);
   }
 
-  /** Path part for operation `desbloquear()` */
-  static readonly DesbloquearPath = '/api/usuarios/{id}/desbloquear';
+  /** Path part for operation `usuarioDesbloquear()` */
+  static readonly UsuarioDesbloquearPath = '/api/usuarios/{id}/desbloquear';
 
   /**
    * This method provides access to the full `HttpResponse`, allowing access to response headers.
-   * To access only the response body, use `desbloquear()` instead.
+   * To access only the response body, use `usuarioDesbloquear()` instead.
    *
    * This method doesn't expect any request body.
    */
-  desbloquear$Response(params: Desbloquear$Params, context?: HttpContext): Promise<StrictHttpResponse<UsuarioResponse>> {
-    const obs = desbloquear(this.http, this.rootUrl, params, context);
+  usuarioDesbloquear$Response(params: UsuarioDesbloquear$Params, context?: HttpContext): Promise<StrictHttpResponse<UsuarioResponse>> {
+    const obs = usuarioDesbloquear(this.http, this.rootUrl, params, context);
     return firstValueFrom(obs);
   }
 
   /**
    * This method provides access only to the response body.
-   * To access the full response (for headers, for example), `desbloquear$Response()` instead.
+   * To access the full response (for headers, for example), `usuarioDesbloquear$Response()` instead.
    *
    * This method doesn't expect any request body.
    */
-  desbloquear(params: Desbloquear$Params, context?: HttpContext): Promise<UsuarioResponse> {
-    const resp = this.desbloquear$Response(params, context);
+  usuarioDesbloquear(params: UsuarioDesbloquear$Params, context?: HttpContext): Promise<UsuarioResponse> {
+    const resp = this.usuarioDesbloquear$Response(params, context);
     return resp.then((r: StrictHttpResponse<UsuarioResponse>): UsuarioResponse => r.body);
   }
 

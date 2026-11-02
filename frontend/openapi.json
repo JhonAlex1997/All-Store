@@ -7,7 +7,7 @@
   },
   "servers": [
     {
-      "url": "http://localhost:8080",
+      "url": "http://localhost:8081",
       "description": "Generated server url"
     }
   ],
@@ -22,7 +22,7 @@
         "tags": [
           "usuario-controller"
         ],
-        "operationId": "actualizar",
+        "operationId": "usuarioActualizar",
         "parameters": [
           {
             "name": "id",
@@ -63,7 +63,7 @@
         "tags": [
           "talla-controller"
         ],
-        "operationId": "actualizar_1",
+        "operationId": "tallaActualizar",
         "parameters": [
           {
             "name": "id",
@@ -104,7 +104,7 @@
         "tags": [
           "serie-controller"
         ],
-        "operationId": "actualizar_2",
+        "operationId": "serieActualizar",
         "parameters": [
           {
             "name": "id",
@@ -145,7 +145,7 @@
         "tags": [
           "proveedor-controller"
         ],
-        "operationId": "actualizar_3",
+        "operationId": "proveedorActualizar",
         "parameters": [
           {
             "name": "id",
@@ -186,7 +186,7 @@
         "tags": [
           "producto-controller"
         ],
-        "operationId": "obtener",
+        "operationId": "productoObtener",
         "parameters": [
           {
             "name": "id",
@@ -215,7 +215,7 @@
         "tags": [
           "producto-controller"
         ],
-        "operationId": "actualizar_4",
+        "operationId": "productoActualizar",
         "parameters": [
           {
             "name": "id",
@@ -256,7 +256,7 @@
         "tags": [
           "producto-controller"
         ],
-        "operationId": "definirStockMinimo",
+        "operationId": "productoDefinirStockMinimo",
         "parameters": [
           {
             "name": "id",
@@ -297,7 +297,7 @@
         "tags": [
           "producto-controller"
         ],
-        "operationId": "definirCosto",
+        "operationId": "productoDefinirCosto",
         "parameters": [
           {
             "name": "id",
@@ -338,7 +338,7 @@
         "tags": [
           "producto-controller"
         ],
-        "operationId": "definirCostoVariante",
+        "operationId": "productoDefinirCostoVariante",
         "parameters": [
           {
             "name": "varianteId",
@@ -379,7 +379,7 @@
         "tags": [
           "inventario-controller"
         ],
-        "operationId": "definirStockMinimo_1",
+        "operationId": "inventarioDefinirStockMinimo",
         "requestBody": {
           "content": {
             "application/json": {
@@ -412,7 +412,7 @@
         "tags": [
           "conteo-controller"
         ],
-        "operationId": "registrar",
+        "operationId": "conteoRegistrar",
         "parameters": [
           {
             "name": "id",
@@ -461,7 +461,7 @@
         "tags": [
           "insumo-controller"
         ],
-        "operationId": "actualizar_5",
+        "operationId": "insumoActualizar",
         "parameters": [
           {
             "name": "id",
@@ -502,7 +502,7 @@
         "tags": [
           "establecimiento-controller"
         ],
-        "operationId": "actualizar_6",
+        "operationId": "establecimientoActualizar",
         "parameters": [
           {
             "name": "id",
@@ -543,7 +543,7 @@
         "tags": [
           "empresa-controller"
         ],
-        "operationId": "obtener_1",
+        "operationId": "empresaObtener",
         "responses": {
           "200": {
             "description": "OK",
@@ -561,7 +561,7 @@
         "tags": [
           "empresa-controller"
         ],
-        "operationId": "guardar",
+        "operationId": "empresaGuardar",
         "requestBody": {
           "content": {
             "application/json": {
@@ -586,12 +586,61 @@
         }
       }
     },
+    "/api/empresa/logo": {
+      "put": {
+        "tags": [
+          "empresa-controller"
+        ],
+        "operationId": "empresaSubirLogo",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "archivo": {
+                    "type": "string",
+                    "format": "binary"
+                  }
+                },
+                "required": [
+                  "archivo"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MarcaResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "empresa-controller"
+        ],
+        "operationId": "empresaQuitarLogo",
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
     "/api/colores/{id}": {
       "put": {
         "tags": [
           "color-controller"
         ],
-        "operationId": "actualizar_7",
+        "operationId": "colorActualizar",
         "parameters": [
           {
             "name": "id",
@@ -632,7 +681,7 @@
         "tags": [
           "cliente-controller"
         ],
-        "operationId": "obtener_2",
+        "operationId": "clienteObtener",
         "parameters": [
           {
             "name": "id",
@@ -661,7 +710,7 @@
         "tags": [
           "cliente-controller"
         ],
-        "operationId": "actualizar_8",
+        "operationId": "clienteActualizar",
         "parameters": [
           {
             "name": "id",
@@ -702,7 +751,7 @@
         "tags": [
           "categoria-controller"
         ],
-        "operationId": "actualizar_9",
+        "operationId": "categoriaActualizar",
         "parameters": [
           {
             "name": "id",
@@ -743,7 +792,7 @@
         "tags": [
           "campana-controller"
         ],
-        "operationId": "obtener_3",
+        "operationId": "campanaObtener",
         "parameters": [
           {
             "name": "id",
@@ -772,7 +821,7 @@
         "tags": [
           "campana-controller"
         ],
-        "operationId": "actualizar_10",
+        "operationId": "campanaActualizar",
         "parameters": [
           {
             "name": "id",
@@ -813,7 +862,7 @@
         "tags": [
           "venta-controller"
         ],
-        "operationId": "listar",
+        "operationId": "ventaListar",
         "parameters": [
           {
             "name": "tipoComprobante",
@@ -1037,7 +1086,7 @@
         "tags": [
           "venta-controller"
         ],
-        "operationId": "crear",
+        "operationId": "ventaCrear",
         "parameters": [
           {
             "name": "Idempotency-Key",
@@ -1077,7 +1126,7 @@
         "tags": [
           "venta-controller"
         ],
-        "operationId": "reemitir",
+        "operationId": "ventaReemitir",
         "parameters": [
           {
             "name": "id",
@@ -1125,7 +1174,7 @@
         "tags": [
           "venta-controller"
         ],
-        "operationId": "emitirNotaDebito",
+        "operationId": "ventaEmitirNotaDebito",
         "parameters": [
           {
             "name": "id",
@@ -1174,7 +1223,7 @@
         "tags": [
           "venta-controller"
         ],
-        "operationId": "emitirNotaCredito",
+        "operationId": "ventaEmitirNotaCredito",
         "parameters": [
           {
             "name": "id",
@@ -1223,7 +1272,7 @@
         "tags": [
           "entrega-controller"
         ],
-        "operationId": "enviarWhatsapp",
+        "operationId": "entregaEnviarWhatsapp",
         "parameters": [
           {
             "name": "id",
@@ -1271,7 +1320,7 @@
         "tags": [
           "entrega-controller"
         ],
-        "operationId": "enviarCorreo",
+        "operationId": "entregaEnviarCorreo",
         "parameters": [
           {
             "name": "id",
@@ -1319,7 +1368,7 @@
         "tags": [
           "venta-controller"
         ],
-        "operationId": "convertir",
+        "operationId": "ventaConvertir",
         "parameters": [
           {
             "name": "id",
@@ -1368,7 +1417,7 @@
         "tags": [
           "venta-controller"
         ],
-        "operationId": "anular",
+        "operationId": "ventaAnular",
         "parameters": [
           {
             "name": "id",
@@ -1417,7 +1466,7 @@
         "tags": [
           "usuario-controller"
         ],
-        "operationId": "listar_1",
+        "operationId": "usuarioListar",
         "responses": {
           "200": {
             "description": "OK",
@@ -1438,7 +1487,7 @@
         "tags": [
           "usuario-controller"
         ],
-        "operationId": "crear_1",
+        "operationId": "usuarioCrear",
         "parameters": [
           {
             "name": "Idempotency-Key",
@@ -1478,7 +1527,7 @@
         "tags": [
           "usuario-controller"
         ],
-        "operationId": "reiniciarPassword",
+        "operationId": "usuarioReiniciarPassword",
         "parameters": [
           {
             "name": "id",
@@ -1519,7 +1568,7 @@
         "tags": [
           "usuario-controller"
         ],
-        "operationId": "desbloquear",
+        "operationId": "usuarioDesbloquear",
         "parameters": [
           {
             "name": "id",
@@ -1550,7 +1599,7 @@
         "tags": [
           "talla-controller"
         ],
-        "operationId": "listar_2",
+        "operationId": "tallaListar",
         "parameters": [
           {
             "name": "soloActivas",
@@ -1582,7 +1631,7 @@
         "tags": [
           "talla-controller"
         ],
-        "operationId": "crear_2",
+        "operationId": "tallaCrear",
         "parameters": [
           {
             "name": "Idempotency-Key",
@@ -1622,7 +1671,7 @@
         "tags": [
           "sunat-controller"
         ],
-        "operationId": "enviarEnvio",
+        "operationId": "sunatEnviarEnvio",
         "parameters": [
           {
             "name": "envioId",
@@ -1662,7 +1711,7 @@
         "tags": [
           "sunat-controller"
         ],
-        "operationId": "enviar",
+        "operationId": "sunatEnviar",
         "parameters": [
           {
             "name": "comprobanteId",
@@ -1702,7 +1751,7 @@
         "tags": [
           "sunat-controller"
         ],
-        "operationId": "reintentarBaja",
+        "operationId": "sunatReintentarBaja",
         "parameters": [
           {
             "name": "comprobanteId",
@@ -1741,7 +1790,7 @@
         "tags": [
           "serie-controller"
         ],
-        "operationId": "listar_3",
+        "operationId": "serieListar",
         "parameters": [
           {
             "name": "tipoComprobante",
@@ -1789,7 +1838,7 @@
         "tags": [
           "serie-controller"
         ],
-        "operationId": "crear_3",
+        "operationId": "serieCrear",
         "parameters": [
           {
             "name": "Idempotency-Key",
@@ -1829,7 +1878,7 @@
         "tags": [
           "proveedor-controller"
         ],
-        "operationId": "listar_4",
+        "operationId": "proveedorListar",
         "responses": {
           "200": {
             "description": "OK",
@@ -1850,7 +1899,7 @@
         "tags": [
           "proveedor-controller"
         ],
-        "operationId": "crear_4",
+        "operationId": "proveedorCrear",
         "parameters": [
           {
             "name": "Idempotency-Key",
@@ -1890,7 +1939,7 @@
         "tags": [
           "producto-controller"
         ],
-        "operationId": "listar_5",
+        "operationId": "productoListar",
         "parameters": [
           {
             "name": "busqueda",
@@ -1972,7 +2021,7 @@
         "tags": [
           "producto-controller"
         ],
-        "operationId": "crear_5",
+        "operationId": "productoCrear",
         "parameters": [
           {
             "name": "Idempotency-Key",
@@ -2012,7 +2061,7 @@
         "tags": [
           "producto-controller"
         ],
-        "operationId": "agregarVariantes",
+        "operationId": "productoAgregarVariantes",
         "parameters": [
           {
             "name": "id",
@@ -2061,7 +2110,7 @@
         "tags": [
           "producto-controller"
         ],
-        "operationId": "etiquetas",
+        "operationId": "productoEtiquetas",
         "requestBody": {
           "content": {
             "application/json": {
@@ -2092,7 +2141,7 @@
         "tags": [
           "produccion-controller"
         ],
-        "operationId": "listar_6",
+        "operationId": "produccionListar",
         "parameters": [
           {
             "name": "estado",
@@ -2162,7 +2211,7 @@
         "tags": [
           "produccion-controller"
         ],
-        "operationId": "crear_6",
+        "operationId": "produccionCrear",
         "parameters": [
           {
             "name": "Idempotency-Key",
@@ -2202,7 +2251,7 @@
         "tags": [
           "produccion-controller"
         ],
-        "operationId": "terminar",
+        "operationId": "produccionTerminar",
         "parameters": [
           {
             "name": "id",
@@ -2251,7 +2300,7 @@
         "tags": [
           "produccion-controller"
         ],
-        "operationId": "consumir",
+        "operationId": "produccionConsumir",
         "parameters": [
           {
             "name": "id",
@@ -2300,7 +2349,7 @@
         "tags": [
           "produccion-controller"
         ],
-        "operationId": "devolver",
+        "operationId": "produccionDevolver",
         "parameters": [
           {
             "name": "id",
@@ -2349,7 +2398,7 @@
         "tags": [
           "produccion-controller"
         ],
-        "operationId": "terminarEtapa",
+        "operationId": "produccionTerminarEtapa",
         "parameters": [
           {
             "name": "id",
@@ -2412,7 +2461,7 @@
         "tags": [
           "produccion-controller"
         ],
-        "operationId": "iniciarEtapa",
+        "operationId": "produccionIniciarEtapa",
         "parameters": [
           {
             "name": "id",
@@ -2474,7 +2523,7 @@
         "tags": [
           "produccion-controller"
         ],
-        "operationId": "anular_1",
+        "operationId": "produccionAnular",
         "parameters": [
           {
             "name": "id",
@@ -2523,7 +2572,7 @@
         "tags": [
           "inventario-controller"
         ],
-        "operationId": "trasladar",
+        "operationId": "inventarioTrasladar",
         "parameters": [
           {
             "name": "Idempotency-Key",
@@ -2566,7 +2615,7 @@
         "tags": [
           "inventario-controller"
         ],
-        "operationId": "registrarMovimiento",
+        "operationId": "inventarioRegistrarMovimiento",
         "parameters": [
           {
             "name": "Idempotency-Key",
@@ -2609,7 +2658,7 @@
         "tags": [
           "conteo-controller"
         ],
-        "operationId": "listar_7",
+        "operationId": "conteoListar",
         "parameters": [
           {
             "name": "establecimientoId",
@@ -2688,7 +2737,7 @@
         "tags": [
           "conteo-controller"
         ],
-        "operationId": "abrir",
+        "operationId": "conteoAbrir",
         "parameters": [
           {
             "name": "Idempotency-Key",
@@ -2728,7 +2777,7 @@
         "tags": [
           "conteo-controller"
         ],
-        "operationId": "cerrar",
+        "operationId": "conteoCerrar",
         "parameters": [
           {
             "name": "id",
@@ -2776,7 +2825,7 @@
         "tags": [
           "conteo-controller"
         ],
-        "operationId": "anular_2",
+        "operationId": "conteoAnular",
         "parameters": [
           {
             "name": "id",
@@ -2815,7 +2864,7 @@
         "tags": [
           "inventario-controller"
         ],
-        "operationId": "cargaMasiva",
+        "operationId": "inventarioCargaMasiva",
         "parameters": [
           {
             "name": "establecimientoId",
@@ -2881,7 +2930,7 @@
         "tags": [
           "insumo-controller"
         ],
-        "operationId": "listar_8",
+        "operationId": "insumoListar",
         "responses": {
           "200": {
             "description": "OK",
@@ -2902,7 +2951,7 @@
         "tags": [
           "insumo-controller"
         ],
-        "operationId": "crear_7",
+        "operationId": "insumoCrear",
         "parameters": [
           {
             "name": "Idempotency-Key",
@@ -2942,7 +2991,7 @@
         "tags": [
           "insumo-controller"
         ],
-        "operationId": "ajustar",
+        "operationId": "insumoAjustar",
         "parameters": [
           {
             "name": "Idempotency-Key",
@@ -2985,7 +3034,7 @@
         "tags": [
           "guia-remision-controller"
         ],
-        "operationId": "listar_9",
+        "operationId": "guiaRemisionListar",
         "parameters": [
           {
             "name": "motivo",
@@ -3090,7 +3139,7 @@
         "tags": [
           "guia-remision-controller"
         ],
-        "operationId": "emitir",
+        "operationId": "guiaRemisionEmitir",
         "parameters": [
           {
             "name": "Idempotency-Key",
@@ -3130,7 +3179,7 @@
         "tags": [
           "establecimiento-controller"
         ],
-        "operationId": "listar_10",
+        "operationId": "establecimientoListar",
         "parameters": [
           {
             "name": "soloActivos",
@@ -3162,7 +3211,7 @@
         "tags": [
           "establecimiento-controller"
         ],
-        "operationId": "crear_8",
+        "operationId": "establecimientoCrear",
         "parameters": [
           {
             "name": "Idempotency-Key",
@@ -3202,7 +3251,7 @@
         "tags": [
           "compra-controller"
         ],
-        "operationId": "listar_11",
+        "operationId": "compraListar",
         "parameters": [
           {
             "name": "periodo",
@@ -3276,7 +3325,7 @@
         "tags": [
           "compra-controller"
         ],
-        "operationId": "registrar_1",
+        "operationId": "compraRegistrar",
         "parameters": [
           {
             "name": "Idempotency-Key",
@@ -3316,7 +3365,7 @@
         "tags": [
           "compra-controller"
         ],
-        "operationId": "anular_3",
+        "operationId": "compraAnular",
         "parameters": [
           {
             "name": "id",
@@ -3365,7 +3414,7 @@
         "tags": [
           "color-controller"
         ],
-        "operationId": "listar_12",
+        "operationId": "colorListar",
         "parameters": [
           {
             "name": "soloActivos",
@@ -3397,7 +3446,7 @@
         "tags": [
           "color-controller"
         ],
-        "operationId": "crear_9",
+        "operationId": "colorCrear",
         "parameters": [
           {
             "name": "Idempotency-Key",
@@ -3437,7 +3486,7 @@
         "tags": [
           "cliente-controller"
         ],
-        "operationId": "listar_13",
+        "operationId": "clienteListar",
         "parameters": [
           {
             "name": "busqueda",
@@ -3526,7 +3575,7 @@
         "tags": [
           "cliente-controller"
         ],
-        "operationId": "crear_10",
+        "operationId": "clienteCrear",
         "parameters": [
           {
             "name": "Idempotency-Key",
@@ -3566,7 +3615,7 @@
         "tags": [
           "categoria-controller"
         ],
-        "operationId": "listar_14",
+        "operationId": "categoriaListar",
         "parameters": [
           {
             "name": "soloActivas",
@@ -3598,7 +3647,7 @@
         "tags": [
           "categoria-controller"
         ],
-        "operationId": "crear_11",
+        "operationId": "categoriaCrear",
         "parameters": [
           {
             "name": "Idempotency-Key",
@@ -3638,7 +3687,7 @@
         "tags": [
           "campana-controller"
         ],
-        "operationId": "listar_15",
+        "operationId": "campanaListar",
         "parameters": [
           {
             "name": "vigentes",
@@ -3670,7 +3719,7 @@
         "tags": [
           "campana-controller"
         ],
-        "operationId": "crear_12",
+        "operationId": "campanaCrear",
         "parameters": [
           {
             "name": "Idempotency-Key",
@@ -3710,7 +3759,7 @@
         "tags": [
           "caja-controller"
         ],
-        "operationId": "registrarMovimiento_1",
+        "operationId": "cajaRegistrarMovimiento",
         "parameters": [
           {
             "name": "Idempotency-Key",
@@ -3750,7 +3799,7 @@
         "tags": [
           "caja-controller"
         ],
-        "operationId": "cerrar_1",
+        "operationId": "cajaCerrar",
         "parameters": [
           {
             "name": "Idempotency-Key",
@@ -3790,7 +3839,7 @@
         "tags": [
           "caja-controller"
         ],
-        "operationId": "abrir_1",
+        "operationId": "cajaAbrir",
         "parameters": [
           {
             "name": "Idempotency-Key",
@@ -3830,7 +3879,7 @@
         "tags": [
           "auth-controller"
         ],
-        "operationId": "login",
+        "operationId": "authLogin",
         "requestBody": {
           "content": {
             "application/json": {
@@ -3860,7 +3909,7 @@
         "tags": [
           "auth-controller"
         ],
-        "operationId": "cerrarSesion",
+        "operationId": "authCerrarSesion",
         "responses": {
           "204": {
             "description": "No Content"
@@ -3873,7 +3922,7 @@
         "tags": [
           "auth-controller"
         ],
-        "operationId": "cambiarPassword",
+        "operationId": "authCambiarPassword",
         "requestBody": {
           "content": {
             "application/json": {
@@ -3903,7 +3952,7 @@
         "tags": [
           "alerta-controller"
         ],
-        "operationId": "enviarCorreo_1",
+        "operationId": "alertaEnviarCorreo",
         "parameters": [
           {
             "name": "Idempotency-Key",
@@ -3933,7 +3982,7 @@
         "tags": [
           "producto-controller"
         ],
-        "operationId": "actualizarVariante",
+        "operationId": "productoActualizarVariante",
         "parameters": [
           {
             "name": "varianteId",
@@ -3974,7 +4023,7 @@
         "tags": [
           "venta-controller"
         ],
-        "operationId": "obtener_4",
+        "operationId": "ventaObtener",
         "parameters": [
           {
             "name": "id",
@@ -4005,7 +4054,7 @@
         "tags": [
           "venta-controller"
         ],
-        "operationId": "pdf",
+        "operationId": "ventaPdf",
         "parameters": [
           {
             "name": "id",
@@ -4050,7 +4099,7 @@
         "tags": [
           "entrega-controller"
         ],
-        "operationId": "entrega",
+        "operationId": "entregaEntrega",
         "parameters": [
           {
             "name": "id",
@@ -4081,7 +4130,7 @@
         "tags": [
           "venta-controller"
         ],
-        "operationId": "totales",
+        "operationId": "ventaTotales",
         "parameters": [
           {
             "name": "tipoComprobante",
@@ -4270,7 +4319,7 @@
         "tags": [
           "sunat-controller"
         ],
-        "operationId": "listar_16",
+        "operationId": "sunatListar",
         "parameters": [
           {
             "name": "estado",
@@ -4345,7 +4394,7 @@
         "tags": [
           "sunat-controller"
         ],
-        "operationId": "consultarEnvio",
+        "operationId": "sunatConsultarEnvio",
         "parameters": [
           {
             "name": "envioId",
@@ -4376,7 +4425,7 @@
         "tags": [
           "sunat-controller"
         ],
-        "operationId": "xmlDeEnvio",
+        "operationId": "sunatXmlDeEnvio",
         "parameters": [
           {
             "name": "envioId",
@@ -4408,7 +4457,7 @@
         "tags": [
           "sunat-controller"
         ],
-        "operationId": "cdrDeEnvio",
+        "operationId": "sunatCdrDeEnvio",
         "parameters": [
           {
             "name": "envioId",
@@ -4440,7 +4489,7 @@
         "tags": [
           "sunat-controller"
         ],
-        "operationId": "consultar",
+        "operationId": "sunatConsultar",
         "parameters": [
           {
             "name": "comprobanteId",
@@ -4471,7 +4520,7 @@
         "tags": [
           "sunat-controller"
         ],
-        "operationId": "xml",
+        "operationId": "sunatXml",
         "parameters": [
           {
             "name": "comprobanteId",
@@ -4503,7 +4552,7 @@
         "tags": [
           "sunat-controller"
         ],
-        "operationId": "cdr",
+        "operationId": "sunatCdr",
         "parameters": [
           {
             "name": "comprobanteId",
@@ -4535,7 +4584,7 @@
         "tags": [
           "sistema-controller"
         ],
-        "operationId": "estado",
+        "operationId": "sistemaEstado",
         "responses": {
           "200": {
             "description": "OK",
@@ -4555,7 +4604,7 @@
         "tags": [
           "sistema-controller"
         ],
-        "operationId": "errores",
+        "operationId": "sistemaErrores",
         "responses": {
           "200": {
             "description": "OK",
@@ -4578,7 +4627,7 @@
         "tags": [
           "reporte-controller"
         ],
-        "operationId": "porVendedor",
+        "operationId": "reportePorVendedor",
         "parameters": [
           {
             "name": "desde",
@@ -4641,7 +4690,7 @@
         "tags": [
           "reporte-controller"
         ],
-        "operationId": "porTallaColor",
+        "operationId": "reportePorTallaColor",
         "parameters": [
           {
             "name": "desde",
@@ -4704,7 +4753,7 @@
         "tags": [
           "reporte-controller"
         ],
-        "operationId": "porProducto",
+        "operationId": "reportePorProducto",
         "parameters": [
           {
             "name": "desde",
@@ -4767,7 +4816,7 @@
         "tags": [
           "reporte-controller"
         ],
-        "operationId": "porHora",
+        "operationId": "reportePorHora",
         "parameters": [
           {
             "name": "desde",
@@ -4830,7 +4879,7 @@
         "tags": [
           "reporte-controller"
         ],
-        "operationId": "porDia",
+        "operationId": "reportePorDia",
         "parameters": [
           {
             "name": "desde",
@@ -4893,7 +4942,7 @@
         "tags": [
           "reporte-controller"
         ],
-        "operationId": "porDiaSemana",
+        "operationId": "reportePorDiaSemana",
         "parameters": [
           {
             "name": "desde",
@@ -4956,7 +5005,7 @@
         "tags": [
           "reporte-controller"
         ],
-        "operationId": "porCampana",
+        "operationId": "reportePorCampana",
         "parameters": [
           {
             "name": "desde",
@@ -5019,7 +5068,7 @@
         "tags": [
           "reporte-controller"
         ],
-        "operationId": "sinRotacion",
+        "operationId": "reporteSinRotacion",
         "parameters": [
           {
             "name": "dias",
@@ -5074,7 +5123,7 @@
         "tags": [
           "reporte-controller"
         ],
-        "operationId": "detalle",
+        "operationId": "reporteDetalle",
         "parameters": [
           {
             "name": "desde",
@@ -5132,12 +5181,73 @@
         }
       }
     },
+    "/api/publico/marca": {
+      "get": {
+        "tags": [
+          "marca-controller"
+        ],
+        "operationId": "marcaMarca",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MarcaResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/publico/marca/logo": {
+      "get": {
+        "tags": [
+          "marca-controller"
+        ],
+        "operationId": "marcaLogo",
+        "parameters": [
+          {
+            "name": "v",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "name": "fondo",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "claro"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "image/png": {
+                "schema": {
+                  "type": "string",
+                  "format": "byte"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/publico/comprobantes/{codigo}/xml": {
       "get": {
         "tags": [
           "consulta-publica-controller"
         ],
-        "operationId": "xml_1",
+        "operationId": "consultaPublicaXml",
         "parameters": [
           {
             "name": "codigo",
@@ -5169,7 +5279,7 @@
         "tags": [
           "consulta-publica-controller"
         ],
-        "operationId": "pdf_1",
+        "operationId": "consultaPublicaPdf",
         "parameters": [
           {
             "name": "codigo",
@@ -5214,7 +5324,7 @@
         "tags": [
           "consulta-publica-controller"
         ],
-        "operationId": "cdr_1",
+        "operationId": "consultaPublicaCdr",
         "parameters": [
           {
             "name": "codigo",
@@ -5246,7 +5356,7 @@
         "tags": [
           "producto-controller"
         ],
-        "operationId": "buscarVariante",
+        "operationId": "productoBuscarVariante",
         "parameters": [
           {
             "name": "codigo",
@@ -5276,7 +5386,7 @@
         "tags": [
           "produccion-controller"
         ],
-        "operationId": "obtener_5",
+        "operationId": "produccionObtener",
         "parameters": [
           {
             "name": "id",
@@ -5307,7 +5417,7 @@
         "tags": [
           "inventario-controller"
         ],
-        "operationId": "stock",
+        "operationId": "inventarioStock",
         "parameters": [
           {
             "name": "establecimientoId",
@@ -5389,7 +5499,7 @@
         "tags": [
           "inventario-controller"
         ],
-        "operationId": "stockPorVariante",
+        "operationId": "inventarioStockPorVariante",
         "parameters": [
           {
             "name": "varianteId",
@@ -5423,7 +5533,7 @@
         "tags": [
           "inventario-controller"
         ],
-        "operationId": "reposicion",
+        "operationId": "inventarioReposicion",
         "parameters": [
           {
             "name": "establecimientoId",
@@ -5468,7 +5578,7 @@
         "tags": [
           "inventario-controller"
         ],
-        "operationId": "kardex",
+        "operationId": "inventarioKardex",
         "parameters": [
           {
             "name": "varianteId",
@@ -5560,7 +5670,7 @@
         "tags": [
           "conteo-controller"
         ],
-        "operationId": "obtener_6",
+        "operationId": "conteoObtener",
         "parameters": [
           {
             "name": "id",
@@ -5605,7 +5715,7 @@
         "tags": [
           "inventario-controller"
         ],
-        "operationId": "plantilla",
+        "operationId": "inventarioPlantilla",
         "responses": {
           "200": {
             "description": "OK",
@@ -5626,7 +5736,7 @@
         "tags": [
           "insumo-controller"
         ],
-        "operationId": "kardex_1",
+        "operationId": "insumoKardex",
         "parameters": [
           {
             "name": "id",
@@ -5700,7 +5810,7 @@
         "tags": [
           "insumo-controller"
         ],
-        "operationId": "stock_1",
+        "operationId": "insumoStock",
         "parameters": [
           {
             "name": "establecimientoId",
@@ -5734,7 +5844,7 @@
         "tags": [
           "guia-remision-controller"
         ],
-        "operationId": "obtener_7",
+        "operationId": "guiaRemisionObtener",
         "parameters": [
           {
             "name": "id",
@@ -5765,7 +5875,7 @@
         "tags": [
           "guia-remision-controller"
         ],
-        "operationId": "pdf_2",
+        "operationId": "guiaRemisionPdf",
         "parameters": [
           {
             "name": "id",
@@ -5797,7 +5907,7 @@
         "tags": [
           "registro-ventas-controller"
         ],
-        "operationId": "registro",
+        "operationId": "registroVentasRegistro",
         "parameters": [
           {
             "name": "periodo",
@@ -5827,7 +5937,7 @@
         "tags": [
           "registro-ventas-controller"
         ],
-        "operationId": "validar",
+        "operationId": "registroVentasValidar",
         "parameters": [
           {
             "name": "periodo",
@@ -5857,7 +5967,7 @@
         "tags": [
           "registro-ventas-controller"
         ],
-        "operationId": "archivoSire",
+        "operationId": "registroVentasArchivoSire",
         "parameters": [
           {
             "name": "periodo",
@@ -5901,7 +6011,7 @@
         "tags": [
           "registro-compras-controller"
         ],
-        "operationId": "registro_1",
+        "operationId": "registroComprasRegistro",
         "parameters": [
           {
             "name": "periodo",
@@ -5931,7 +6041,7 @@
         "tags": [
           "registro-compras-controller"
         ],
-        "operationId": "validar_1",
+        "operationId": "registroComprasValidar",
         "parameters": [
           {
             "name": "periodo",
@@ -5961,7 +6071,7 @@
         "tags": [
           "registro-compras-controller"
         ],
-        "operationId": "archivoSire_1",
+        "operationId": "registroComprasArchivoSire",
         "parameters": [
           {
             "name": "periodo",
@@ -6005,7 +6115,7 @@
         "tags": [
           "libro-diario-controller"
         ],
-        "operationId": "libroDiario",
+        "operationId": "libroDiarioLibroDiario",
         "parameters": [
           {
             "name": "periodo",
@@ -6049,7 +6159,7 @@
         "tags": [
           "compra-controller"
         ],
-        "operationId": "obtener_8",
+        "operationId": "compraObtener",
         "parameters": [
           {
             "name": "id",
@@ -6080,7 +6190,7 @@
         "tags": [
           "cliente-controller"
         ],
-        "operationId": "obtenerGenerico",
+        "operationId": "clienteObtenerGenerico",
         "responses": {
           "200": {
             "description": "OK",
@@ -6100,7 +6210,7 @@
         "tags": [
           "cliente-controller"
         ],
-        "operationId": "buscarPorDocumento",
+        "operationId": "clienteBuscarPorDocumento",
         "parameters": [
           {
             "name": "tipo",
@@ -6146,7 +6256,7 @@
         "tags": [
           "cliente-controller"
         ],
-        "operationId": "consultar_1",
+        "operationId": "clienteConsultar",
         "parameters": [
           {
             "name": "tipo",
@@ -6192,7 +6302,7 @@
         "tags": [
           "campana-controller"
         ],
-        "operationId": "precios",
+        "operationId": "campanaPrecios",
         "parameters": [
           {
             "name": "varianteIds",
@@ -6238,7 +6348,7 @@
         "tags": [
           "caja-controller"
         ],
-        "operationId": "listar_17",
+        "operationId": "cajaListar",
         "parameters": [
           {
             "name": "establecimientoId",
@@ -6344,7 +6454,7 @@
         "tags": [
           "caja-controller"
         ],
-        "operationId": "obtener_9",
+        "operationId": "cajaObtener",
         "parameters": [
           {
             "name": "id",
@@ -6375,7 +6485,7 @@
         "tags": [
           "caja-controller"
         ],
-        "operationId": "miCaja",
+        "operationId": "cajaMiCaja",
         "responses": {
           "200": {
             "description": "OK",
@@ -6395,7 +6505,7 @@
         "tags": [
           "bitacora-controller"
         ],
-        "operationId": "consultar_2",
+        "operationId": "bitacoraConsultar",
         "parameters": [
           {
             "name": "desde",
@@ -6534,7 +6644,7 @@
         "tags": [
           "auth-controller"
         ],
-        "operationId": "perfil",
+        "operationId": "authPerfil",
         "responses": {
           "200": {
             "description": "OK",
@@ -6554,7 +6664,7 @@
         "tags": [
           "alerta-controller"
         ],
-        "operationId": "alertas",
+        "operationId": "alertaAlertas",
         "responses": {
           "200": {
             "description": "OK",
@@ -7456,6 +7566,21 @@
           "minimoPrendasPorMayor": {
             "type": "integer",
             "format": "int32"
+          }
+        }
+      },
+      "MarcaResponse": {
+        "type": "object",
+        "properties": {
+          "nombre": {
+            "type": "string"
+          },
+          "configurada": {
+            "type": "boolean"
+          },
+          "logoVersion": {
+            "type": "integer",
+            "format": "int64"
           }
         }
       },

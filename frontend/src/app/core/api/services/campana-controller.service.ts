@@ -9,18 +9,18 @@ import { BaseService } from '../base-service';
 import { ApiConfiguration } from '../api-configuration';
 import { StrictHttpResponse } from '../strict-http-response';
 
-import { actualizar10 } from '../fn/campana-controller/actualizar-10';
-import { Actualizar10$Params } from '../fn/campana-controller/actualizar-10';
+import { campanaActualizar } from '../fn/campana-controller/campana-actualizar';
+import { CampanaActualizar$Params } from '../fn/campana-controller/campana-actualizar';
+import { campanaCrear } from '../fn/campana-controller/campana-crear';
+import { CampanaCrear$Params } from '../fn/campana-controller/campana-crear';
+import { campanaListar } from '../fn/campana-controller/campana-listar';
+import { CampanaListar$Params } from '../fn/campana-controller/campana-listar';
+import { campanaObtener } from '../fn/campana-controller/campana-obtener';
+import { CampanaObtener$Params } from '../fn/campana-controller/campana-obtener';
+import { campanaPrecios } from '../fn/campana-controller/campana-precios';
+import { CampanaPrecios$Params } from '../fn/campana-controller/campana-precios';
 import { CampanaResponse } from '../models/campana-response';
-import { crear12 } from '../fn/campana-controller/crear-12';
-import { Crear12$Params } from '../fn/campana-controller/crear-12';
-import { listar15 } from '../fn/campana-controller/listar-15';
-import { Listar15$Params } from '../fn/campana-controller/listar-15';
-import { obtener3 } from '../fn/campana-controller/obtener-3';
-import { Obtener3$Params } from '../fn/campana-controller/obtener-3';
 import { PrecioCampanaResponse } from '../models/precio-campana-response';
-import { precios } from '../fn/campana-controller/precios';
-import { Precios$Params } from '../fn/campana-controller/precios';
 
 @Injectable({ providedIn: 'root' })
 export class CampanaControllerService extends BaseService {
@@ -28,128 +28,128 @@ export class CampanaControllerService extends BaseService {
     super(config, http);
   }
 
-  /** Path part for operation `obtener3()` */
-  static readonly Obtener3Path = '/api/campanas/{id}';
+  /** Path part for operation `campanaObtener()` */
+  static readonly CampanaObtenerPath = '/api/campanas/{id}';
 
   /**
    * This method provides access to the full `HttpResponse`, allowing access to response headers.
-   * To access only the response body, use `obtener3()` instead.
+   * To access only the response body, use `campanaObtener()` instead.
    *
    * This method doesn't expect any request body.
    */
-  obtener3$Response(params: Obtener3$Params, context?: HttpContext): Promise<StrictHttpResponse<CampanaResponse>> {
-    const obs = obtener3(this.http, this.rootUrl, params, context);
+  campanaObtener$Response(params: CampanaObtener$Params, context?: HttpContext): Promise<StrictHttpResponse<CampanaResponse>> {
+    const obs = campanaObtener(this.http, this.rootUrl, params, context);
     return firstValueFrom(obs);
   }
 
   /**
    * This method provides access only to the response body.
-   * To access the full response (for headers, for example), `obtener3$Response()` instead.
+   * To access the full response (for headers, for example), `campanaObtener$Response()` instead.
    *
    * This method doesn't expect any request body.
    */
-  obtener3(params: Obtener3$Params, context?: HttpContext): Promise<CampanaResponse> {
-    const resp = this.obtener3$Response(params, context);
+  campanaObtener(params: CampanaObtener$Params, context?: HttpContext): Promise<CampanaResponse> {
+    const resp = this.campanaObtener$Response(params, context);
     return resp.then((r: StrictHttpResponse<CampanaResponse>): CampanaResponse => r.body);
   }
 
-  /** Path part for operation `actualizar10()` */
-  static readonly Actualizar10Path = '/api/campanas/{id}';
+  /** Path part for operation `campanaActualizar()` */
+  static readonly CampanaActualizarPath = '/api/campanas/{id}';
 
   /**
    * This method provides access to the full `HttpResponse`, allowing access to response headers.
-   * To access only the response body, use `actualizar10()` instead.
+   * To access only the response body, use `campanaActualizar()` instead.
    *
    * This method sends `application/json` and handles request body of type `application/json`.
    */
-  actualizar10$Response(params: Actualizar10$Params, context?: HttpContext): Promise<StrictHttpResponse<CampanaResponse>> {
-    const obs = actualizar10(this.http, this.rootUrl, params, context);
+  campanaActualizar$Response(params: CampanaActualizar$Params, context?: HttpContext): Promise<StrictHttpResponse<CampanaResponse>> {
+    const obs = campanaActualizar(this.http, this.rootUrl, params, context);
     return firstValueFrom(obs);
   }
 
   /**
    * This method provides access only to the response body.
-   * To access the full response (for headers, for example), `actualizar10$Response()` instead.
+   * To access the full response (for headers, for example), `campanaActualizar$Response()` instead.
    *
    * This method sends `application/json` and handles request body of type `application/json`.
    */
-  actualizar10(params: Actualizar10$Params, context?: HttpContext): Promise<CampanaResponse> {
-    const resp = this.actualizar10$Response(params, context);
+  campanaActualizar(params: CampanaActualizar$Params, context?: HttpContext): Promise<CampanaResponse> {
+    const resp = this.campanaActualizar$Response(params, context);
     return resp.then((r: StrictHttpResponse<CampanaResponse>): CampanaResponse => r.body);
   }
 
-  /** Path part for operation `listar15()` */
-  static readonly Listar15Path = '/api/campanas';
+  /** Path part for operation `campanaListar()` */
+  static readonly CampanaListarPath = '/api/campanas';
 
   /**
    * This method provides access to the full `HttpResponse`, allowing access to response headers.
-   * To access only the response body, use `listar15()` instead.
+   * To access only the response body, use `campanaListar()` instead.
    *
    * This method doesn't expect any request body.
    */
-  listar15$Response(params?: Listar15$Params, context?: HttpContext): Promise<StrictHttpResponse<Array<CampanaResponse>>> {
-    const obs = listar15(this.http, this.rootUrl, params, context);
+  campanaListar$Response(params?: CampanaListar$Params, context?: HttpContext): Promise<StrictHttpResponse<Array<CampanaResponse>>> {
+    const obs = campanaListar(this.http, this.rootUrl, params, context);
     return firstValueFrom(obs);
   }
 
   /**
    * This method provides access only to the response body.
-   * To access the full response (for headers, for example), `listar15$Response()` instead.
+   * To access the full response (for headers, for example), `campanaListar$Response()` instead.
    *
    * This method doesn't expect any request body.
    */
-  listar15(params?: Listar15$Params, context?: HttpContext): Promise<Array<CampanaResponse>> {
-    const resp = this.listar15$Response(params, context);
+  campanaListar(params?: CampanaListar$Params, context?: HttpContext): Promise<Array<CampanaResponse>> {
+    const resp = this.campanaListar$Response(params, context);
     return resp.then((r: StrictHttpResponse<Array<CampanaResponse>>): Array<CampanaResponse> => r.body);
   }
 
-  /** Path part for operation `crear12()` */
-  static readonly Crear12Path = '/api/campanas';
+  /** Path part for operation `campanaCrear()` */
+  static readonly CampanaCrearPath = '/api/campanas';
 
   /**
    * This method provides access to the full `HttpResponse`, allowing access to response headers.
-   * To access only the response body, use `crear12()` instead.
+   * To access only the response body, use `campanaCrear()` instead.
    *
    * This method sends `application/json` and handles request body of type `application/json`.
    */
-  crear12$Response(params: Crear12$Params, context?: HttpContext): Promise<StrictHttpResponse<CampanaResponse>> {
-    const obs = crear12(this.http, this.rootUrl, params, context);
+  campanaCrear$Response(params: CampanaCrear$Params, context?: HttpContext): Promise<StrictHttpResponse<CampanaResponse>> {
+    const obs = campanaCrear(this.http, this.rootUrl, params, context);
     return firstValueFrom(obs);
   }
 
   /**
    * This method provides access only to the response body.
-   * To access the full response (for headers, for example), `crear12$Response()` instead.
+   * To access the full response (for headers, for example), `campanaCrear$Response()` instead.
    *
    * This method sends `application/json` and handles request body of type `application/json`.
    */
-  crear12(params: Crear12$Params, context?: HttpContext): Promise<CampanaResponse> {
-    const resp = this.crear12$Response(params, context);
+  campanaCrear(params: CampanaCrear$Params, context?: HttpContext): Promise<CampanaResponse> {
+    const resp = this.campanaCrear$Response(params, context);
     return resp.then((r: StrictHttpResponse<CampanaResponse>): CampanaResponse => r.body);
   }
 
-  /** Path part for operation `precios()` */
-  static readonly PreciosPath = '/api/campanas/precios';
+  /** Path part for operation `campanaPrecios()` */
+  static readonly CampanaPreciosPath = '/api/campanas/precios';
 
   /**
    * This method provides access to the full `HttpResponse`, allowing access to response headers.
-   * To access only the response body, use `precios()` instead.
+   * To access only the response body, use `campanaPrecios()` instead.
    *
    * This method doesn't expect any request body.
    */
-  precios$Response(params: Precios$Params, context?: HttpContext): Promise<StrictHttpResponse<Array<PrecioCampanaResponse>>> {
-    const obs = precios(this.http, this.rootUrl, params, context);
+  campanaPrecios$Response(params: CampanaPrecios$Params, context?: HttpContext): Promise<StrictHttpResponse<Array<PrecioCampanaResponse>>> {
+    const obs = campanaPrecios(this.http, this.rootUrl, params, context);
     return firstValueFrom(obs);
   }
 
   /**
    * This method provides access only to the response body.
-   * To access the full response (for headers, for example), `precios$Response()` instead.
+   * To access the full response (for headers, for example), `campanaPrecios$Response()` instead.
    *
    * This method doesn't expect any request body.
    */
-  precios(params: Precios$Params, context?: HttpContext): Promise<Array<PrecioCampanaResponse>> {
-    const resp = this.precios$Response(params, context);
+  campanaPrecios(params: CampanaPrecios$Params, context?: HttpContext): Promise<Array<PrecioCampanaResponse>> {
+    const resp = this.campanaPrecios$Response(params, context);
     return resp.then((r: StrictHttpResponse<Array<PrecioCampanaResponse>>): Array<PrecioCampanaResponse> => r.body);
   }
 

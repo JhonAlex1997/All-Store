@@ -9,12 +9,12 @@ import { BaseService } from '../base-service';
 import { ApiConfiguration } from '../api-configuration';
 import { StrictHttpResponse } from '../strict-http-response';
 
-import { cdr1 } from '../fn/consulta-publica-controller/cdr-1';
-import { Cdr1$Params } from '../fn/consulta-publica-controller/cdr-1';
-import { pdf1 } from '../fn/consulta-publica-controller/pdf-1';
-import { Pdf1$Params } from '../fn/consulta-publica-controller/pdf-1';
-import { xml1 } from '../fn/consulta-publica-controller/xml-1';
-import { Xml1$Params } from '../fn/consulta-publica-controller/xml-1';
+import { consultaPublicaCdr } from '../fn/consulta-publica-controller/consulta-publica-cdr';
+import { ConsultaPublicaCdr$Params } from '../fn/consulta-publica-controller/consulta-publica-cdr';
+import { consultaPublicaPdf } from '../fn/consulta-publica-controller/consulta-publica-pdf';
+import { ConsultaPublicaPdf$Params } from '../fn/consulta-publica-controller/consulta-publica-pdf';
+import { consultaPublicaXml } from '../fn/consulta-publica-controller/consulta-publica-xml';
+import { ConsultaPublicaXml$Params } from '../fn/consulta-publica-controller/consulta-publica-xml';
 
 @Injectable({ providedIn: 'root' })
 export class ConsultaPublicaControllerService extends BaseService {
@@ -22,78 +22,78 @@ export class ConsultaPublicaControllerService extends BaseService {
     super(config, http);
   }
 
-  /** Path part for operation `xml1()` */
-  static readonly Xml1Path = '/api/publico/comprobantes/{codigo}/xml';
+  /** Path part for operation `consultaPublicaXml()` */
+  static readonly ConsultaPublicaXmlPath = '/api/publico/comprobantes/{codigo}/xml';
 
   /**
    * This method provides access to the full `HttpResponse`, allowing access to response headers.
-   * To access only the response body, use `xml1()` instead.
+   * To access only the response body, use `consultaPublicaXml()` instead.
    *
    * This method doesn't expect any request body.
    */
-  xml1$Response(params: Xml1$Params, context?: HttpContext): Promise<StrictHttpResponse<Blob>> {
-    const obs = xml1(this.http, this.rootUrl, params, context);
+  consultaPublicaXml$Response(params: ConsultaPublicaXml$Params, context?: HttpContext): Promise<StrictHttpResponse<Blob>> {
+    const obs = consultaPublicaXml(this.http, this.rootUrl, params, context);
     return firstValueFrom(obs);
   }
 
   /**
    * This method provides access only to the response body.
-   * To access the full response (for headers, for example), `xml1$Response()` instead.
+   * To access the full response (for headers, for example), `consultaPublicaXml$Response()` instead.
    *
    * This method doesn't expect any request body.
    */
-  xml1(params: Xml1$Params, context?: HttpContext): Promise<Blob> {
-    const resp = this.xml1$Response(params, context);
+  consultaPublicaXml(params: ConsultaPublicaXml$Params, context?: HttpContext): Promise<Blob> {
+    const resp = this.consultaPublicaXml$Response(params, context);
     return resp.then((r: StrictHttpResponse<Blob>): Blob => r.body);
   }
 
-  /** Path part for operation `pdf1()` */
-  static readonly Pdf1Path = '/api/publico/comprobantes/{codigo}/pdf';
+  /** Path part for operation `consultaPublicaPdf()` */
+  static readonly ConsultaPublicaPdfPath = '/api/publico/comprobantes/{codigo}/pdf';
 
   /**
    * This method provides access to the full `HttpResponse`, allowing access to response headers.
-   * To access only the response body, use `pdf1()` instead.
+   * To access only the response body, use `consultaPublicaPdf()` instead.
    *
    * This method doesn't expect any request body.
    */
-  pdf1$Response(params: Pdf1$Params, context?: HttpContext): Promise<StrictHttpResponse<Blob>> {
-    const obs = pdf1(this.http, this.rootUrl, params, context);
+  consultaPublicaPdf$Response(params: ConsultaPublicaPdf$Params, context?: HttpContext): Promise<StrictHttpResponse<Blob>> {
+    const obs = consultaPublicaPdf(this.http, this.rootUrl, params, context);
     return firstValueFrom(obs);
   }
 
   /**
    * This method provides access only to the response body.
-   * To access the full response (for headers, for example), `pdf1$Response()` instead.
+   * To access the full response (for headers, for example), `consultaPublicaPdf$Response()` instead.
    *
    * This method doesn't expect any request body.
    */
-  pdf1(params: Pdf1$Params, context?: HttpContext): Promise<Blob> {
-    const resp = this.pdf1$Response(params, context);
+  consultaPublicaPdf(params: ConsultaPublicaPdf$Params, context?: HttpContext): Promise<Blob> {
+    const resp = this.consultaPublicaPdf$Response(params, context);
     return resp.then((r: StrictHttpResponse<Blob>): Blob => r.body);
   }
 
-  /** Path part for operation `cdr1()` */
-  static readonly Cdr1Path = '/api/publico/comprobantes/{codigo}/cdr';
+  /** Path part for operation `consultaPublicaCdr()` */
+  static readonly ConsultaPublicaCdrPath = '/api/publico/comprobantes/{codigo}/cdr';
 
   /**
    * This method provides access to the full `HttpResponse`, allowing access to response headers.
-   * To access only the response body, use `cdr1()` instead.
+   * To access only the response body, use `consultaPublicaCdr()` instead.
    *
    * This method doesn't expect any request body.
    */
-  cdr1$Response(params: Cdr1$Params, context?: HttpContext): Promise<StrictHttpResponse<Blob>> {
-    const obs = cdr1(this.http, this.rootUrl, params, context);
+  consultaPublicaCdr$Response(params: ConsultaPublicaCdr$Params, context?: HttpContext): Promise<StrictHttpResponse<Blob>> {
+    const obs = consultaPublicaCdr(this.http, this.rootUrl, params, context);
     return firstValueFrom(obs);
   }
 
   /**
    * This method provides access only to the response body.
-   * To access the full response (for headers, for example), `cdr1$Response()` instead.
+   * To access the full response (for headers, for example), `consultaPublicaCdr$Response()` instead.
    *
    * This method doesn't expect any request body.
    */
-  cdr1(params: Cdr1$Params, context?: HttpContext): Promise<Blob> {
-    const resp = this.cdr1$Response(params, context);
+  consultaPublicaCdr(params: ConsultaPublicaCdr$Params, context?: HttpContext): Promise<Blob> {
+    const resp = this.consultaPublicaCdr$Response(params, context);
     return resp.then((r: StrictHttpResponse<Blob>): Blob => r.body);
   }
 

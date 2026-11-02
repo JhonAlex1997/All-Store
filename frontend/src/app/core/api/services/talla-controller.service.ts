@@ -9,12 +9,12 @@ import { BaseService } from '../base-service';
 import { ApiConfiguration } from '../api-configuration';
 import { StrictHttpResponse } from '../strict-http-response';
 
-import { actualizar1 } from '../fn/talla-controller/actualizar-1';
-import { Actualizar1$Params } from '../fn/talla-controller/actualizar-1';
-import { crear2 } from '../fn/talla-controller/crear-2';
-import { Crear2$Params } from '../fn/talla-controller/crear-2';
-import { listar2 } from '../fn/talla-controller/listar-2';
-import { Listar2$Params } from '../fn/talla-controller/listar-2';
+import { tallaActualizar } from '../fn/talla-controller/talla-actualizar';
+import { TallaActualizar$Params } from '../fn/talla-controller/talla-actualizar';
+import { tallaCrear } from '../fn/talla-controller/talla-crear';
+import { TallaCrear$Params } from '../fn/talla-controller/talla-crear';
+import { tallaListar } from '../fn/talla-controller/talla-listar';
+import { TallaListar$Params } from '../fn/talla-controller/talla-listar';
 import { TallaResponse } from '../models/talla-response';
 
 @Injectable({ providedIn: 'root' })
@@ -23,78 +23,78 @@ export class TallaControllerService extends BaseService {
     super(config, http);
   }
 
-  /** Path part for operation `actualizar1()` */
-  static readonly Actualizar1Path = '/api/tallas/{id}';
+  /** Path part for operation `tallaActualizar()` */
+  static readonly TallaActualizarPath = '/api/tallas/{id}';
 
   /**
    * This method provides access to the full `HttpResponse`, allowing access to response headers.
-   * To access only the response body, use `actualizar1()` instead.
+   * To access only the response body, use `tallaActualizar()` instead.
    *
    * This method sends `application/json` and handles request body of type `application/json`.
    */
-  actualizar1$Response(params: Actualizar1$Params, context?: HttpContext): Promise<StrictHttpResponse<TallaResponse>> {
-    const obs = actualizar1(this.http, this.rootUrl, params, context);
+  tallaActualizar$Response(params: TallaActualizar$Params, context?: HttpContext): Promise<StrictHttpResponse<TallaResponse>> {
+    const obs = tallaActualizar(this.http, this.rootUrl, params, context);
     return firstValueFrom(obs);
   }
 
   /**
    * This method provides access only to the response body.
-   * To access the full response (for headers, for example), `actualizar1$Response()` instead.
+   * To access the full response (for headers, for example), `tallaActualizar$Response()` instead.
    *
    * This method sends `application/json` and handles request body of type `application/json`.
    */
-  actualizar1(params: Actualizar1$Params, context?: HttpContext): Promise<TallaResponse> {
-    const resp = this.actualizar1$Response(params, context);
+  tallaActualizar(params: TallaActualizar$Params, context?: HttpContext): Promise<TallaResponse> {
+    const resp = this.tallaActualizar$Response(params, context);
     return resp.then((r: StrictHttpResponse<TallaResponse>): TallaResponse => r.body);
   }
 
-  /** Path part for operation `listar2()` */
-  static readonly Listar2Path = '/api/tallas';
+  /** Path part for operation `tallaListar()` */
+  static readonly TallaListarPath = '/api/tallas';
 
   /**
    * This method provides access to the full `HttpResponse`, allowing access to response headers.
-   * To access only the response body, use `listar2()` instead.
+   * To access only the response body, use `tallaListar()` instead.
    *
    * This method doesn't expect any request body.
    */
-  listar2$Response(params?: Listar2$Params, context?: HttpContext): Promise<StrictHttpResponse<Array<TallaResponse>>> {
-    const obs = listar2(this.http, this.rootUrl, params, context);
+  tallaListar$Response(params?: TallaListar$Params, context?: HttpContext): Promise<StrictHttpResponse<Array<TallaResponse>>> {
+    const obs = tallaListar(this.http, this.rootUrl, params, context);
     return firstValueFrom(obs);
   }
 
   /**
    * This method provides access only to the response body.
-   * To access the full response (for headers, for example), `listar2$Response()` instead.
+   * To access the full response (for headers, for example), `tallaListar$Response()` instead.
    *
    * This method doesn't expect any request body.
    */
-  listar2(params?: Listar2$Params, context?: HttpContext): Promise<Array<TallaResponse>> {
-    const resp = this.listar2$Response(params, context);
+  tallaListar(params?: TallaListar$Params, context?: HttpContext): Promise<Array<TallaResponse>> {
+    const resp = this.tallaListar$Response(params, context);
     return resp.then((r: StrictHttpResponse<Array<TallaResponse>>): Array<TallaResponse> => r.body);
   }
 
-  /** Path part for operation `crear2()` */
-  static readonly Crear2Path = '/api/tallas';
+  /** Path part for operation `tallaCrear()` */
+  static readonly TallaCrearPath = '/api/tallas';
 
   /**
    * This method provides access to the full `HttpResponse`, allowing access to response headers.
-   * To access only the response body, use `crear2()` instead.
+   * To access only the response body, use `tallaCrear()` instead.
    *
    * This method sends `application/json` and handles request body of type `application/json`.
    */
-  crear2$Response(params: Crear2$Params, context?: HttpContext): Promise<StrictHttpResponse<TallaResponse>> {
-    const obs = crear2(this.http, this.rootUrl, params, context);
+  tallaCrear$Response(params: TallaCrear$Params, context?: HttpContext): Promise<StrictHttpResponse<TallaResponse>> {
+    const obs = tallaCrear(this.http, this.rootUrl, params, context);
     return firstValueFrom(obs);
   }
 
   /**
    * This method provides access only to the response body.
-   * To access the full response (for headers, for example), `crear2$Response()` instead.
+   * To access the full response (for headers, for example), `tallaCrear$Response()` instead.
    *
    * This method sends `application/json` and handles request body of type `application/json`.
    */
-  crear2(params: Crear2$Params, context?: HttpContext): Promise<TallaResponse> {
-    const resp = this.crear2$Response(params, context);
+  tallaCrear(params: TallaCrear$Params, context?: HttpContext): Promise<TallaResponse> {
+    const resp = this.tallaCrear$Response(params, context);
     return resp.then((r: StrictHttpResponse<TallaResponse>): TallaResponse => r.body);
   }
 

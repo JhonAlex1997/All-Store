@@ -9,12 +9,12 @@ import { BaseService } from '../base-service';
 import { ApiConfiguration } from '../api-configuration';
 import { StrictHttpResponse } from '../strict-http-response';
 
-import { actualizar2 } from '../fn/serie-controller/actualizar-2';
-import { Actualizar2$Params } from '../fn/serie-controller/actualizar-2';
-import { crear3 } from '../fn/serie-controller/crear-3';
-import { Crear3$Params } from '../fn/serie-controller/crear-3';
-import { listar3 } from '../fn/serie-controller/listar-3';
-import { Listar3$Params } from '../fn/serie-controller/listar-3';
+import { serieActualizar } from '../fn/serie-controller/serie-actualizar';
+import { SerieActualizar$Params } from '../fn/serie-controller/serie-actualizar';
+import { serieCrear } from '../fn/serie-controller/serie-crear';
+import { SerieCrear$Params } from '../fn/serie-controller/serie-crear';
+import { serieListar } from '../fn/serie-controller/serie-listar';
+import { SerieListar$Params } from '../fn/serie-controller/serie-listar';
 import { SerieResponse } from '../models/serie-response';
 
 @Injectable({ providedIn: 'root' })
@@ -23,78 +23,78 @@ export class SerieControllerService extends BaseService {
     super(config, http);
   }
 
-  /** Path part for operation `actualizar2()` */
-  static readonly Actualizar2Path = '/api/series/{id}';
+  /** Path part for operation `serieActualizar()` */
+  static readonly SerieActualizarPath = '/api/series/{id}';
 
   /**
    * This method provides access to the full `HttpResponse`, allowing access to response headers.
-   * To access only the response body, use `actualizar2()` instead.
+   * To access only the response body, use `serieActualizar()` instead.
    *
    * This method sends `application/json` and handles request body of type `application/json`.
    */
-  actualizar2$Response(params: Actualizar2$Params, context?: HttpContext): Promise<StrictHttpResponse<SerieResponse>> {
-    const obs = actualizar2(this.http, this.rootUrl, params, context);
+  serieActualizar$Response(params: SerieActualizar$Params, context?: HttpContext): Promise<StrictHttpResponse<SerieResponse>> {
+    const obs = serieActualizar(this.http, this.rootUrl, params, context);
     return firstValueFrom(obs);
   }
 
   /**
    * This method provides access only to the response body.
-   * To access the full response (for headers, for example), `actualizar2$Response()` instead.
+   * To access the full response (for headers, for example), `serieActualizar$Response()` instead.
    *
    * This method sends `application/json` and handles request body of type `application/json`.
    */
-  actualizar2(params: Actualizar2$Params, context?: HttpContext): Promise<SerieResponse> {
-    const resp = this.actualizar2$Response(params, context);
+  serieActualizar(params: SerieActualizar$Params, context?: HttpContext): Promise<SerieResponse> {
+    const resp = this.serieActualizar$Response(params, context);
     return resp.then((r: StrictHttpResponse<SerieResponse>): SerieResponse => r.body);
   }
 
-  /** Path part for operation `listar3()` */
-  static readonly Listar3Path = '/api/series';
+  /** Path part for operation `serieListar()` */
+  static readonly SerieListarPath = '/api/series';
 
   /**
    * This method provides access to the full `HttpResponse`, allowing access to response headers.
-   * To access only the response body, use `listar3()` instead.
+   * To access only the response body, use `serieListar()` instead.
    *
    * This method doesn't expect any request body.
    */
-  listar3$Response(params?: Listar3$Params, context?: HttpContext): Promise<StrictHttpResponse<Array<SerieResponse>>> {
-    const obs = listar3(this.http, this.rootUrl, params, context);
+  serieListar$Response(params?: SerieListar$Params, context?: HttpContext): Promise<StrictHttpResponse<Array<SerieResponse>>> {
+    const obs = serieListar(this.http, this.rootUrl, params, context);
     return firstValueFrom(obs);
   }
 
   /**
    * This method provides access only to the response body.
-   * To access the full response (for headers, for example), `listar3$Response()` instead.
+   * To access the full response (for headers, for example), `serieListar$Response()` instead.
    *
    * This method doesn't expect any request body.
    */
-  listar3(params?: Listar3$Params, context?: HttpContext): Promise<Array<SerieResponse>> {
-    const resp = this.listar3$Response(params, context);
+  serieListar(params?: SerieListar$Params, context?: HttpContext): Promise<Array<SerieResponse>> {
+    const resp = this.serieListar$Response(params, context);
     return resp.then((r: StrictHttpResponse<Array<SerieResponse>>): Array<SerieResponse> => r.body);
   }
 
-  /** Path part for operation `crear3()` */
-  static readonly Crear3Path = '/api/series';
+  /** Path part for operation `serieCrear()` */
+  static readonly SerieCrearPath = '/api/series';
 
   /**
    * This method provides access to the full `HttpResponse`, allowing access to response headers.
-   * To access only the response body, use `crear3()` instead.
+   * To access only the response body, use `serieCrear()` instead.
    *
    * This method sends `application/json` and handles request body of type `application/json`.
    */
-  crear3$Response(params: Crear3$Params, context?: HttpContext): Promise<StrictHttpResponse<SerieResponse>> {
-    const obs = crear3(this.http, this.rootUrl, params, context);
+  serieCrear$Response(params: SerieCrear$Params, context?: HttpContext): Promise<StrictHttpResponse<SerieResponse>> {
+    const obs = serieCrear(this.http, this.rootUrl, params, context);
     return firstValueFrom(obs);
   }
 
   /**
    * This method provides access only to the response body.
-   * To access the full response (for headers, for example), `crear3$Response()` instead.
+   * To access the full response (for headers, for example), `serieCrear$Response()` instead.
    *
    * This method sends `application/json` and handles request body of type `application/json`.
    */
-  crear3(params: Crear3$Params, context?: HttpContext): Promise<SerieResponse> {
-    const resp = this.crear3$Response(params, context);
+  serieCrear(params: SerieCrear$Params, context?: HttpContext): Promise<SerieResponse> {
+    const resp = this.serieCrear$Response(params, context);
     return resp.then((r: StrictHttpResponse<SerieResponse>): SerieResponse => r.body);
   }
 

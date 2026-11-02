@@ -9,14 +9,14 @@ import { BaseService } from '../base-service';
 import { ApiConfiguration } from '../api-configuration';
 import { StrictHttpResponse } from '../strict-http-response';
 
-import { archivoSire1 } from '../fn/registro-compras-controller/archivo-sire-1';
-import { ArchivoSire1$Params } from '../fn/registro-compras-controller/archivo-sire-1';
-import { registro1 } from '../fn/registro-compras-controller/registro-1';
-import { Registro1$Params } from '../fn/registro-compras-controller/registro-1';
+import { registroComprasArchivoSire } from '../fn/registro-compras-controller/registro-compras-archivo-sire';
+import { RegistroComprasArchivoSire$Params } from '../fn/registro-compras-controller/registro-compras-archivo-sire';
+import { registroComprasRegistro } from '../fn/registro-compras-controller/registro-compras-registro';
+import { RegistroComprasRegistro$Params } from '../fn/registro-compras-controller/registro-compras-registro';
 import { RegistroComprasResponse } from '../models/registro-compras-response';
+import { registroComprasValidar } from '../fn/registro-compras-controller/registro-compras-validar';
+import { RegistroComprasValidar$Params } from '../fn/registro-compras-controller/registro-compras-validar';
 import { ValidacionSireResponse } from '../models/validacion-sire-response';
-import { validar1 } from '../fn/registro-compras-controller/validar-1';
-import { Validar1$Params } from '../fn/registro-compras-controller/validar-1';
 
 @Injectable({ providedIn: 'root' })
 export class RegistroComprasControllerService extends BaseService {
@@ -24,78 +24,78 @@ export class RegistroComprasControllerService extends BaseService {
     super(config, http);
   }
 
-  /** Path part for operation `registro1()` */
-  static readonly Registro1Path = '/api/contabilidad/registro-compras';
+  /** Path part for operation `registroComprasRegistro()` */
+  static readonly RegistroComprasRegistroPath = '/api/contabilidad/registro-compras';
 
   /**
    * This method provides access to the full `HttpResponse`, allowing access to response headers.
-   * To access only the response body, use `registro1()` instead.
+   * To access only the response body, use `registroComprasRegistro()` instead.
    *
    * This method doesn't expect any request body.
    */
-  registro1$Response(params: Registro1$Params, context?: HttpContext): Promise<StrictHttpResponse<RegistroComprasResponse>> {
-    const obs = registro1(this.http, this.rootUrl, params, context);
+  registroComprasRegistro$Response(params: RegistroComprasRegistro$Params, context?: HttpContext): Promise<StrictHttpResponse<RegistroComprasResponse>> {
+    const obs = registroComprasRegistro(this.http, this.rootUrl, params, context);
     return firstValueFrom(obs);
   }
 
   /**
    * This method provides access only to the response body.
-   * To access the full response (for headers, for example), `registro1$Response()` instead.
+   * To access the full response (for headers, for example), `registroComprasRegistro$Response()` instead.
    *
    * This method doesn't expect any request body.
    */
-  registro1(params: Registro1$Params, context?: HttpContext): Promise<RegistroComprasResponse> {
-    const resp = this.registro1$Response(params, context);
+  registroComprasRegistro(params: RegistroComprasRegistro$Params, context?: HttpContext): Promise<RegistroComprasResponse> {
+    const resp = this.registroComprasRegistro$Response(params, context);
     return resp.then((r: StrictHttpResponse<RegistroComprasResponse>): RegistroComprasResponse => r.body);
   }
 
-  /** Path part for operation `validar1()` */
-  static readonly Validar1Path = '/api/contabilidad/registro-compras/validar';
+  /** Path part for operation `registroComprasValidar()` */
+  static readonly RegistroComprasValidarPath = '/api/contabilidad/registro-compras/validar';
 
   /**
    * This method provides access to the full `HttpResponse`, allowing access to response headers.
-   * To access only the response body, use `validar1()` instead.
+   * To access only the response body, use `registroComprasValidar()` instead.
    *
    * This method doesn't expect any request body.
    */
-  validar1$Response(params: Validar1$Params, context?: HttpContext): Promise<StrictHttpResponse<ValidacionSireResponse>> {
-    const obs = validar1(this.http, this.rootUrl, params, context);
+  registroComprasValidar$Response(params: RegistroComprasValidar$Params, context?: HttpContext): Promise<StrictHttpResponse<ValidacionSireResponse>> {
+    const obs = registroComprasValidar(this.http, this.rootUrl, params, context);
     return firstValueFrom(obs);
   }
 
   /**
    * This method provides access only to the response body.
-   * To access the full response (for headers, for example), `validar1$Response()` instead.
+   * To access the full response (for headers, for example), `registroComprasValidar$Response()` instead.
    *
    * This method doesn't expect any request body.
    */
-  validar1(params: Validar1$Params, context?: HttpContext): Promise<ValidacionSireResponse> {
-    const resp = this.validar1$Response(params, context);
+  registroComprasValidar(params: RegistroComprasValidar$Params, context?: HttpContext): Promise<ValidacionSireResponse> {
+    const resp = this.registroComprasValidar$Response(params, context);
     return resp.then((r: StrictHttpResponse<ValidacionSireResponse>): ValidacionSireResponse => r.body);
   }
 
-  /** Path part for operation `archivoSire1()` */
-  static readonly ArchivoSire1Path = '/api/contabilidad/registro-compras/sire';
+  /** Path part for operation `registroComprasArchivoSire()` */
+  static readonly RegistroComprasArchivoSirePath = '/api/contabilidad/registro-compras/sire';
 
   /**
    * This method provides access to the full `HttpResponse`, allowing access to response headers.
-   * To access only the response body, use `archivoSire1()` instead.
+   * To access only the response body, use `registroComprasArchivoSire()` instead.
    *
    * This method doesn't expect any request body.
    */
-  archivoSire1$Response(params: ArchivoSire1$Params, context?: HttpContext): Promise<StrictHttpResponse<Blob>> {
-    const obs = archivoSire1(this.http, this.rootUrl, params, context);
+  registroComprasArchivoSire$Response(params: RegistroComprasArchivoSire$Params, context?: HttpContext): Promise<StrictHttpResponse<Blob>> {
+    const obs = registroComprasArchivoSire(this.http, this.rootUrl, params, context);
     return firstValueFrom(obs);
   }
 
   /**
    * This method provides access only to the response body.
-   * To access the full response (for headers, for example), `archivoSire1$Response()` instead.
+   * To access the full response (for headers, for example), `registroComprasArchivoSire$Response()` instead.
    *
    * This method doesn't expect any request body.
    */
-  archivoSire1(params: ArchivoSire1$Params, context?: HttpContext): Promise<Blob> {
-    const resp = this.archivoSire1$Response(params, context);
+  registroComprasArchivoSire(params: RegistroComprasArchivoSire$Params, context?: HttpContext): Promise<Blob> {
+    const resp = this.registroComprasArchivoSire$Response(params, context);
     return resp.then((r: StrictHttpResponse<Blob>): Blob => r.body);
   }
 

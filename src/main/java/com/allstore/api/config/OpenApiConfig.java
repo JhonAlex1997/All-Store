@@ -10,6 +10,7 @@ import io.swagger.v3.oas.models.media.Content;
 import io.swagger.v3.oas.models.media.MediaType;
 import io.swagger.v3.oas.models.media.Schema;
 import org.springdoc.core.customizers.OpenApiCustomizer;
+import org.springdoc.core.customizers.OperationCustomizer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -48,6 +49,22 @@ public class OpenApiConfig {
                         contenido.addMediaType(org.springframework.http.MediaType.APPLICATION_JSON_VALUE, tipo);
                     }
                 })));
+    }
+
+    /**
+     * Nombre de cada operación = controlador + método ("serieCrear", "establecimientoListar"). Sin esto,
+     * springdoc numera los repetidos (crear3, listar10) y los números cambian al agregar endpoints,
+     * rompiendo el código del front que usa el cliente generado.
+     */
+    @Bean
+    OperationCustomizer nombresDeOperacion() {
+        return (operacion, metodo) -> {
+            String controlador = metodo.getBeanType().getSimpleName().replaceFirst("Controller$", "");
+            String nombre = metodo.getMethod().getName();
+            operacion.setOperationId(Character.toLowerCase(controlador.charAt(0)) + controlador.substring(1)
+                    + Character.toUpperCase(nombre.charAt(0)) + nombre.substring(1));
+            return operacion;
+        };
     }
 
     private static boolean esBinario(Schema<?> esquema) {

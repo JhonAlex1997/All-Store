@@ -9,29 +9,29 @@ import { BaseService } from '../base-service';
 import { ApiConfiguration } from '../api-configuration';
 import { StrictHttpResponse } from '../strict-http-response';
 
-import { anular } from '../fn/venta-controller/anular';
-import { Anular$Params } from '../fn/venta-controller/anular';
-import { convertir } from '../fn/venta-controller/convertir';
-import { Convertir$Params } from '../fn/venta-controller/convertir';
-import { crear } from '../fn/venta-controller/crear';
-import { Crear$Params } from '../fn/venta-controller/crear';
-import { emitirNotaCredito } from '../fn/venta-controller/emitir-nota-credito';
-import { EmitirNotaCredito$Params } from '../fn/venta-controller/emitir-nota-credito';
-import { emitirNotaDebito } from '../fn/venta-controller/emitir-nota-debito';
-import { EmitirNotaDebito$Params } from '../fn/venta-controller/emitir-nota-debito';
-import { listar } from '../fn/venta-controller/listar';
-import { Listar$Params } from '../fn/venta-controller/listar';
-import { obtener4 } from '../fn/venta-controller/obtener-4';
-import { Obtener4$Params } from '../fn/venta-controller/obtener-4';
 import { PageResponseVentaResumenResponse } from '../models/page-response-venta-resumen-response';
-import { pdf } from '../fn/venta-controller/pdf';
-import { Pdf$Params } from '../fn/venta-controller/pdf';
-import { reemitir } from '../fn/venta-controller/reemitir';
-import { Reemitir$Params } from '../fn/venta-controller/reemitir';
-import { totales } from '../fn/venta-controller/totales';
-import { Totales$Params } from '../fn/venta-controller/totales';
 import { TotalesVentasResponse } from '../models/totales-ventas-response';
+import { ventaAnular } from '../fn/venta-controller/venta-anular';
+import { VentaAnular$Params } from '../fn/venta-controller/venta-anular';
+import { ventaConvertir } from '../fn/venta-controller/venta-convertir';
+import { VentaConvertir$Params } from '../fn/venta-controller/venta-convertir';
+import { ventaCrear } from '../fn/venta-controller/venta-crear';
+import { VentaCrear$Params } from '../fn/venta-controller/venta-crear';
+import { ventaEmitirNotaCredito } from '../fn/venta-controller/venta-emitir-nota-credito';
+import { VentaEmitirNotaCredito$Params } from '../fn/venta-controller/venta-emitir-nota-credito';
+import { ventaEmitirNotaDebito } from '../fn/venta-controller/venta-emitir-nota-debito';
+import { VentaEmitirNotaDebito$Params } from '../fn/venta-controller/venta-emitir-nota-debito';
+import { ventaListar } from '../fn/venta-controller/venta-listar';
+import { VentaListar$Params } from '../fn/venta-controller/venta-listar';
+import { ventaObtener } from '../fn/venta-controller/venta-obtener';
+import { VentaObtener$Params } from '../fn/venta-controller/venta-obtener';
+import { ventaPdf } from '../fn/venta-controller/venta-pdf';
+import { VentaPdf$Params } from '../fn/venta-controller/venta-pdf';
+import { ventaReemitir } from '../fn/venta-controller/venta-reemitir';
+import { VentaReemitir$Params } from '../fn/venta-controller/venta-reemitir';
 import { VentaResponse } from '../models/venta-response';
+import { ventaTotales } from '../fn/venta-controller/venta-totales';
+import { VentaTotales$Params } from '../fn/venta-controller/venta-totales';
 
 @Injectable({ providedIn: 'root' })
 export class VentaControllerService extends BaseService {
@@ -39,253 +39,253 @@ export class VentaControllerService extends BaseService {
     super(config, http);
   }
 
-  /** Path part for operation `listar()` */
-  static readonly ListarPath = '/api/ventas';
+  /** Path part for operation `ventaListar()` */
+  static readonly VentaListarPath = '/api/ventas';
 
   /**
    * This method provides access to the full `HttpResponse`, allowing access to response headers.
-   * To access only the response body, use `listar()` instead.
+   * To access only the response body, use `ventaListar()` instead.
    *
    * This method doesn't expect any request body.
    */
-  listar$Response(params?: Listar$Params, context?: HttpContext): Promise<StrictHttpResponse<PageResponseVentaResumenResponse>> {
-    const obs = listar(this.http, this.rootUrl, params, context);
+  ventaListar$Response(params?: VentaListar$Params, context?: HttpContext): Promise<StrictHttpResponse<PageResponseVentaResumenResponse>> {
+    const obs = ventaListar(this.http, this.rootUrl, params, context);
     return firstValueFrom(obs);
   }
 
   /**
    * This method provides access only to the response body.
-   * To access the full response (for headers, for example), `listar$Response()` instead.
+   * To access the full response (for headers, for example), `ventaListar$Response()` instead.
    *
    * This method doesn't expect any request body.
    */
-  listar(params?: Listar$Params, context?: HttpContext): Promise<PageResponseVentaResumenResponse> {
-    const resp = this.listar$Response(params, context);
+  ventaListar(params?: VentaListar$Params, context?: HttpContext): Promise<PageResponseVentaResumenResponse> {
+    const resp = this.ventaListar$Response(params, context);
     return resp.then((r: StrictHttpResponse<PageResponseVentaResumenResponse>): PageResponseVentaResumenResponse => r.body);
   }
 
-  /** Path part for operation `crear()` */
-  static readonly CrearPath = '/api/ventas';
+  /** Path part for operation `ventaCrear()` */
+  static readonly VentaCrearPath = '/api/ventas';
 
   /**
    * This method provides access to the full `HttpResponse`, allowing access to response headers.
-   * To access only the response body, use `crear()` instead.
+   * To access only the response body, use `ventaCrear()` instead.
    *
    * This method sends `application/json` and handles request body of type `application/json`.
    */
-  crear$Response(params: Crear$Params, context?: HttpContext): Promise<StrictHttpResponse<VentaResponse>> {
-    const obs = crear(this.http, this.rootUrl, params, context);
+  ventaCrear$Response(params: VentaCrear$Params, context?: HttpContext): Promise<StrictHttpResponse<VentaResponse>> {
+    const obs = ventaCrear(this.http, this.rootUrl, params, context);
     return firstValueFrom(obs);
   }
 
   /**
    * This method provides access only to the response body.
-   * To access the full response (for headers, for example), `crear$Response()` instead.
+   * To access the full response (for headers, for example), `ventaCrear$Response()` instead.
    *
    * This method sends `application/json` and handles request body of type `application/json`.
    */
-  crear(params: Crear$Params, context?: HttpContext): Promise<VentaResponse> {
-    const resp = this.crear$Response(params, context);
+  ventaCrear(params: VentaCrear$Params, context?: HttpContext): Promise<VentaResponse> {
+    const resp = this.ventaCrear$Response(params, context);
     return resp.then((r: StrictHttpResponse<VentaResponse>): VentaResponse => r.body);
   }
 
-  /** Path part for operation `reemitir()` */
-  static readonly ReemitirPath = '/api/ventas/{id}/reemitir';
+  /** Path part for operation `ventaReemitir()` */
+  static readonly VentaReemitirPath = '/api/ventas/{id}/reemitir';
 
   /**
    * This method provides access to the full `HttpResponse`, allowing access to response headers.
-   * To access only the response body, use `reemitir()` instead.
+   * To access only the response body, use `ventaReemitir()` instead.
    *
    * This method sends `application/json` and handles request body of type `application/json`.
    */
-  reemitir$Response(params: Reemitir$Params, context?: HttpContext): Promise<StrictHttpResponse<VentaResponse>> {
-    const obs = reemitir(this.http, this.rootUrl, params, context);
+  ventaReemitir$Response(params: VentaReemitir$Params, context?: HttpContext): Promise<StrictHttpResponse<VentaResponse>> {
+    const obs = ventaReemitir(this.http, this.rootUrl, params, context);
     return firstValueFrom(obs);
   }
 
   /**
    * This method provides access only to the response body.
-   * To access the full response (for headers, for example), `reemitir$Response()` instead.
+   * To access the full response (for headers, for example), `ventaReemitir$Response()` instead.
    *
    * This method sends `application/json` and handles request body of type `application/json`.
    */
-  reemitir(params: Reemitir$Params, context?: HttpContext): Promise<VentaResponse> {
-    const resp = this.reemitir$Response(params, context);
+  ventaReemitir(params: VentaReemitir$Params, context?: HttpContext): Promise<VentaResponse> {
+    const resp = this.ventaReemitir$Response(params, context);
     return resp.then((r: StrictHttpResponse<VentaResponse>): VentaResponse => r.body);
   }
 
-  /** Path part for operation `emitirNotaDebito()` */
-  static readonly EmitirNotaDebitoPath = '/api/ventas/{id}/notas-debito';
+  /** Path part for operation `ventaEmitirNotaDebito()` */
+  static readonly VentaEmitirNotaDebitoPath = '/api/ventas/{id}/notas-debito';
 
   /**
    * This method provides access to the full `HttpResponse`, allowing access to response headers.
-   * To access only the response body, use `emitirNotaDebito()` instead.
+   * To access only the response body, use `ventaEmitirNotaDebito()` instead.
    *
    * This method sends `application/json` and handles request body of type `application/json`.
    */
-  emitirNotaDebito$Response(params: EmitirNotaDebito$Params, context?: HttpContext): Promise<StrictHttpResponse<VentaResponse>> {
-    const obs = emitirNotaDebito(this.http, this.rootUrl, params, context);
+  ventaEmitirNotaDebito$Response(params: VentaEmitirNotaDebito$Params, context?: HttpContext): Promise<StrictHttpResponse<VentaResponse>> {
+    const obs = ventaEmitirNotaDebito(this.http, this.rootUrl, params, context);
     return firstValueFrom(obs);
   }
 
   /**
    * This method provides access only to the response body.
-   * To access the full response (for headers, for example), `emitirNotaDebito$Response()` instead.
+   * To access the full response (for headers, for example), `ventaEmitirNotaDebito$Response()` instead.
    *
    * This method sends `application/json` and handles request body of type `application/json`.
    */
-  emitirNotaDebito(params: EmitirNotaDebito$Params, context?: HttpContext): Promise<VentaResponse> {
-    const resp = this.emitirNotaDebito$Response(params, context);
+  ventaEmitirNotaDebito(params: VentaEmitirNotaDebito$Params, context?: HttpContext): Promise<VentaResponse> {
+    const resp = this.ventaEmitirNotaDebito$Response(params, context);
     return resp.then((r: StrictHttpResponse<VentaResponse>): VentaResponse => r.body);
   }
 
-  /** Path part for operation `emitirNotaCredito()` */
-  static readonly EmitirNotaCreditoPath = '/api/ventas/{id}/notas-credito';
+  /** Path part for operation `ventaEmitirNotaCredito()` */
+  static readonly VentaEmitirNotaCreditoPath = '/api/ventas/{id}/notas-credito';
 
   /**
    * This method provides access to the full `HttpResponse`, allowing access to response headers.
-   * To access only the response body, use `emitirNotaCredito()` instead.
+   * To access only the response body, use `ventaEmitirNotaCredito()` instead.
    *
    * This method sends `application/json` and handles request body of type `application/json`.
    */
-  emitirNotaCredito$Response(params: EmitirNotaCredito$Params, context?: HttpContext): Promise<StrictHttpResponse<VentaResponse>> {
-    const obs = emitirNotaCredito(this.http, this.rootUrl, params, context);
+  ventaEmitirNotaCredito$Response(params: VentaEmitirNotaCredito$Params, context?: HttpContext): Promise<StrictHttpResponse<VentaResponse>> {
+    const obs = ventaEmitirNotaCredito(this.http, this.rootUrl, params, context);
     return firstValueFrom(obs);
   }
 
   /**
    * This method provides access only to the response body.
-   * To access the full response (for headers, for example), `emitirNotaCredito$Response()` instead.
+   * To access the full response (for headers, for example), `ventaEmitirNotaCredito$Response()` instead.
    *
    * This method sends `application/json` and handles request body of type `application/json`.
    */
-  emitirNotaCredito(params: EmitirNotaCredito$Params, context?: HttpContext): Promise<VentaResponse> {
-    const resp = this.emitirNotaCredito$Response(params, context);
+  ventaEmitirNotaCredito(params: VentaEmitirNotaCredito$Params, context?: HttpContext): Promise<VentaResponse> {
+    const resp = this.ventaEmitirNotaCredito$Response(params, context);
     return resp.then((r: StrictHttpResponse<VentaResponse>): VentaResponse => r.body);
   }
 
-  /** Path part for operation `convertir()` */
-  static readonly ConvertirPath = '/api/ventas/{id}/convertir';
+  /** Path part for operation `ventaConvertir()` */
+  static readonly VentaConvertirPath = '/api/ventas/{id}/convertir';
 
   /**
    * This method provides access to the full `HttpResponse`, allowing access to response headers.
-   * To access only the response body, use `convertir()` instead.
+   * To access only the response body, use `ventaConvertir()` instead.
    *
    * This method sends `application/json` and handles request body of type `application/json`.
    */
-  convertir$Response(params: Convertir$Params, context?: HttpContext): Promise<StrictHttpResponse<VentaResponse>> {
-    const obs = convertir(this.http, this.rootUrl, params, context);
+  ventaConvertir$Response(params: VentaConvertir$Params, context?: HttpContext): Promise<StrictHttpResponse<VentaResponse>> {
+    const obs = ventaConvertir(this.http, this.rootUrl, params, context);
     return firstValueFrom(obs);
   }
 
   /**
    * This method provides access only to the response body.
-   * To access the full response (for headers, for example), `convertir$Response()` instead.
+   * To access the full response (for headers, for example), `ventaConvertir$Response()` instead.
    *
    * This method sends `application/json` and handles request body of type `application/json`.
    */
-  convertir(params: Convertir$Params, context?: HttpContext): Promise<VentaResponse> {
-    const resp = this.convertir$Response(params, context);
+  ventaConvertir(params: VentaConvertir$Params, context?: HttpContext): Promise<VentaResponse> {
+    const resp = this.ventaConvertir$Response(params, context);
     return resp.then((r: StrictHttpResponse<VentaResponse>): VentaResponse => r.body);
   }
 
-  /** Path part for operation `anular()` */
-  static readonly AnularPath = '/api/ventas/{id}/anular';
+  /** Path part for operation `ventaAnular()` */
+  static readonly VentaAnularPath = '/api/ventas/{id}/anular';
 
   /**
    * This method provides access to the full `HttpResponse`, allowing access to response headers.
-   * To access only the response body, use `anular()` instead.
+   * To access only the response body, use `ventaAnular()` instead.
    *
    * This method sends `application/json` and handles request body of type `application/json`.
    */
-  anular$Response(params: Anular$Params, context?: HttpContext): Promise<StrictHttpResponse<VentaResponse>> {
-    const obs = anular(this.http, this.rootUrl, params, context);
+  ventaAnular$Response(params: VentaAnular$Params, context?: HttpContext): Promise<StrictHttpResponse<VentaResponse>> {
+    const obs = ventaAnular(this.http, this.rootUrl, params, context);
     return firstValueFrom(obs);
   }
 
   /**
    * This method provides access only to the response body.
-   * To access the full response (for headers, for example), `anular$Response()` instead.
+   * To access the full response (for headers, for example), `ventaAnular$Response()` instead.
    *
    * This method sends `application/json` and handles request body of type `application/json`.
    */
-  anular(params: Anular$Params, context?: HttpContext): Promise<VentaResponse> {
-    const resp = this.anular$Response(params, context);
+  ventaAnular(params: VentaAnular$Params, context?: HttpContext): Promise<VentaResponse> {
+    const resp = this.ventaAnular$Response(params, context);
     return resp.then((r: StrictHttpResponse<VentaResponse>): VentaResponse => r.body);
   }
 
-  /** Path part for operation `obtener4()` */
-  static readonly Obtener4Path = '/api/ventas/{id}';
+  /** Path part for operation `ventaObtener()` */
+  static readonly VentaObtenerPath = '/api/ventas/{id}';
 
   /**
    * This method provides access to the full `HttpResponse`, allowing access to response headers.
-   * To access only the response body, use `obtener4()` instead.
+   * To access only the response body, use `ventaObtener()` instead.
    *
    * This method doesn't expect any request body.
    */
-  obtener4$Response(params: Obtener4$Params, context?: HttpContext): Promise<StrictHttpResponse<VentaResponse>> {
-    const obs = obtener4(this.http, this.rootUrl, params, context);
+  ventaObtener$Response(params: VentaObtener$Params, context?: HttpContext): Promise<StrictHttpResponse<VentaResponse>> {
+    const obs = ventaObtener(this.http, this.rootUrl, params, context);
     return firstValueFrom(obs);
   }
 
   /**
    * This method provides access only to the response body.
-   * To access the full response (for headers, for example), `obtener4$Response()` instead.
+   * To access the full response (for headers, for example), `ventaObtener$Response()` instead.
    *
    * This method doesn't expect any request body.
    */
-  obtener4(params: Obtener4$Params, context?: HttpContext): Promise<VentaResponse> {
-    const resp = this.obtener4$Response(params, context);
+  ventaObtener(params: VentaObtener$Params, context?: HttpContext): Promise<VentaResponse> {
+    const resp = this.ventaObtener$Response(params, context);
     return resp.then((r: StrictHttpResponse<VentaResponse>): VentaResponse => r.body);
   }
 
-  /** Path part for operation `pdf()` */
-  static readonly PdfPath = '/api/ventas/{id}/pdf';
+  /** Path part for operation `ventaPdf()` */
+  static readonly VentaPdfPath = '/api/ventas/{id}/pdf';
 
   /**
    * This method provides access to the full `HttpResponse`, allowing access to response headers.
-   * To access only the response body, use `pdf()` instead.
+   * To access only the response body, use `ventaPdf()` instead.
    *
    * This method doesn't expect any request body.
    */
-  pdf$Response(params: Pdf$Params, context?: HttpContext): Promise<StrictHttpResponse<Blob>> {
-    const obs = pdf(this.http, this.rootUrl, params, context);
+  ventaPdf$Response(params: VentaPdf$Params, context?: HttpContext): Promise<StrictHttpResponse<Blob>> {
+    const obs = ventaPdf(this.http, this.rootUrl, params, context);
     return firstValueFrom(obs);
   }
 
   /**
    * This method provides access only to the response body.
-   * To access the full response (for headers, for example), `pdf$Response()` instead.
+   * To access the full response (for headers, for example), `ventaPdf$Response()` instead.
    *
    * This method doesn't expect any request body.
    */
-  pdf(params: Pdf$Params, context?: HttpContext): Promise<Blob> {
-    const resp = this.pdf$Response(params, context);
+  ventaPdf(params: VentaPdf$Params, context?: HttpContext): Promise<Blob> {
+    const resp = this.ventaPdf$Response(params, context);
     return resp.then((r: StrictHttpResponse<Blob>): Blob => r.body);
   }
 
-  /** Path part for operation `totales()` */
-  static readonly TotalesPath = '/api/ventas/totales';
+  /** Path part for operation `ventaTotales()` */
+  static readonly VentaTotalesPath = '/api/ventas/totales';
 
   /**
    * This method provides access to the full `HttpResponse`, allowing access to response headers.
-   * To access only the response body, use `totales()` instead.
+   * To access only the response body, use `ventaTotales()` instead.
    *
    * This method doesn't expect any request body.
    */
-  totales$Response(params?: Totales$Params, context?: HttpContext): Promise<StrictHttpResponse<TotalesVentasResponse>> {
-    const obs = totales(this.http, this.rootUrl, params, context);
+  ventaTotales$Response(params?: VentaTotales$Params, context?: HttpContext): Promise<StrictHttpResponse<TotalesVentasResponse>> {
+    const obs = ventaTotales(this.http, this.rootUrl, params, context);
     return firstValueFrom(obs);
   }
 
   /**
    * This method provides access only to the response body.
-   * To access the full response (for headers, for example), `totales$Response()` instead.
+   * To access the full response (for headers, for example), `ventaTotales$Response()` instead.
    *
    * This method doesn't expect any request body.
    */
-  totales(params?: Totales$Params, context?: HttpContext): Promise<TotalesVentasResponse> {
-    const resp = this.totales$Response(params, context);
+  ventaTotales(params?: VentaTotales$Params, context?: HttpContext): Promise<TotalesVentasResponse> {
+    const resp = this.ventaTotales$Response(params, context);
     return resp.then((r: StrictHttpResponse<TotalesVentasResponse>): TotalesVentasResponse => r.body);
   }
 

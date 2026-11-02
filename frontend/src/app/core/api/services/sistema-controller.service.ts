@@ -9,12 +9,12 @@ import { BaseService } from '../base-service';
 import { ApiConfiguration } from '../api-configuration';
 import { StrictHttpResponse } from '../strict-http-response';
 
-import { errores } from '../fn/sistema-controller/errores';
-import { Errores$Params } from '../fn/sistema-controller/errores';
 import { ErrorRegistrado } from '../models/error-registrado';
-import { estado } from '../fn/sistema-controller/estado';
-import { Estado$Params } from '../fn/sistema-controller/estado';
 import { EstadoSistemaResponse } from '../models/estado-sistema-response';
+import { sistemaErrores } from '../fn/sistema-controller/sistema-errores';
+import { SistemaErrores$Params } from '../fn/sistema-controller/sistema-errores';
+import { sistemaEstado } from '../fn/sistema-controller/sistema-estado';
+import { SistemaEstado$Params } from '../fn/sistema-controller/sistema-estado';
 
 @Injectable({ providedIn: 'root' })
 export class SistemaControllerService extends BaseService {
@@ -22,53 +22,53 @@ export class SistemaControllerService extends BaseService {
     super(config, http);
   }
 
-  /** Path part for operation `estado()` */
-  static readonly EstadoPath = '/api/sistema/estado';
+  /** Path part for operation `sistemaEstado()` */
+  static readonly SistemaEstadoPath = '/api/sistema/estado';
 
   /**
    * This method provides access to the full `HttpResponse`, allowing access to response headers.
-   * To access only the response body, use `estado()` instead.
+   * To access only the response body, use `sistemaEstado()` instead.
    *
    * This method doesn't expect any request body.
    */
-  estado$Response(params?: Estado$Params, context?: HttpContext): Promise<StrictHttpResponse<EstadoSistemaResponse>> {
-    const obs = estado(this.http, this.rootUrl, params, context);
+  sistemaEstado$Response(params?: SistemaEstado$Params, context?: HttpContext): Promise<StrictHttpResponse<EstadoSistemaResponse>> {
+    const obs = sistemaEstado(this.http, this.rootUrl, params, context);
     return firstValueFrom(obs);
   }
 
   /**
    * This method provides access only to the response body.
-   * To access the full response (for headers, for example), `estado$Response()` instead.
+   * To access the full response (for headers, for example), `sistemaEstado$Response()` instead.
    *
    * This method doesn't expect any request body.
    */
-  estado(params?: Estado$Params, context?: HttpContext): Promise<EstadoSistemaResponse> {
-    const resp = this.estado$Response(params, context);
+  sistemaEstado(params?: SistemaEstado$Params, context?: HttpContext): Promise<EstadoSistemaResponse> {
+    const resp = this.sistemaEstado$Response(params, context);
     return resp.then((r: StrictHttpResponse<EstadoSistemaResponse>): EstadoSistemaResponse => r.body);
   }
 
-  /** Path part for operation `errores()` */
-  static readonly ErroresPath = '/api/sistema/errores';
+  /** Path part for operation `sistemaErrores()` */
+  static readonly SistemaErroresPath = '/api/sistema/errores';
 
   /**
    * This method provides access to the full `HttpResponse`, allowing access to response headers.
-   * To access only the response body, use `errores()` instead.
+   * To access only the response body, use `sistemaErrores()` instead.
    *
    * This method doesn't expect any request body.
    */
-  errores$Response(params?: Errores$Params, context?: HttpContext): Promise<StrictHttpResponse<Array<ErrorRegistrado>>> {
-    const obs = errores(this.http, this.rootUrl, params, context);
+  sistemaErrores$Response(params?: SistemaErrores$Params, context?: HttpContext): Promise<StrictHttpResponse<Array<ErrorRegistrado>>> {
+    const obs = sistemaErrores(this.http, this.rootUrl, params, context);
     return firstValueFrom(obs);
   }
 
   /**
    * This method provides access only to the response body.
-   * To access the full response (for headers, for example), `errores$Response()` instead.
+   * To access the full response (for headers, for example), `sistemaErrores$Response()` instead.
    *
    * This method doesn't expect any request body.
    */
-  errores(params?: Errores$Params, context?: HttpContext): Promise<Array<ErrorRegistrado>> {
-    const resp = this.errores$Response(params, context);
+  sistemaErrores(params?: SistemaErrores$Params, context?: HttpContext): Promise<Array<ErrorRegistrado>> {
+    const resp = this.sistemaErrores$Response(params, context);
     return resp.then((r: StrictHttpResponse<Array<ErrorRegistrado>>): Array<ErrorRegistrado> => r.body);
   }
 

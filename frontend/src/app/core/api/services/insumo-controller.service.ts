@@ -9,21 +9,21 @@ import { BaseService } from '../base-service';
 import { ApiConfiguration } from '../api-configuration';
 import { StrictHttpResponse } from '../strict-http-response';
 
-import { actualizar5 } from '../fn/insumo-controller/actualizar-5';
-import { Actualizar5$Params } from '../fn/insumo-controller/actualizar-5';
-import { ajustar } from '../fn/insumo-controller/ajustar';
-import { Ajustar$Params } from '../fn/insumo-controller/ajustar';
-import { crear7 } from '../fn/insumo-controller/crear-7';
-import { Crear7$Params } from '../fn/insumo-controller/crear-7';
+import { insumoActualizar } from '../fn/insumo-controller/insumo-actualizar';
+import { InsumoActualizar$Params } from '../fn/insumo-controller/insumo-actualizar';
+import { insumoAjustar } from '../fn/insumo-controller/insumo-ajustar';
+import { InsumoAjustar$Params } from '../fn/insumo-controller/insumo-ajustar';
+import { insumoCrear } from '../fn/insumo-controller/insumo-crear';
+import { InsumoCrear$Params } from '../fn/insumo-controller/insumo-crear';
+import { insumoKardex } from '../fn/insumo-controller/insumo-kardex';
+import { InsumoKardex$Params } from '../fn/insumo-controller/insumo-kardex';
+import { insumoListar } from '../fn/insumo-controller/insumo-listar';
+import { InsumoListar$Params } from '../fn/insumo-controller/insumo-listar';
 import { InsumoResponse } from '../models/insumo-response';
-import { kardex1 } from '../fn/insumo-controller/kardex-1';
-import { Kardex1$Params } from '../fn/insumo-controller/kardex-1';
-import { listar8 } from '../fn/insumo-controller/listar-8';
-import { Listar8$Params } from '../fn/insumo-controller/listar-8';
+import { insumoStock } from '../fn/insumo-controller/insumo-stock';
+import { InsumoStock$Params } from '../fn/insumo-controller/insumo-stock';
 import { MovimientoInsumoResponse } from '../models/movimiento-insumo-response';
 import { PageResponseMovimientoInsumoResponse } from '../models/page-response-movimiento-insumo-response';
-import { stock1 } from '../fn/insumo-controller/stock-1';
-import { Stock1$Params } from '../fn/insumo-controller/stock-1';
 import { StockInsumoResponse } from '../models/stock-insumo-response';
 
 @Injectable({ providedIn: 'root' })
@@ -32,153 +32,153 @@ export class InsumoControllerService extends BaseService {
     super(config, http);
   }
 
-  /** Path part for operation `actualizar5()` */
-  static readonly Actualizar5Path = '/api/insumos/{id}';
+  /** Path part for operation `insumoActualizar()` */
+  static readonly InsumoActualizarPath = '/api/insumos/{id}';
 
   /**
    * This method provides access to the full `HttpResponse`, allowing access to response headers.
-   * To access only the response body, use `actualizar5()` instead.
+   * To access only the response body, use `insumoActualizar()` instead.
    *
    * This method sends `application/json` and handles request body of type `application/json`.
    */
-  actualizar5$Response(params: Actualizar5$Params, context?: HttpContext): Promise<StrictHttpResponse<InsumoResponse>> {
-    const obs = actualizar5(this.http, this.rootUrl, params, context);
+  insumoActualizar$Response(params: InsumoActualizar$Params, context?: HttpContext): Promise<StrictHttpResponse<InsumoResponse>> {
+    const obs = insumoActualizar(this.http, this.rootUrl, params, context);
     return firstValueFrom(obs);
   }
 
   /**
    * This method provides access only to the response body.
-   * To access the full response (for headers, for example), `actualizar5$Response()` instead.
+   * To access the full response (for headers, for example), `insumoActualizar$Response()` instead.
    *
    * This method sends `application/json` and handles request body of type `application/json`.
    */
-  actualizar5(params: Actualizar5$Params, context?: HttpContext): Promise<InsumoResponse> {
-    const resp = this.actualizar5$Response(params, context);
+  insumoActualizar(params: InsumoActualizar$Params, context?: HttpContext): Promise<InsumoResponse> {
+    const resp = this.insumoActualizar$Response(params, context);
     return resp.then((r: StrictHttpResponse<InsumoResponse>): InsumoResponse => r.body);
   }
 
-  /** Path part for operation `listar8()` */
-  static readonly Listar8Path = '/api/insumos';
+  /** Path part for operation `insumoListar()` */
+  static readonly InsumoListarPath = '/api/insumos';
 
   /**
    * This method provides access to the full `HttpResponse`, allowing access to response headers.
-   * To access only the response body, use `listar8()` instead.
+   * To access only the response body, use `insumoListar()` instead.
    *
    * This method doesn't expect any request body.
    */
-  listar8$Response(params?: Listar8$Params, context?: HttpContext): Promise<StrictHttpResponse<Array<InsumoResponse>>> {
-    const obs = listar8(this.http, this.rootUrl, params, context);
+  insumoListar$Response(params?: InsumoListar$Params, context?: HttpContext): Promise<StrictHttpResponse<Array<InsumoResponse>>> {
+    const obs = insumoListar(this.http, this.rootUrl, params, context);
     return firstValueFrom(obs);
   }
 
   /**
    * This method provides access only to the response body.
-   * To access the full response (for headers, for example), `listar8$Response()` instead.
+   * To access the full response (for headers, for example), `insumoListar$Response()` instead.
    *
    * This method doesn't expect any request body.
    */
-  listar8(params?: Listar8$Params, context?: HttpContext): Promise<Array<InsumoResponse>> {
-    const resp = this.listar8$Response(params, context);
+  insumoListar(params?: InsumoListar$Params, context?: HttpContext): Promise<Array<InsumoResponse>> {
+    const resp = this.insumoListar$Response(params, context);
     return resp.then((r: StrictHttpResponse<Array<InsumoResponse>>): Array<InsumoResponse> => r.body);
   }
 
-  /** Path part for operation `crear7()` */
-  static readonly Crear7Path = '/api/insumos';
+  /** Path part for operation `insumoCrear()` */
+  static readonly InsumoCrearPath = '/api/insumos';
 
   /**
    * This method provides access to the full `HttpResponse`, allowing access to response headers.
-   * To access only the response body, use `crear7()` instead.
+   * To access only the response body, use `insumoCrear()` instead.
    *
    * This method sends `application/json` and handles request body of type `application/json`.
    */
-  crear7$Response(params: Crear7$Params, context?: HttpContext): Promise<StrictHttpResponse<InsumoResponse>> {
-    const obs = crear7(this.http, this.rootUrl, params, context);
+  insumoCrear$Response(params: InsumoCrear$Params, context?: HttpContext): Promise<StrictHttpResponse<InsumoResponse>> {
+    const obs = insumoCrear(this.http, this.rootUrl, params, context);
     return firstValueFrom(obs);
   }
 
   /**
    * This method provides access only to the response body.
-   * To access the full response (for headers, for example), `crear7$Response()` instead.
+   * To access the full response (for headers, for example), `insumoCrear$Response()` instead.
    *
    * This method sends `application/json` and handles request body of type `application/json`.
    */
-  crear7(params: Crear7$Params, context?: HttpContext): Promise<InsumoResponse> {
-    const resp = this.crear7$Response(params, context);
+  insumoCrear(params: InsumoCrear$Params, context?: HttpContext): Promise<InsumoResponse> {
+    const resp = this.insumoCrear$Response(params, context);
     return resp.then((r: StrictHttpResponse<InsumoResponse>): InsumoResponse => r.body);
   }
 
-  /** Path part for operation `ajustar()` */
-  static readonly AjustarPath = '/api/insumos/movimientos';
+  /** Path part for operation `insumoAjustar()` */
+  static readonly InsumoAjustarPath = '/api/insumos/movimientos';
 
   /**
    * This method provides access to the full `HttpResponse`, allowing access to response headers.
-   * To access only the response body, use `ajustar()` instead.
+   * To access only the response body, use `insumoAjustar()` instead.
    *
    * This method sends `application/json` and handles request body of type `application/json`.
    */
-  ajustar$Response(params: Ajustar$Params, context?: HttpContext): Promise<StrictHttpResponse<Array<MovimientoInsumoResponse>>> {
-    const obs = ajustar(this.http, this.rootUrl, params, context);
+  insumoAjustar$Response(params: InsumoAjustar$Params, context?: HttpContext): Promise<StrictHttpResponse<Array<MovimientoInsumoResponse>>> {
+    const obs = insumoAjustar(this.http, this.rootUrl, params, context);
     return firstValueFrom(obs);
   }
 
   /**
    * This method provides access only to the response body.
-   * To access the full response (for headers, for example), `ajustar$Response()` instead.
+   * To access the full response (for headers, for example), `insumoAjustar$Response()` instead.
    *
    * This method sends `application/json` and handles request body of type `application/json`.
    */
-  ajustar(params: Ajustar$Params, context?: HttpContext): Promise<Array<MovimientoInsumoResponse>> {
-    const resp = this.ajustar$Response(params, context);
+  insumoAjustar(params: InsumoAjustar$Params, context?: HttpContext): Promise<Array<MovimientoInsumoResponse>> {
+    const resp = this.insumoAjustar$Response(params, context);
     return resp.then((r: StrictHttpResponse<Array<MovimientoInsumoResponse>>): Array<MovimientoInsumoResponse> => r.body);
   }
 
-  /** Path part for operation `kardex1()` */
-  static readonly Kardex1Path = '/api/insumos/{id}/kardex';
+  /** Path part for operation `insumoKardex()` */
+  static readonly InsumoKardexPath = '/api/insumos/{id}/kardex';
 
   /**
    * This method provides access to the full `HttpResponse`, allowing access to response headers.
-   * To access only the response body, use `kardex1()` instead.
+   * To access only the response body, use `insumoKardex()` instead.
    *
    * This method doesn't expect any request body.
    */
-  kardex1$Response(params: Kardex1$Params, context?: HttpContext): Promise<StrictHttpResponse<PageResponseMovimientoInsumoResponse>> {
-    const obs = kardex1(this.http, this.rootUrl, params, context);
+  insumoKardex$Response(params: InsumoKardex$Params, context?: HttpContext): Promise<StrictHttpResponse<PageResponseMovimientoInsumoResponse>> {
+    const obs = insumoKardex(this.http, this.rootUrl, params, context);
     return firstValueFrom(obs);
   }
 
   /**
    * This method provides access only to the response body.
-   * To access the full response (for headers, for example), `kardex1$Response()` instead.
+   * To access the full response (for headers, for example), `insumoKardex$Response()` instead.
    *
    * This method doesn't expect any request body.
    */
-  kardex1(params: Kardex1$Params, context?: HttpContext): Promise<PageResponseMovimientoInsumoResponse> {
-    const resp = this.kardex1$Response(params, context);
+  insumoKardex(params: InsumoKardex$Params, context?: HttpContext): Promise<PageResponseMovimientoInsumoResponse> {
+    const resp = this.insumoKardex$Response(params, context);
     return resp.then((r: StrictHttpResponse<PageResponseMovimientoInsumoResponse>): PageResponseMovimientoInsumoResponse => r.body);
   }
 
-  /** Path part for operation `stock1()` */
-  static readonly Stock1Path = '/api/insumos/stock';
+  /** Path part for operation `insumoStock()` */
+  static readonly InsumoStockPath = '/api/insumos/stock';
 
   /**
    * This method provides access to the full `HttpResponse`, allowing access to response headers.
-   * To access only the response body, use `stock1()` instead.
+   * To access only the response body, use `insumoStock()` instead.
    *
    * This method doesn't expect any request body.
    */
-  stock1$Response(params?: Stock1$Params, context?: HttpContext): Promise<StrictHttpResponse<Array<StockInsumoResponse>>> {
-    const obs = stock1(this.http, this.rootUrl, params, context);
+  insumoStock$Response(params?: InsumoStock$Params, context?: HttpContext): Promise<StrictHttpResponse<Array<StockInsumoResponse>>> {
+    const obs = insumoStock(this.http, this.rootUrl, params, context);
     return firstValueFrom(obs);
   }
 
   /**
    * This method provides access only to the response body.
-   * To access the full response (for headers, for example), `stock1$Response()` instead.
+   * To access the full response (for headers, for example), `insumoStock$Response()` instead.
    *
    * This method doesn't expect any request body.
    */
-  stock1(params?: Stock1$Params, context?: HttpContext): Promise<Array<StockInsumoResponse>> {
-    const resp = this.stock1$Response(params, context);
+  insumoStock(params?: InsumoStock$Params, context?: HttpContext): Promise<Array<StockInsumoResponse>> {
+    const resp = this.insumoStock$Response(params, context);
     return resp.then((r: StrictHttpResponse<Array<StockInsumoResponse>>): Array<StockInsumoResponse> => r.body);
   }
 

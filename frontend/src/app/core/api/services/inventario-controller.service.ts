@@ -9,30 +9,30 @@ import { BaseService } from '../base-service';
 import { ApiConfiguration } from '../api-configuration';
 import { StrictHttpResponse } from '../strict-http-response';
 
-import { cargaMasiva } from '../fn/inventario-controller/carga-masiva';
-import { CargaMasiva$Params } from '../fn/inventario-controller/carga-masiva';
 import { CargaMasivaResponse } from '../models/carga-masiva-response';
-import { definirStockMinimo1 } from '../fn/inventario-controller/definir-stock-minimo-1';
-import { DefinirStockMinimo1$Params } from '../fn/inventario-controller/definir-stock-minimo-1';
-import { kardex } from '../fn/inventario-controller/kardex';
-import { Kardex$Params } from '../fn/inventario-controller/kardex';
+import { inventarioCargaMasiva } from '../fn/inventario-controller/inventario-carga-masiva';
+import { InventarioCargaMasiva$Params } from '../fn/inventario-controller/inventario-carga-masiva';
+import { inventarioDefinirStockMinimo } from '../fn/inventario-controller/inventario-definir-stock-minimo';
+import { InventarioDefinirStockMinimo$Params } from '../fn/inventario-controller/inventario-definir-stock-minimo';
+import { inventarioKardex } from '../fn/inventario-controller/inventario-kardex';
+import { InventarioKardex$Params } from '../fn/inventario-controller/inventario-kardex';
+import { inventarioPlantilla } from '../fn/inventario-controller/inventario-plantilla';
+import { InventarioPlantilla$Params } from '../fn/inventario-controller/inventario-plantilla';
+import { inventarioRegistrarMovimiento } from '../fn/inventario-controller/inventario-registrar-movimiento';
+import { InventarioRegistrarMovimiento$Params } from '../fn/inventario-controller/inventario-registrar-movimiento';
+import { inventarioReposicion } from '../fn/inventario-controller/inventario-reposicion';
+import { InventarioReposicion$Params } from '../fn/inventario-controller/inventario-reposicion';
+import { inventarioStock } from '../fn/inventario-controller/inventario-stock';
+import { InventarioStock$Params } from '../fn/inventario-controller/inventario-stock';
+import { inventarioStockPorVariante } from '../fn/inventario-controller/inventario-stock-por-variante';
+import { InventarioStockPorVariante$Params } from '../fn/inventario-controller/inventario-stock-por-variante';
+import { inventarioTrasladar } from '../fn/inventario-controller/inventario-trasladar';
+import { InventarioTrasladar$Params } from '../fn/inventario-controller/inventario-trasladar';
 import { MovimientoResponse } from '../models/movimiento-response';
 import { PageResponseMovimientoResponse } from '../models/page-response-movimiento-response';
 import { PageResponseStockResponse } from '../models/page-response-stock-response';
-import { plantilla } from '../fn/inventario-controller/plantilla';
-import { Plantilla$Params } from '../fn/inventario-controller/plantilla';
-import { registrarMovimiento } from '../fn/inventario-controller/registrar-movimiento';
-import { RegistrarMovimiento$Params } from '../fn/inventario-controller/registrar-movimiento';
-import { reposicion } from '../fn/inventario-controller/reposicion';
-import { Reposicion$Params } from '../fn/inventario-controller/reposicion';
 import { ReposicionFila } from '../models/reposicion-fila';
-import { stock } from '../fn/inventario-controller/stock';
-import { Stock$Params } from '../fn/inventario-controller/stock';
 import { StockEstablecimientoResponse } from '../models/stock-establecimiento-response';
-import { stockPorVariante } from '../fn/inventario-controller/stock-por-variante';
-import { StockPorVariante$Params } from '../fn/inventario-controller/stock-por-variante';
-import { trasladar } from '../fn/inventario-controller/trasladar';
-import { Trasladar$Params } from '../fn/inventario-controller/trasladar';
 
 @Injectable({ providedIn: 'root' })
 export class InventarioControllerService extends BaseService {
@@ -40,232 +40,232 @@ export class InventarioControllerService extends BaseService {
     super(config, http);
   }
 
-  /** Path part for operation `definirStockMinimo1()` */
-  static readonly DefinirStockMinimo1Path = '/api/inventario/stock-minimo';
+  /** Path part for operation `inventarioDefinirStockMinimo()` */
+  static readonly InventarioDefinirStockMinimoPath = '/api/inventario/stock-minimo';
 
   /**
    * This method provides access to the full `HttpResponse`, allowing access to response headers.
-   * To access only the response body, use `definirStockMinimo1()` instead.
+   * To access only the response body, use `inventarioDefinirStockMinimo()` instead.
    *
    * This method sends `application/json` and handles request body of type `application/json`.
    */
-  definirStockMinimo1$Response(params: DefinirStockMinimo1$Params, context?: HttpContext): Promise<StrictHttpResponse<Array<ReposicionFila>>> {
-    const obs = definirStockMinimo1(this.http, this.rootUrl, params, context);
+  inventarioDefinirStockMinimo$Response(params: InventarioDefinirStockMinimo$Params, context?: HttpContext): Promise<StrictHttpResponse<Array<ReposicionFila>>> {
+    const obs = inventarioDefinirStockMinimo(this.http, this.rootUrl, params, context);
     return firstValueFrom(obs);
   }
 
   /**
    * This method provides access only to the response body.
-   * To access the full response (for headers, for example), `definirStockMinimo1$Response()` instead.
+   * To access the full response (for headers, for example), `inventarioDefinirStockMinimo$Response()` instead.
    *
    * This method sends `application/json` and handles request body of type `application/json`.
    */
-  definirStockMinimo1(params: DefinirStockMinimo1$Params, context?: HttpContext): Promise<Array<ReposicionFila>> {
-    const resp = this.definirStockMinimo1$Response(params, context);
+  inventarioDefinirStockMinimo(params: InventarioDefinirStockMinimo$Params, context?: HttpContext): Promise<Array<ReposicionFila>> {
+    const resp = this.inventarioDefinirStockMinimo$Response(params, context);
     return resp.then((r: StrictHttpResponse<Array<ReposicionFila>>): Array<ReposicionFila> => r.body);
   }
 
-  /** Path part for operation `trasladar()` */
-  static readonly TrasladarPath = '/api/inventario/traslados';
+  /** Path part for operation `inventarioTrasladar()` */
+  static readonly InventarioTrasladarPath = '/api/inventario/traslados';
 
   /**
    * This method provides access to the full `HttpResponse`, allowing access to response headers.
-   * To access only the response body, use `trasladar()` instead.
+   * To access only the response body, use `inventarioTrasladar()` instead.
    *
    * This method sends `application/json` and handles request body of type `application/json`.
    */
-  trasladar$Response(params: Trasladar$Params, context?: HttpContext): Promise<StrictHttpResponse<Array<MovimientoResponse>>> {
-    const obs = trasladar(this.http, this.rootUrl, params, context);
+  inventarioTrasladar$Response(params: InventarioTrasladar$Params, context?: HttpContext): Promise<StrictHttpResponse<Array<MovimientoResponse>>> {
+    const obs = inventarioTrasladar(this.http, this.rootUrl, params, context);
     return firstValueFrom(obs);
   }
 
   /**
    * This method provides access only to the response body.
-   * To access the full response (for headers, for example), `trasladar$Response()` instead.
+   * To access the full response (for headers, for example), `inventarioTrasladar$Response()` instead.
    *
    * This method sends `application/json` and handles request body of type `application/json`.
    */
-  trasladar(params: Trasladar$Params, context?: HttpContext): Promise<Array<MovimientoResponse>> {
-    const resp = this.trasladar$Response(params, context);
+  inventarioTrasladar(params: InventarioTrasladar$Params, context?: HttpContext): Promise<Array<MovimientoResponse>> {
+    const resp = this.inventarioTrasladar$Response(params, context);
     return resp.then((r: StrictHttpResponse<Array<MovimientoResponse>>): Array<MovimientoResponse> => r.body);
   }
 
-  /** Path part for operation `registrarMovimiento()` */
-  static readonly RegistrarMovimientoPath = '/api/inventario/movimientos';
+  /** Path part for operation `inventarioRegistrarMovimiento()` */
+  static readonly InventarioRegistrarMovimientoPath = '/api/inventario/movimientos';
 
   /**
    * This method provides access to the full `HttpResponse`, allowing access to response headers.
-   * To access only the response body, use `registrarMovimiento()` instead.
+   * To access only the response body, use `inventarioRegistrarMovimiento()` instead.
    *
    * This method sends `application/json` and handles request body of type `application/json`.
    */
-  registrarMovimiento$Response(params: RegistrarMovimiento$Params, context?: HttpContext): Promise<StrictHttpResponse<Array<MovimientoResponse>>> {
-    const obs = registrarMovimiento(this.http, this.rootUrl, params, context);
+  inventarioRegistrarMovimiento$Response(params: InventarioRegistrarMovimiento$Params, context?: HttpContext): Promise<StrictHttpResponse<Array<MovimientoResponse>>> {
+    const obs = inventarioRegistrarMovimiento(this.http, this.rootUrl, params, context);
     return firstValueFrom(obs);
   }
 
   /**
    * This method provides access only to the response body.
-   * To access the full response (for headers, for example), `registrarMovimiento$Response()` instead.
+   * To access the full response (for headers, for example), `inventarioRegistrarMovimiento$Response()` instead.
    *
    * This method sends `application/json` and handles request body of type `application/json`.
    */
-  registrarMovimiento(params: RegistrarMovimiento$Params, context?: HttpContext): Promise<Array<MovimientoResponse>> {
-    const resp = this.registrarMovimiento$Response(params, context);
+  inventarioRegistrarMovimiento(params: InventarioRegistrarMovimiento$Params, context?: HttpContext): Promise<Array<MovimientoResponse>> {
+    const resp = this.inventarioRegistrarMovimiento$Response(params, context);
     return resp.then((r: StrictHttpResponse<Array<MovimientoResponse>>): Array<MovimientoResponse> => r.body);
   }
 
-  /** Path part for operation `cargaMasiva()` */
-  static readonly CargaMasivaPath = '/api/inventario/carga-masiva';
+  /** Path part for operation `inventarioCargaMasiva()` */
+  static readonly InventarioCargaMasivaPath = '/api/inventario/carga-masiva';
 
   /**
    * This method provides access to the full `HttpResponse`, allowing access to response headers.
-   * To access only the response body, use `cargaMasiva()` instead.
+   * To access only the response body, use `inventarioCargaMasiva()` instead.
    *
    * This method sends `multipart/form-data` and handles request body of type `multipart/form-data`.
    */
-  cargaMasiva$Response(params: CargaMasiva$Params, context?: HttpContext): Promise<StrictHttpResponse<CargaMasivaResponse>> {
-    const obs = cargaMasiva(this.http, this.rootUrl, params, context);
+  inventarioCargaMasiva$Response(params: InventarioCargaMasiva$Params, context?: HttpContext): Promise<StrictHttpResponse<CargaMasivaResponse>> {
+    const obs = inventarioCargaMasiva(this.http, this.rootUrl, params, context);
     return firstValueFrom(obs);
   }
 
   /**
    * This method provides access only to the response body.
-   * To access the full response (for headers, for example), `cargaMasiva$Response()` instead.
+   * To access the full response (for headers, for example), `inventarioCargaMasiva$Response()` instead.
    *
    * This method sends `multipart/form-data` and handles request body of type `multipart/form-data`.
    */
-  cargaMasiva(params: CargaMasiva$Params, context?: HttpContext): Promise<CargaMasivaResponse> {
-    const resp = this.cargaMasiva$Response(params, context);
+  inventarioCargaMasiva(params: InventarioCargaMasiva$Params, context?: HttpContext): Promise<CargaMasivaResponse> {
+    const resp = this.inventarioCargaMasiva$Response(params, context);
     return resp.then((r: StrictHttpResponse<CargaMasivaResponse>): CargaMasivaResponse => r.body);
   }
 
-  /** Path part for operation `stock()` */
-  static readonly StockPath = '/api/inventario/stock';
+  /** Path part for operation `inventarioStock()` */
+  static readonly InventarioStockPath = '/api/inventario/stock';
 
   /**
    * This method provides access to the full `HttpResponse`, allowing access to response headers.
-   * To access only the response body, use `stock()` instead.
+   * To access only the response body, use `inventarioStock()` instead.
    *
    * This method doesn't expect any request body.
    */
-  stock$Response(params?: Stock$Params, context?: HttpContext): Promise<StrictHttpResponse<PageResponseStockResponse>> {
-    const obs = stock(this.http, this.rootUrl, params, context);
+  inventarioStock$Response(params?: InventarioStock$Params, context?: HttpContext): Promise<StrictHttpResponse<PageResponseStockResponse>> {
+    const obs = inventarioStock(this.http, this.rootUrl, params, context);
     return firstValueFrom(obs);
   }
 
   /**
    * This method provides access only to the response body.
-   * To access the full response (for headers, for example), `stock$Response()` instead.
+   * To access the full response (for headers, for example), `inventarioStock$Response()` instead.
    *
    * This method doesn't expect any request body.
    */
-  stock(params?: Stock$Params, context?: HttpContext): Promise<PageResponseStockResponse> {
-    const resp = this.stock$Response(params, context);
+  inventarioStock(params?: InventarioStock$Params, context?: HttpContext): Promise<PageResponseStockResponse> {
+    const resp = this.inventarioStock$Response(params, context);
     return resp.then((r: StrictHttpResponse<PageResponseStockResponse>): PageResponseStockResponse => r.body);
   }
 
-  /** Path part for operation `stockPorVariante()` */
-  static readonly StockPorVariantePath = '/api/inventario/stock/variante/{varianteId}';
+  /** Path part for operation `inventarioStockPorVariante()` */
+  static readonly InventarioStockPorVariantePath = '/api/inventario/stock/variante/{varianteId}';
 
   /**
    * This method provides access to the full `HttpResponse`, allowing access to response headers.
-   * To access only the response body, use `stockPorVariante()` instead.
+   * To access only the response body, use `inventarioStockPorVariante()` instead.
    *
    * This method doesn't expect any request body.
    */
-  stockPorVariante$Response(params: StockPorVariante$Params, context?: HttpContext): Promise<StrictHttpResponse<Array<StockEstablecimientoResponse>>> {
-    const obs = stockPorVariante(this.http, this.rootUrl, params, context);
+  inventarioStockPorVariante$Response(params: InventarioStockPorVariante$Params, context?: HttpContext): Promise<StrictHttpResponse<Array<StockEstablecimientoResponse>>> {
+    const obs = inventarioStockPorVariante(this.http, this.rootUrl, params, context);
     return firstValueFrom(obs);
   }
 
   /**
    * This method provides access only to the response body.
-   * To access the full response (for headers, for example), `stockPorVariante$Response()` instead.
+   * To access the full response (for headers, for example), `inventarioStockPorVariante$Response()` instead.
    *
    * This method doesn't expect any request body.
    */
-  stockPorVariante(params: StockPorVariante$Params, context?: HttpContext): Promise<Array<StockEstablecimientoResponse>> {
-    const resp = this.stockPorVariante$Response(params, context);
+  inventarioStockPorVariante(params: InventarioStockPorVariante$Params, context?: HttpContext): Promise<Array<StockEstablecimientoResponse>> {
+    const resp = this.inventarioStockPorVariante$Response(params, context);
     return resp.then((r: StrictHttpResponse<Array<StockEstablecimientoResponse>>): Array<StockEstablecimientoResponse> => r.body);
   }
 
-  /** Path part for operation `reposicion()` */
-  static readonly ReposicionPath = '/api/inventario/reposicion';
+  /** Path part for operation `inventarioReposicion()` */
+  static readonly InventarioReposicionPath = '/api/inventario/reposicion';
 
   /**
    * This method provides access to the full `HttpResponse`, allowing access to response headers.
-   * To access only the response body, use `reposicion()` instead.
+   * To access only the response body, use `inventarioReposicion()` instead.
    *
    * This method doesn't expect any request body.
    */
-  reposicion$Response(params?: Reposicion$Params, context?: HttpContext): Promise<StrictHttpResponse<{
+  inventarioReposicion$Response(params?: InventarioReposicion$Params, context?: HttpContext): Promise<StrictHttpResponse<{
 }>> {
-    const obs = reposicion(this.http, this.rootUrl, params, context);
+    const obs = inventarioReposicion(this.http, this.rootUrl, params, context);
     return firstValueFrom(obs);
   }
 
   /**
    * This method provides access only to the response body.
-   * To access the full response (for headers, for example), `reposicion$Response()` instead.
+   * To access the full response (for headers, for example), `inventarioReposicion$Response()` instead.
    *
    * This method doesn't expect any request body.
    */
-  reposicion(params?: Reposicion$Params, context?: HttpContext): Promise<{
+  inventarioReposicion(params?: InventarioReposicion$Params, context?: HttpContext): Promise<{
 }> {
-    const resp = this.reposicion$Response(params, context);
+    const resp = this.inventarioReposicion$Response(params, context);
     return resp.then((r: StrictHttpResponse<{
 }>): {
 } => r.body);
   }
 
-  /** Path part for operation `kardex()` */
-  static readonly KardexPath = '/api/inventario/kardex';
+  /** Path part for operation `inventarioKardex()` */
+  static readonly InventarioKardexPath = '/api/inventario/kardex';
 
   /**
    * This method provides access to the full `HttpResponse`, allowing access to response headers.
-   * To access only the response body, use `kardex()` instead.
+   * To access only the response body, use `inventarioKardex()` instead.
    *
    * This method doesn't expect any request body.
    */
-  kardex$Response(params?: Kardex$Params, context?: HttpContext): Promise<StrictHttpResponse<PageResponseMovimientoResponse>> {
-    const obs = kardex(this.http, this.rootUrl, params, context);
+  inventarioKardex$Response(params?: InventarioKardex$Params, context?: HttpContext): Promise<StrictHttpResponse<PageResponseMovimientoResponse>> {
+    const obs = inventarioKardex(this.http, this.rootUrl, params, context);
     return firstValueFrom(obs);
   }
 
   /**
    * This method provides access only to the response body.
-   * To access the full response (for headers, for example), `kardex$Response()` instead.
+   * To access the full response (for headers, for example), `inventarioKardex$Response()` instead.
    *
    * This method doesn't expect any request body.
    */
-  kardex(params?: Kardex$Params, context?: HttpContext): Promise<PageResponseMovimientoResponse> {
-    const resp = this.kardex$Response(params, context);
+  inventarioKardex(params?: InventarioKardex$Params, context?: HttpContext): Promise<PageResponseMovimientoResponse> {
+    const resp = this.inventarioKardex$Response(params, context);
     return resp.then((r: StrictHttpResponse<PageResponseMovimientoResponse>): PageResponseMovimientoResponse => r.body);
   }
 
-  /** Path part for operation `plantilla()` */
-  static readonly PlantillaPath = '/api/inventario/carga-masiva/plantilla';
+  /** Path part for operation `inventarioPlantilla()` */
+  static readonly InventarioPlantillaPath = '/api/inventario/carga-masiva/plantilla';
 
   /**
    * This method provides access to the full `HttpResponse`, allowing access to response headers.
-   * To access only the response body, use `plantilla()` instead.
+   * To access only the response body, use `inventarioPlantilla()` instead.
    *
    * This method doesn't expect any request body.
    */
-  plantilla$Response(params?: Plantilla$Params, context?: HttpContext): Promise<StrictHttpResponse<Blob>> {
-    const obs = plantilla(this.http, this.rootUrl, params, context);
+  inventarioPlantilla$Response(params?: InventarioPlantilla$Params, context?: HttpContext): Promise<StrictHttpResponse<Blob>> {
+    const obs = inventarioPlantilla(this.http, this.rootUrl, params, context);
     return firstValueFrom(obs);
   }
 
   /**
    * This method provides access only to the response body.
-   * To access the full response (for headers, for example), `plantilla$Response()` instead.
+   * To access the full response (for headers, for example), `inventarioPlantilla$Response()` instead.
    *
    * This method doesn't expect any request body.
    */
-  plantilla(params?: Plantilla$Params, context?: HttpContext): Promise<Blob> {
-    const resp = this.plantilla$Response(params, context);
+  inventarioPlantilla(params?: InventarioPlantilla$Params, context?: HttpContext): Promise<Blob> {
+    const resp = this.inventarioPlantilla$Response(params, context);
     return resp.then((r: StrictHttpResponse<Blob>): Blob => r.body);
   }
 

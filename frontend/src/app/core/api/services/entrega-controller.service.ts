@@ -9,13 +9,13 @@ import { BaseService } from '../base-service';
 import { ApiConfiguration } from '../api-configuration';
 import { StrictHttpResponse } from '../strict-http-response';
 
-import { entrega } from '../fn/entrega-controller/entrega';
-import { Entrega$Params } from '../fn/entrega-controller/entrega';
+import { entregaEntrega } from '../fn/entrega-controller/entrega-entrega';
+import { EntregaEntrega$Params } from '../fn/entrega-controller/entrega-entrega';
+import { entregaEnviarCorreo } from '../fn/entrega-controller/entrega-enviar-correo';
+import { EntregaEnviarCorreo$Params } from '../fn/entrega-controller/entrega-enviar-correo';
+import { entregaEnviarWhatsapp } from '../fn/entrega-controller/entrega-enviar-whatsapp';
+import { EntregaEnviarWhatsapp$Params } from '../fn/entrega-controller/entrega-enviar-whatsapp';
 import { EntregaResponse } from '../models/entrega-response';
-import { enviarCorreo } from '../fn/entrega-controller/enviar-correo';
-import { EnviarCorreo$Params } from '../fn/entrega-controller/enviar-correo';
-import { enviarWhatsapp } from '../fn/entrega-controller/enviar-whatsapp';
-import { EnviarWhatsapp$Params } from '../fn/entrega-controller/enviar-whatsapp';
 import { EnvioCorreoResponse } from '../models/envio-correo-response';
 import { EnvioWhatsappResponse } from '../models/envio-whatsapp-response';
 
@@ -25,78 +25,78 @@ export class EntregaControllerService extends BaseService {
     super(config, http);
   }
 
-  /** Path part for operation `enviarWhatsapp()` */
-  static readonly EnviarWhatsappPath = '/api/ventas/{id}/entrega/whatsapp';
+  /** Path part for operation `entregaEnviarWhatsapp()` */
+  static readonly EntregaEnviarWhatsappPath = '/api/ventas/{id}/entrega/whatsapp';
 
   /**
    * This method provides access to the full `HttpResponse`, allowing access to response headers.
-   * To access only the response body, use `enviarWhatsapp()` instead.
+   * To access only the response body, use `entregaEnviarWhatsapp()` instead.
    *
    * This method sends `application/json` and handles request body of type `application/json`.
    */
-  enviarWhatsapp$Response(params: EnviarWhatsapp$Params, context?: HttpContext): Promise<StrictHttpResponse<EnvioWhatsappResponse>> {
-    const obs = enviarWhatsapp(this.http, this.rootUrl, params, context);
+  entregaEnviarWhatsapp$Response(params: EntregaEnviarWhatsapp$Params, context?: HttpContext): Promise<StrictHttpResponse<EnvioWhatsappResponse>> {
+    const obs = entregaEnviarWhatsapp(this.http, this.rootUrl, params, context);
     return firstValueFrom(obs);
   }
 
   /**
    * This method provides access only to the response body.
-   * To access the full response (for headers, for example), `enviarWhatsapp$Response()` instead.
+   * To access the full response (for headers, for example), `entregaEnviarWhatsapp$Response()` instead.
    *
    * This method sends `application/json` and handles request body of type `application/json`.
    */
-  enviarWhatsapp(params: EnviarWhatsapp$Params, context?: HttpContext): Promise<EnvioWhatsappResponse> {
-    const resp = this.enviarWhatsapp$Response(params, context);
+  entregaEnviarWhatsapp(params: EntregaEnviarWhatsapp$Params, context?: HttpContext): Promise<EnvioWhatsappResponse> {
+    const resp = this.entregaEnviarWhatsapp$Response(params, context);
     return resp.then((r: StrictHttpResponse<EnvioWhatsappResponse>): EnvioWhatsappResponse => r.body);
   }
 
-  /** Path part for operation `enviarCorreo()` */
-  static readonly EnviarCorreoPath = '/api/ventas/{id}/entrega/correo';
+  /** Path part for operation `entregaEnviarCorreo()` */
+  static readonly EntregaEnviarCorreoPath = '/api/ventas/{id}/entrega/correo';
 
   /**
    * This method provides access to the full `HttpResponse`, allowing access to response headers.
-   * To access only the response body, use `enviarCorreo()` instead.
+   * To access only the response body, use `entregaEnviarCorreo()` instead.
    *
    * This method sends `application/json` and handles request body of type `application/json`.
    */
-  enviarCorreo$Response(params: EnviarCorreo$Params, context?: HttpContext): Promise<StrictHttpResponse<EnvioCorreoResponse>> {
-    const obs = enviarCorreo(this.http, this.rootUrl, params, context);
+  entregaEnviarCorreo$Response(params: EntregaEnviarCorreo$Params, context?: HttpContext): Promise<StrictHttpResponse<EnvioCorreoResponse>> {
+    const obs = entregaEnviarCorreo(this.http, this.rootUrl, params, context);
     return firstValueFrom(obs);
   }
 
   /**
    * This method provides access only to the response body.
-   * To access the full response (for headers, for example), `enviarCorreo$Response()` instead.
+   * To access the full response (for headers, for example), `entregaEnviarCorreo$Response()` instead.
    *
    * This method sends `application/json` and handles request body of type `application/json`.
    */
-  enviarCorreo(params: EnviarCorreo$Params, context?: HttpContext): Promise<EnvioCorreoResponse> {
-    const resp = this.enviarCorreo$Response(params, context);
+  entregaEnviarCorreo(params: EntregaEnviarCorreo$Params, context?: HttpContext): Promise<EnvioCorreoResponse> {
+    const resp = this.entregaEnviarCorreo$Response(params, context);
     return resp.then((r: StrictHttpResponse<EnvioCorreoResponse>): EnvioCorreoResponse => r.body);
   }
 
-  /** Path part for operation `entrega()` */
-  static readonly EntregaPath = '/api/ventas/{id}/entrega';
+  /** Path part for operation `entregaEntrega()` */
+  static readonly EntregaEntregaPath = '/api/ventas/{id}/entrega';
 
   /**
    * This method provides access to the full `HttpResponse`, allowing access to response headers.
-   * To access only the response body, use `entrega()` instead.
+   * To access only the response body, use `entregaEntrega()` instead.
    *
    * This method doesn't expect any request body.
    */
-  entrega$Response(params: Entrega$Params, context?: HttpContext): Promise<StrictHttpResponse<EntregaResponse>> {
-    const obs = entrega(this.http, this.rootUrl, params, context);
+  entregaEntrega$Response(params: EntregaEntrega$Params, context?: HttpContext): Promise<StrictHttpResponse<EntregaResponse>> {
+    const obs = entregaEntrega(this.http, this.rootUrl, params, context);
     return firstValueFrom(obs);
   }
 
   /**
    * This method provides access only to the response body.
-   * To access the full response (for headers, for example), `entrega$Response()` instead.
+   * To access the full response (for headers, for example), `entregaEntrega$Response()` instead.
    *
    * This method doesn't expect any request body.
    */
-  entrega(params: Entrega$Params, context?: HttpContext): Promise<EntregaResponse> {
-    const resp = this.entrega$Response(params, context);
+  entregaEntrega(params: EntregaEntrega$Params, context?: HttpContext): Promise<EntregaResponse> {
+    const resp = this.entregaEntrega$Response(params, context);
     return resp.then((r: StrictHttpResponse<EntregaResponse>): EntregaResponse => r.body);
   }
 

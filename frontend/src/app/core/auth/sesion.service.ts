@@ -57,12 +57,12 @@ export class SesionService {
 
   /** Las pantallas de login y de cambio de contraseña muestran el error en el formulario, sin aviso. */
   async iniciar(username: string, password: string): Promise<UsuarioResponse> {
-    const respuesta = await this.auth.login({ body: { username, password } }, sinAviso());
+    const respuesta = await this.auth.authLogin({ body: { username, password } }, sinAviso());
     return this.guardar(respuesta);
   }
 
   async cambiarPassword(passwordActual: string, passwordNueva: string): Promise<UsuarioResponse> {
-    const respuesta = await this.auth.cambiarPassword({ body: { passwordActual, passwordNueva } }, sinAviso());
+    const respuesta = await this.auth.authCambiarPassword({ body: { passwordActual, passwordNueva } }, sinAviso());
     return this.guardar(respuesta);
   }
 
@@ -70,7 +70,7 @@ export class SesionService {
   async cerrar(): Promise<void> {
     if (this.autenticado()) {
       try {
-        await this.auth.cerrarSesion();
+        await this.auth.authCerrarSesion();
       } catch {
         // Si el servidor no responde, igual se limpia la sesión local.
       }

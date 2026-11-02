@@ -10,28 +10,28 @@ import { ApiConfiguration } from '../api-configuration';
 import { StrictHttpResponse } from '../strict-http-response';
 
 import { BajaSunatInfo } from '../models/baja-sunat-info';
-import { cdr } from '../fn/sunat-controller/cdr';
-import { Cdr$Params } from '../fn/sunat-controller/cdr';
-import { cdrDeEnvio } from '../fn/sunat-controller/cdr-de-envio';
-import { CdrDeEnvio$Params } from '../fn/sunat-controller/cdr-de-envio';
-import { consultar } from '../fn/sunat-controller/consultar';
-import { Consultar$Params } from '../fn/sunat-controller/consultar';
-import { consultarEnvio } from '../fn/sunat-controller/consultar-envio';
-import { ConsultarEnvio$Params } from '../fn/sunat-controller/consultar-envio';
-import { enviar } from '../fn/sunat-controller/enviar';
-import { Enviar$Params } from '../fn/sunat-controller/enviar';
-import { enviarEnvio } from '../fn/sunat-controller/enviar-envio';
-import { EnviarEnvio$Params } from '../fn/sunat-controller/enviar-envio';
 import { EnvioSunatResponse } from '../models/envio-sunat-response';
-import { listar16 } from '../fn/sunat-controller/listar-16';
-import { Listar16$Params } from '../fn/sunat-controller/listar-16';
 import { PageResponseEnvioSunatResponse } from '../models/page-response-envio-sunat-response';
-import { reintentarBaja } from '../fn/sunat-controller/reintentar-baja';
-import { ReintentarBaja$Params } from '../fn/sunat-controller/reintentar-baja';
-import { xml } from '../fn/sunat-controller/xml';
-import { Xml$Params } from '../fn/sunat-controller/xml';
-import { xmlDeEnvio } from '../fn/sunat-controller/xml-de-envio';
-import { XmlDeEnvio$Params } from '../fn/sunat-controller/xml-de-envio';
+import { sunatCdr } from '../fn/sunat-controller/sunat-cdr';
+import { SunatCdr$Params } from '../fn/sunat-controller/sunat-cdr';
+import { sunatCdrDeEnvio } from '../fn/sunat-controller/sunat-cdr-de-envio';
+import { SunatCdrDeEnvio$Params } from '../fn/sunat-controller/sunat-cdr-de-envio';
+import { sunatConsultar } from '../fn/sunat-controller/sunat-consultar';
+import { SunatConsultar$Params } from '../fn/sunat-controller/sunat-consultar';
+import { sunatConsultarEnvio } from '../fn/sunat-controller/sunat-consultar-envio';
+import { SunatConsultarEnvio$Params } from '../fn/sunat-controller/sunat-consultar-envio';
+import { sunatEnviar } from '../fn/sunat-controller/sunat-enviar';
+import { SunatEnviar$Params } from '../fn/sunat-controller/sunat-enviar';
+import { sunatEnviarEnvio } from '../fn/sunat-controller/sunat-enviar-envio';
+import { SunatEnviarEnvio$Params } from '../fn/sunat-controller/sunat-enviar-envio';
+import { sunatListar } from '../fn/sunat-controller/sunat-listar';
+import { SunatListar$Params } from '../fn/sunat-controller/sunat-listar';
+import { sunatReintentarBaja } from '../fn/sunat-controller/sunat-reintentar-baja';
+import { SunatReintentarBaja$Params } from '../fn/sunat-controller/sunat-reintentar-baja';
+import { sunatXml } from '../fn/sunat-controller/sunat-xml';
+import { SunatXml$Params } from '../fn/sunat-controller/sunat-xml';
+import { sunatXmlDeEnvio } from '../fn/sunat-controller/sunat-xml-de-envio';
+import { SunatXmlDeEnvio$Params } from '../fn/sunat-controller/sunat-xml-de-envio';
 
 @Injectable({ providedIn: 'root' })
 export class SunatControllerService extends BaseService {
@@ -39,253 +39,253 @@ export class SunatControllerService extends BaseService {
     super(config, http);
   }
 
-  /** Path part for operation `enviarEnvio()` */
-  static readonly EnviarEnvioPath = '/api/sunat/envios/{envioId}/enviar';
+  /** Path part for operation `sunatEnviarEnvio()` */
+  static readonly SunatEnviarEnvioPath = '/api/sunat/envios/{envioId}/enviar';
 
   /**
    * This method provides access to the full `HttpResponse`, allowing access to response headers.
-   * To access only the response body, use `enviarEnvio()` instead.
+   * To access only the response body, use `sunatEnviarEnvio()` instead.
    *
    * This method doesn't expect any request body.
    */
-  enviarEnvio$Response(params: EnviarEnvio$Params, context?: HttpContext): Promise<StrictHttpResponse<EnvioSunatResponse>> {
-    const obs = enviarEnvio(this.http, this.rootUrl, params, context);
+  sunatEnviarEnvio$Response(params: SunatEnviarEnvio$Params, context?: HttpContext): Promise<StrictHttpResponse<EnvioSunatResponse>> {
+    const obs = sunatEnviarEnvio(this.http, this.rootUrl, params, context);
     return firstValueFrom(obs);
   }
 
   /**
    * This method provides access only to the response body.
-   * To access the full response (for headers, for example), `enviarEnvio$Response()` instead.
+   * To access the full response (for headers, for example), `sunatEnviarEnvio$Response()` instead.
    *
    * This method doesn't expect any request body.
    */
-  enviarEnvio(params: EnviarEnvio$Params, context?: HttpContext): Promise<EnvioSunatResponse> {
-    const resp = this.enviarEnvio$Response(params, context);
+  sunatEnviarEnvio(params: SunatEnviarEnvio$Params, context?: HttpContext): Promise<EnvioSunatResponse> {
+    const resp = this.sunatEnviarEnvio$Response(params, context);
     return resp.then((r: StrictHttpResponse<EnvioSunatResponse>): EnvioSunatResponse => r.body);
   }
 
-  /** Path part for operation `enviar()` */
-  static readonly EnviarPath = '/api/sunat/comprobantes/{comprobanteId}/enviar';
+  /** Path part for operation `sunatEnviar()` */
+  static readonly SunatEnviarPath = '/api/sunat/comprobantes/{comprobanteId}/enviar';
 
   /**
    * This method provides access to the full `HttpResponse`, allowing access to response headers.
-   * To access only the response body, use `enviar()` instead.
+   * To access only the response body, use `sunatEnviar()` instead.
    *
    * This method doesn't expect any request body.
    */
-  enviar$Response(params: Enviar$Params, context?: HttpContext): Promise<StrictHttpResponse<EnvioSunatResponse>> {
-    const obs = enviar(this.http, this.rootUrl, params, context);
+  sunatEnviar$Response(params: SunatEnviar$Params, context?: HttpContext): Promise<StrictHttpResponse<EnvioSunatResponse>> {
+    const obs = sunatEnviar(this.http, this.rootUrl, params, context);
     return firstValueFrom(obs);
   }
 
   /**
    * This method provides access only to the response body.
-   * To access the full response (for headers, for example), `enviar$Response()` instead.
+   * To access the full response (for headers, for example), `sunatEnviar$Response()` instead.
    *
    * This method doesn't expect any request body.
    */
-  enviar(params: Enviar$Params, context?: HttpContext): Promise<EnvioSunatResponse> {
-    const resp = this.enviar$Response(params, context);
+  sunatEnviar(params: SunatEnviar$Params, context?: HttpContext): Promise<EnvioSunatResponse> {
+    const resp = this.sunatEnviar$Response(params, context);
     return resp.then((r: StrictHttpResponse<EnvioSunatResponse>): EnvioSunatResponse => r.body);
   }
 
-  /** Path part for operation `reintentarBaja()` */
-  static readonly ReintentarBajaPath = '/api/sunat/comprobantes/{comprobanteId}/baja';
+  /** Path part for operation `sunatReintentarBaja()` */
+  static readonly SunatReintentarBajaPath = '/api/sunat/comprobantes/{comprobanteId}/baja';
 
   /**
    * This method provides access to the full `HttpResponse`, allowing access to response headers.
-   * To access only the response body, use `reintentarBaja()` instead.
+   * To access only the response body, use `sunatReintentarBaja()` instead.
    *
    * This method doesn't expect any request body.
    */
-  reintentarBaja$Response(params: ReintentarBaja$Params, context?: HttpContext): Promise<StrictHttpResponse<BajaSunatInfo>> {
-    const obs = reintentarBaja(this.http, this.rootUrl, params, context);
+  sunatReintentarBaja$Response(params: SunatReintentarBaja$Params, context?: HttpContext): Promise<StrictHttpResponse<BajaSunatInfo>> {
+    const obs = sunatReintentarBaja(this.http, this.rootUrl, params, context);
     return firstValueFrom(obs);
   }
 
   /**
    * This method provides access only to the response body.
-   * To access the full response (for headers, for example), `reintentarBaja$Response()` instead.
+   * To access the full response (for headers, for example), `sunatReintentarBaja$Response()` instead.
    *
    * This method doesn't expect any request body.
    */
-  reintentarBaja(params: ReintentarBaja$Params, context?: HttpContext): Promise<BajaSunatInfo> {
-    const resp = this.reintentarBaja$Response(params, context);
+  sunatReintentarBaja(params: SunatReintentarBaja$Params, context?: HttpContext): Promise<BajaSunatInfo> {
+    const resp = this.sunatReintentarBaja$Response(params, context);
     return resp.then((r: StrictHttpResponse<BajaSunatInfo>): BajaSunatInfo => r.body);
   }
 
-  /** Path part for operation `listar16()` */
-  static readonly Listar16Path = '/api/sunat/envios';
+  /** Path part for operation `sunatListar()` */
+  static readonly SunatListarPath = '/api/sunat/envios';
 
   /**
    * This method provides access to the full `HttpResponse`, allowing access to response headers.
-   * To access only the response body, use `listar16()` instead.
+   * To access only the response body, use `sunatListar()` instead.
    *
    * This method doesn't expect any request body.
    */
-  listar16$Response(params?: Listar16$Params, context?: HttpContext): Promise<StrictHttpResponse<PageResponseEnvioSunatResponse>> {
-    const obs = listar16(this.http, this.rootUrl, params, context);
+  sunatListar$Response(params?: SunatListar$Params, context?: HttpContext): Promise<StrictHttpResponse<PageResponseEnvioSunatResponse>> {
+    const obs = sunatListar(this.http, this.rootUrl, params, context);
     return firstValueFrom(obs);
   }
 
   /**
    * This method provides access only to the response body.
-   * To access the full response (for headers, for example), `listar16$Response()` instead.
+   * To access the full response (for headers, for example), `sunatListar$Response()` instead.
    *
    * This method doesn't expect any request body.
    */
-  listar16(params?: Listar16$Params, context?: HttpContext): Promise<PageResponseEnvioSunatResponse> {
-    const resp = this.listar16$Response(params, context);
+  sunatListar(params?: SunatListar$Params, context?: HttpContext): Promise<PageResponseEnvioSunatResponse> {
+    const resp = this.sunatListar$Response(params, context);
     return resp.then((r: StrictHttpResponse<PageResponseEnvioSunatResponse>): PageResponseEnvioSunatResponse => r.body);
   }
 
-  /** Path part for operation `consultarEnvio()` */
-  static readonly ConsultarEnvioPath = '/api/sunat/envios/{envioId}';
+  /** Path part for operation `sunatConsultarEnvio()` */
+  static readonly SunatConsultarEnvioPath = '/api/sunat/envios/{envioId}';
 
   /**
    * This method provides access to the full `HttpResponse`, allowing access to response headers.
-   * To access only the response body, use `consultarEnvio()` instead.
+   * To access only the response body, use `sunatConsultarEnvio()` instead.
    *
    * This method doesn't expect any request body.
    */
-  consultarEnvio$Response(params: ConsultarEnvio$Params, context?: HttpContext): Promise<StrictHttpResponse<EnvioSunatResponse>> {
-    const obs = consultarEnvio(this.http, this.rootUrl, params, context);
+  sunatConsultarEnvio$Response(params: SunatConsultarEnvio$Params, context?: HttpContext): Promise<StrictHttpResponse<EnvioSunatResponse>> {
+    const obs = sunatConsultarEnvio(this.http, this.rootUrl, params, context);
     return firstValueFrom(obs);
   }
 
   /**
    * This method provides access only to the response body.
-   * To access the full response (for headers, for example), `consultarEnvio$Response()` instead.
+   * To access the full response (for headers, for example), `sunatConsultarEnvio$Response()` instead.
    *
    * This method doesn't expect any request body.
    */
-  consultarEnvio(params: ConsultarEnvio$Params, context?: HttpContext): Promise<EnvioSunatResponse> {
-    const resp = this.consultarEnvio$Response(params, context);
+  sunatConsultarEnvio(params: SunatConsultarEnvio$Params, context?: HttpContext): Promise<EnvioSunatResponse> {
+    const resp = this.sunatConsultarEnvio$Response(params, context);
     return resp.then((r: StrictHttpResponse<EnvioSunatResponse>): EnvioSunatResponse => r.body);
   }
 
-  /** Path part for operation `xmlDeEnvio()` */
-  static readonly XmlDeEnvioPath = '/api/sunat/envios/{envioId}/xml';
+  /** Path part for operation `sunatXmlDeEnvio()` */
+  static readonly SunatXmlDeEnvioPath = '/api/sunat/envios/{envioId}/xml';
 
   /**
    * This method provides access to the full `HttpResponse`, allowing access to response headers.
-   * To access only the response body, use `xmlDeEnvio()` instead.
+   * To access only the response body, use `sunatXmlDeEnvio()` instead.
    *
    * This method doesn't expect any request body.
    */
-  xmlDeEnvio$Response(params: XmlDeEnvio$Params, context?: HttpContext): Promise<StrictHttpResponse<Blob>> {
-    const obs = xmlDeEnvio(this.http, this.rootUrl, params, context);
+  sunatXmlDeEnvio$Response(params: SunatXmlDeEnvio$Params, context?: HttpContext): Promise<StrictHttpResponse<Blob>> {
+    const obs = sunatXmlDeEnvio(this.http, this.rootUrl, params, context);
     return firstValueFrom(obs);
   }
 
   /**
    * This method provides access only to the response body.
-   * To access the full response (for headers, for example), `xmlDeEnvio$Response()` instead.
+   * To access the full response (for headers, for example), `sunatXmlDeEnvio$Response()` instead.
    *
    * This method doesn't expect any request body.
    */
-  xmlDeEnvio(params: XmlDeEnvio$Params, context?: HttpContext): Promise<Blob> {
-    const resp = this.xmlDeEnvio$Response(params, context);
+  sunatXmlDeEnvio(params: SunatXmlDeEnvio$Params, context?: HttpContext): Promise<Blob> {
+    const resp = this.sunatXmlDeEnvio$Response(params, context);
     return resp.then((r: StrictHttpResponse<Blob>): Blob => r.body);
   }
 
-  /** Path part for operation `cdrDeEnvio()` */
-  static readonly CdrDeEnvioPath = '/api/sunat/envios/{envioId}/cdr';
+  /** Path part for operation `sunatCdrDeEnvio()` */
+  static readonly SunatCdrDeEnvioPath = '/api/sunat/envios/{envioId}/cdr';
 
   /**
    * This method provides access to the full `HttpResponse`, allowing access to response headers.
-   * To access only the response body, use `cdrDeEnvio()` instead.
+   * To access only the response body, use `sunatCdrDeEnvio()` instead.
    *
    * This method doesn't expect any request body.
    */
-  cdrDeEnvio$Response(params: CdrDeEnvio$Params, context?: HttpContext): Promise<StrictHttpResponse<Blob>> {
-    const obs = cdrDeEnvio(this.http, this.rootUrl, params, context);
+  sunatCdrDeEnvio$Response(params: SunatCdrDeEnvio$Params, context?: HttpContext): Promise<StrictHttpResponse<Blob>> {
+    const obs = sunatCdrDeEnvio(this.http, this.rootUrl, params, context);
     return firstValueFrom(obs);
   }
 
   /**
    * This method provides access only to the response body.
-   * To access the full response (for headers, for example), `cdrDeEnvio$Response()` instead.
+   * To access the full response (for headers, for example), `sunatCdrDeEnvio$Response()` instead.
    *
    * This method doesn't expect any request body.
    */
-  cdrDeEnvio(params: CdrDeEnvio$Params, context?: HttpContext): Promise<Blob> {
-    const resp = this.cdrDeEnvio$Response(params, context);
+  sunatCdrDeEnvio(params: SunatCdrDeEnvio$Params, context?: HttpContext): Promise<Blob> {
+    const resp = this.sunatCdrDeEnvio$Response(params, context);
     return resp.then((r: StrictHttpResponse<Blob>): Blob => r.body);
   }
 
-  /** Path part for operation `consultar()` */
-  static readonly ConsultarPath = '/api/sunat/comprobantes/{comprobanteId}';
+  /** Path part for operation `sunatConsultar()` */
+  static readonly SunatConsultarPath = '/api/sunat/comprobantes/{comprobanteId}';
 
   /**
    * This method provides access to the full `HttpResponse`, allowing access to response headers.
-   * To access only the response body, use `consultar()` instead.
+   * To access only the response body, use `sunatConsultar()` instead.
    *
    * This method doesn't expect any request body.
    */
-  consultar$Response(params: Consultar$Params, context?: HttpContext): Promise<StrictHttpResponse<EnvioSunatResponse>> {
-    const obs = consultar(this.http, this.rootUrl, params, context);
+  sunatConsultar$Response(params: SunatConsultar$Params, context?: HttpContext): Promise<StrictHttpResponse<EnvioSunatResponse>> {
+    const obs = sunatConsultar(this.http, this.rootUrl, params, context);
     return firstValueFrom(obs);
   }
 
   /**
    * This method provides access only to the response body.
-   * To access the full response (for headers, for example), `consultar$Response()` instead.
+   * To access the full response (for headers, for example), `sunatConsultar$Response()` instead.
    *
    * This method doesn't expect any request body.
    */
-  consultar(params: Consultar$Params, context?: HttpContext): Promise<EnvioSunatResponse> {
-    const resp = this.consultar$Response(params, context);
+  sunatConsultar(params: SunatConsultar$Params, context?: HttpContext): Promise<EnvioSunatResponse> {
+    const resp = this.sunatConsultar$Response(params, context);
     return resp.then((r: StrictHttpResponse<EnvioSunatResponse>): EnvioSunatResponse => r.body);
   }
 
-  /** Path part for operation `xml()` */
-  static readonly XmlPath = '/api/sunat/comprobantes/{comprobanteId}/xml';
+  /** Path part for operation `sunatXml()` */
+  static readonly SunatXmlPath = '/api/sunat/comprobantes/{comprobanteId}/xml';
 
   /**
    * This method provides access to the full `HttpResponse`, allowing access to response headers.
-   * To access only the response body, use `xml()` instead.
+   * To access only the response body, use `sunatXml()` instead.
    *
    * This method doesn't expect any request body.
    */
-  xml$Response(params: Xml$Params, context?: HttpContext): Promise<StrictHttpResponse<Blob>> {
-    const obs = xml(this.http, this.rootUrl, params, context);
+  sunatXml$Response(params: SunatXml$Params, context?: HttpContext): Promise<StrictHttpResponse<Blob>> {
+    const obs = sunatXml(this.http, this.rootUrl, params, context);
     return firstValueFrom(obs);
   }
 
   /**
    * This method provides access only to the response body.
-   * To access the full response (for headers, for example), `xml$Response()` instead.
+   * To access the full response (for headers, for example), `sunatXml$Response()` instead.
    *
    * This method doesn't expect any request body.
    */
-  xml(params: Xml$Params, context?: HttpContext): Promise<Blob> {
-    const resp = this.xml$Response(params, context);
+  sunatXml(params: SunatXml$Params, context?: HttpContext): Promise<Blob> {
+    const resp = this.sunatXml$Response(params, context);
     return resp.then((r: StrictHttpResponse<Blob>): Blob => r.body);
   }
 
-  /** Path part for operation `cdr()` */
-  static readonly CdrPath = '/api/sunat/comprobantes/{comprobanteId}/cdr';
+  /** Path part for operation `sunatCdr()` */
+  static readonly SunatCdrPath = '/api/sunat/comprobantes/{comprobanteId}/cdr';
 
   /**
    * This method provides access to the full `HttpResponse`, allowing access to response headers.
-   * To access only the response body, use `cdr()` instead.
+   * To access only the response body, use `sunatCdr()` instead.
    *
    * This method doesn't expect any request body.
    */
-  cdr$Response(params: Cdr$Params, context?: HttpContext): Promise<StrictHttpResponse<Blob>> {
-    const obs = cdr(this.http, this.rootUrl, params, context);
+  sunatCdr$Response(params: SunatCdr$Params, context?: HttpContext): Promise<StrictHttpResponse<Blob>> {
+    const obs = sunatCdr(this.http, this.rootUrl, params, context);
     return firstValueFrom(obs);
   }
 
   /**
    * This method provides access only to the response body.
-   * To access the full response (for headers, for example), `cdr$Response()` instead.
+   * To access the full response (for headers, for example), `sunatCdr$Response()` instead.
    *
    * This method doesn't expect any request body.
    */
-  cdr(params: Cdr$Params, context?: HttpContext): Promise<Blob> {
-    const resp = this.cdr$Response(params, context);
+  sunatCdr(params: SunatCdr$Params, context?: HttpContext): Promise<Blob> {
+    const resp = this.sunatCdr$Response(params, context);
     return resp.then((r: StrictHttpResponse<Blob>): Blob => r.body);
   }
 

@@ -9,16 +9,16 @@ import { BaseService } from '../base-service';
 import { ApiConfiguration } from '../api-configuration';
 import { StrictHttpResponse } from '../strict-http-response';
 
-import { emitir } from '../fn/guia-remision-controller/emitir';
-import { Emitir$Params } from '../fn/guia-remision-controller/emitir';
+import { guiaRemisionEmitir } from '../fn/guia-remision-controller/guia-remision-emitir';
+import { GuiaRemisionEmitir$Params } from '../fn/guia-remision-controller/guia-remision-emitir';
+import { guiaRemisionListar } from '../fn/guia-remision-controller/guia-remision-listar';
+import { GuiaRemisionListar$Params } from '../fn/guia-remision-controller/guia-remision-listar';
+import { guiaRemisionObtener } from '../fn/guia-remision-controller/guia-remision-obtener';
+import { GuiaRemisionObtener$Params } from '../fn/guia-remision-controller/guia-remision-obtener';
+import { guiaRemisionPdf } from '../fn/guia-remision-controller/guia-remision-pdf';
+import { GuiaRemisionPdf$Params } from '../fn/guia-remision-controller/guia-remision-pdf';
 import { GuiaRemisionResponse } from '../models/guia-remision-response';
-import { listar9 } from '../fn/guia-remision-controller/listar-9';
-import { Listar9$Params } from '../fn/guia-remision-controller/listar-9';
-import { obtener7 } from '../fn/guia-remision-controller/obtener-7';
-import { Obtener7$Params } from '../fn/guia-remision-controller/obtener-7';
 import { PageResponseGuiaRemisionResumenResponse } from '../models/page-response-guia-remision-resumen-response';
-import { pdf2 } from '../fn/guia-remision-controller/pdf-2';
-import { Pdf2$Params } from '../fn/guia-remision-controller/pdf-2';
 
 @Injectable({ providedIn: 'root' })
 export class GuiaRemisionControllerService extends BaseService {
@@ -26,103 +26,103 @@ export class GuiaRemisionControllerService extends BaseService {
     super(config, http);
   }
 
-  /** Path part for operation `listar9()` */
-  static readonly Listar9Path = '/api/guias';
+  /** Path part for operation `guiaRemisionListar()` */
+  static readonly GuiaRemisionListarPath = '/api/guias';
 
   /**
    * This method provides access to the full `HttpResponse`, allowing access to response headers.
-   * To access only the response body, use `listar9()` instead.
+   * To access only the response body, use `guiaRemisionListar()` instead.
    *
    * This method doesn't expect any request body.
    */
-  listar9$Response(params?: Listar9$Params, context?: HttpContext): Promise<StrictHttpResponse<PageResponseGuiaRemisionResumenResponse>> {
-    const obs = listar9(this.http, this.rootUrl, params, context);
+  guiaRemisionListar$Response(params?: GuiaRemisionListar$Params, context?: HttpContext): Promise<StrictHttpResponse<PageResponseGuiaRemisionResumenResponse>> {
+    const obs = guiaRemisionListar(this.http, this.rootUrl, params, context);
     return firstValueFrom(obs);
   }
 
   /**
    * This method provides access only to the response body.
-   * To access the full response (for headers, for example), `listar9$Response()` instead.
+   * To access the full response (for headers, for example), `guiaRemisionListar$Response()` instead.
    *
    * This method doesn't expect any request body.
    */
-  listar9(params?: Listar9$Params, context?: HttpContext): Promise<PageResponseGuiaRemisionResumenResponse> {
-    const resp = this.listar9$Response(params, context);
+  guiaRemisionListar(params?: GuiaRemisionListar$Params, context?: HttpContext): Promise<PageResponseGuiaRemisionResumenResponse> {
+    const resp = this.guiaRemisionListar$Response(params, context);
     return resp.then((r: StrictHttpResponse<PageResponseGuiaRemisionResumenResponse>): PageResponseGuiaRemisionResumenResponse => r.body);
   }
 
-  /** Path part for operation `emitir()` */
-  static readonly EmitirPath = '/api/guias';
+  /** Path part for operation `guiaRemisionEmitir()` */
+  static readonly GuiaRemisionEmitirPath = '/api/guias';
 
   /**
    * This method provides access to the full `HttpResponse`, allowing access to response headers.
-   * To access only the response body, use `emitir()` instead.
+   * To access only the response body, use `guiaRemisionEmitir()` instead.
    *
    * This method sends `application/json` and handles request body of type `application/json`.
    */
-  emitir$Response(params: Emitir$Params, context?: HttpContext): Promise<StrictHttpResponse<GuiaRemisionResponse>> {
-    const obs = emitir(this.http, this.rootUrl, params, context);
+  guiaRemisionEmitir$Response(params: GuiaRemisionEmitir$Params, context?: HttpContext): Promise<StrictHttpResponse<GuiaRemisionResponse>> {
+    const obs = guiaRemisionEmitir(this.http, this.rootUrl, params, context);
     return firstValueFrom(obs);
   }
 
   /**
    * This method provides access only to the response body.
-   * To access the full response (for headers, for example), `emitir$Response()` instead.
+   * To access the full response (for headers, for example), `guiaRemisionEmitir$Response()` instead.
    *
    * This method sends `application/json` and handles request body of type `application/json`.
    */
-  emitir(params: Emitir$Params, context?: HttpContext): Promise<GuiaRemisionResponse> {
-    const resp = this.emitir$Response(params, context);
+  guiaRemisionEmitir(params: GuiaRemisionEmitir$Params, context?: HttpContext): Promise<GuiaRemisionResponse> {
+    const resp = this.guiaRemisionEmitir$Response(params, context);
     return resp.then((r: StrictHttpResponse<GuiaRemisionResponse>): GuiaRemisionResponse => r.body);
   }
 
-  /** Path part for operation `obtener7()` */
-  static readonly Obtener7Path = '/api/guias/{id}';
+  /** Path part for operation `guiaRemisionObtener()` */
+  static readonly GuiaRemisionObtenerPath = '/api/guias/{id}';
 
   /**
    * This method provides access to the full `HttpResponse`, allowing access to response headers.
-   * To access only the response body, use `obtener7()` instead.
+   * To access only the response body, use `guiaRemisionObtener()` instead.
    *
    * This method doesn't expect any request body.
    */
-  obtener7$Response(params: Obtener7$Params, context?: HttpContext): Promise<StrictHttpResponse<GuiaRemisionResponse>> {
-    const obs = obtener7(this.http, this.rootUrl, params, context);
+  guiaRemisionObtener$Response(params: GuiaRemisionObtener$Params, context?: HttpContext): Promise<StrictHttpResponse<GuiaRemisionResponse>> {
+    const obs = guiaRemisionObtener(this.http, this.rootUrl, params, context);
     return firstValueFrom(obs);
   }
 
   /**
    * This method provides access only to the response body.
-   * To access the full response (for headers, for example), `obtener7$Response()` instead.
+   * To access the full response (for headers, for example), `guiaRemisionObtener$Response()` instead.
    *
    * This method doesn't expect any request body.
    */
-  obtener7(params: Obtener7$Params, context?: HttpContext): Promise<GuiaRemisionResponse> {
-    const resp = this.obtener7$Response(params, context);
+  guiaRemisionObtener(params: GuiaRemisionObtener$Params, context?: HttpContext): Promise<GuiaRemisionResponse> {
+    const resp = this.guiaRemisionObtener$Response(params, context);
     return resp.then((r: StrictHttpResponse<GuiaRemisionResponse>): GuiaRemisionResponse => r.body);
   }
 
-  /** Path part for operation `pdf2()` */
-  static readonly Pdf2Path = '/api/guias/{id}/pdf';
+  /** Path part for operation `guiaRemisionPdf()` */
+  static readonly GuiaRemisionPdfPath = '/api/guias/{id}/pdf';
 
   /**
    * This method provides access to the full `HttpResponse`, allowing access to response headers.
-   * To access only the response body, use `pdf2()` instead.
+   * To access only the response body, use `guiaRemisionPdf()` instead.
    *
    * This method doesn't expect any request body.
    */
-  pdf2$Response(params: Pdf2$Params, context?: HttpContext): Promise<StrictHttpResponse<Blob>> {
-    const obs = pdf2(this.http, this.rootUrl, params, context);
+  guiaRemisionPdf$Response(params: GuiaRemisionPdf$Params, context?: HttpContext): Promise<StrictHttpResponse<Blob>> {
+    const obs = guiaRemisionPdf(this.http, this.rootUrl, params, context);
     return firstValueFrom(obs);
   }
 
   /**
    * This method provides access only to the response body.
-   * To access the full response (for headers, for example), `pdf2$Response()` instead.
+   * To access the full response (for headers, for example), `guiaRemisionPdf$Response()` instead.
    *
    * This method doesn't expect any request body.
    */
-  pdf2(params: Pdf2$Params, context?: HttpContext): Promise<Blob> {
-    const resp = this.pdf2$Response(params, context);
+  guiaRemisionPdf(params: GuiaRemisionPdf$Params, context?: HttpContext): Promise<Blob> {
+    const resp = this.guiaRemisionPdf$Response(params, context);
     return resp.then((r: StrictHttpResponse<Blob>): Blob => r.body);
   }
 

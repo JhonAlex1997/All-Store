@@ -9,20 +9,20 @@ import { BaseService } from '../base-service';
 import { ApiConfiguration } from '../api-configuration';
 import { StrictHttpResponse } from '../strict-http-response';
 
-import { abrir } from '../fn/conteo-controller/abrir';
-import { Abrir$Params } from '../fn/conteo-controller/abrir';
-import { anular2 } from '../fn/conteo-controller/anular-2';
-import { Anular2$Params } from '../fn/conteo-controller/anular-2';
-import { cerrar } from '../fn/conteo-controller/cerrar';
-import { Cerrar$Params } from '../fn/conteo-controller/cerrar';
+import { conteoAbrir } from '../fn/conteo-controller/conteo-abrir';
+import { ConteoAbrir$Params } from '../fn/conteo-controller/conteo-abrir';
+import { conteoAnular } from '../fn/conteo-controller/conteo-anular';
+import { ConteoAnular$Params } from '../fn/conteo-controller/conteo-anular';
+import { conteoCerrar } from '../fn/conteo-controller/conteo-cerrar';
+import { ConteoCerrar$Params } from '../fn/conteo-controller/conteo-cerrar';
+import { conteoListar } from '../fn/conteo-controller/conteo-listar';
+import { ConteoListar$Params } from '../fn/conteo-controller/conteo-listar';
+import { conteoObtener } from '../fn/conteo-controller/conteo-obtener';
+import { ConteoObtener$Params } from '../fn/conteo-controller/conteo-obtener';
+import { conteoRegistrar } from '../fn/conteo-controller/conteo-registrar';
+import { ConteoRegistrar$Params } from '../fn/conteo-controller/conteo-registrar';
 import { ConteoResponse } from '../models/conteo-response';
-import { listar7 } from '../fn/conteo-controller/listar-7';
-import { Listar7$Params } from '../fn/conteo-controller/listar-7';
-import { obtener6 } from '../fn/conteo-controller/obtener-6';
-import { Obtener6$Params } from '../fn/conteo-controller/obtener-6';
 import { PageResponseConteoResponse } from '../models/page-response-conteo-response';
-import { registrar } from '../fn/conteo-controller/registrar';
-import { Registrar$Params } from '../fn/conteo-controller/registrar';
 
 @Injectable({ providedIn: 'root' })
 export class ConteoControllerService extends BaseService {
@@ -30,155 +30,155 @@ export class ConteoControllerService extends BaseService {
     super(config, http);
   }
 
-  /** Path part for operation `registrar()` */
-  static readonly RegistrarPath = '/api/inventario/conteos/{id}/cantidades';
+  /** Path part for operation `conteoRegistrar()` */
+  static readonly ConteoRegistrarPath = '/api/inventario/conteos/{id}/cantidades';
 
   /**
    * This method provides access to the full `HttpResponse`, allowing access to response headers.
-   * To access only the response body, use `registrar()` instead.
+   * To access only the response body, use `conteoRegistrar()` instead.
    *
    * This method sends `application/json` and handles request body of type `application/json`.
    */
-  registrar$Response(params: Registrar$Params, context?: HttpContext): Promise<StrictHttpResponse<ConteoResponse>> {
-    const obs = registrar(this.http, this.rootUrl, params, context);
+  conteoRegistrar$Response(params: ConteoRegistrar$Params, context?: HttpContext): Promise<StrictHttpResponse<ConteoResponse>> {
+    const obs = conteoRegistrar(this.http, this.rootUrl, params, context);
     return firstValueFrom(obs);
   }
 
   /**
    * This method provides access only to the response body.
-   * To access the full response (for headers, for example), `registrar$Response()` instead.
+   * To access the full response (for headers, for example), `conteoRegistrar$Response()` instead.
    *
    * This method sends `application/json` and handles request body of type `application/json`.
    */
-  registrar(params: Registrar$Params, context?: HttpContext): Promise<ConteoResponse> {
-    const resp = this.registrar$Response(params, context);
+  conteoRegistrar(params: ConteoRegistrar$Params, context?: HttpContext): Promise<ConteoResponse> {
+    const resp = this.conteoRegistrar$Response(params, context);
     return resp.then((r: StrictHttpResponse<ConteoResponse>): ConteoResponse => r.body);
   }
 
-  /** Path part for operation `listar7()` */
-  static readonly Listar7Path = '/api/inventario/conteos';
+  /** Path part for operation `conteoListar()` */
+  static readonly ConteoListarPath = '/api/inventario/conteos';
 
   /**
    * This method provides access to the full `HttpResponse`, allowing access to response headers.
-   * To access only the response body, use `listar7()` instead.
+   * To access only the response body, use `conteoListar()` instead.
    *
    * This method doesn't expect any request body.
    */
-  listar7$Response(params?: Listar7$Params, context?: HttpContext): Promise<StrictHttpResponse<PageResponseConteoResponse>> {
-    const obs = listar7(this.http, this.rootUrl, params, context);
+  conteoListar$Response(params?: ConteoListar$Params, context?: HttpContext): Promise<StrictHttpResponse<PageResponseConteoResponse>> {
+    const obs = conteoListar(this.http, this.rootUrl, params, context);
     return firstValueFrom(obs);
   }
 
   /**
    * This method provides access only to the response body.
-   * To access the full response (for headers, for example), `listar7$Response()` instead.
+   * To access the full response (for headers, for example), `conteoListar$Response()` instead.
    *
    * This method doesn't expect any request body.
    */
-  listar7(params?: Listar7$Params, context?: HttpContext): Promise<PageResponseConteoResponse> {
-    const resp = this.listar7$Response(params, context);
+  conteoListar(params?: ConteoListar$Params, context?: HttpContext): Promise<PageResponseConteoResponse> {
+    const resp = this.conteoListar$Response(params, context);
     return resp.then((r: StrictHttpResponse<PageResponseConteoResponse>): PageResponseConteoResponse => r.body);
   }
 
-  /** Path part for operation `abrir()` */
-  static readonly AbrirPath = '/api/inventario/conteos';
+  /** Path part for operation `conteoAbrir()` */
+  static readonly ConteoAbrirPath = '/api/inventario/conteos';
 
   /**
    * This method provides access to the full `HttpResponse`, allowing access to response headers.
-   * To access only the response body, use `abrir()` instead.
+   * To access only the response body, use `conteoAbrir()` instead.
    *
    * This method sends `application/json` and handles request body of type `application/json`.
    */
-  abrir$Response(params: Abrir$Params, context?: HttpContext): Promise<StrictHttpResponse<ConteoResponse>> {
-    const obs = abrir(this.http, this.rootUrl, params, context);
+  conteoAbrir$Response(params: ConteoAbrir$Params, context?: HttpContext): Promise<StrictHttpResponse<ConteoResponse>> {
+    const obs = conteoAbrir(this.http, this.rootUrl, params, context);
     return firstValueFrom(obs);
   }
 
   /**
    * This method provides access only to the response body.
-   * To access the full response (for headers, for example), `abrir$Response()` instead.
+   * To access the full response (for headers, for example), `conteoAbrir$Response()` instead.
    *
    * This method sends `application/json` and handles request body of type `application/json`.
    */
-  abrir(params: Abrir$Params, context?: HttpContext): Promise<ConteoResponse> {
-    const resp = this.abrir$Response(params, context);
+  conteoAbrir(params: ConteoAbrir$Params, context?: HttpContext): Promise<ConteoResponse> {
+    const resp = this.conteoAbrir$Response(params, context);
     return resp.then((r: StrictHttpResponse<ConteoResponse>): ConteoResponse => r.body);
   }
 
-  /** Path part for operation `cerrar()` */
-  static readonly CerrarPath = '/api/inventario/conteos/{id}/cerrar';
+  /** Path part for operation `conteoCerrar()` */
+  static readonly ConteoCerrarPath = '/api/inventario/conteos/{id}/cerrar';
 
   /**
    * This method provides access to the full `HttpResponse`, allowing access to response headers.
-   * To access only the response body, use `cerrar()` instead.
+   * To access only the response body, use `conteoCerrar()` instead.
    *
    * This method sends `application/json` and handles request body of type `application/json`.
    */
-  cerrar$Response(params: Cerrar$Params, context?: HttpContext): Promise<StrictHttpResponse<ConteoResponse>> {
-    const obs = cerrar(this.http, this.rootUrl, params, context);
+  conteoCerrar$Response(params: ConteoCerrar$Params, context?: HttpContext): Promise<StrictHttpResponse<ConteoResponse>> {
+    const obs = conteoCerrar(this.http, this.rootUrl, params, context);
     return firstValueFrom(obs);
   }
 
   /**
    * This method provides access only to the response body.
-   * To access the full response (for headers, for example), `cerrar$Response()` instead.
+   * To access the full response (for headers, for example), `conteoCerrar$Response()` instead.
    *
    * This method sends `application/json` and handles request body of type `application/json`.
    */
-  cerrar(params: Cerrar$Params, context?: HttpContext): Promise<ConteoResponse> {
-    const resp = this.cerrar$Response(params, context);
+  conteoCerrar(params: ConteoCerrar$Params, context?: HttpContext): Promise<ConteoResponse> {
+    const resp = this.conteoCerrar$Response(params, context);
     return resp.then((r: StrictHttpResponse<ConteoResponse>): ConteoResponse => r.body);
   }
 
-  /** Path part for operation `anular2()` */
-  static readonly Anular2Path = '/api/inventario/conteos/{id}/anular';
+  /** Path part for operation `conteoAnular()` */
+  static readonly ConteoAnularPath = '/api/inventario/conteos/{id}/anular';
 
   /**
    * This method provides access to the full `HttpResponse`, allowing access to response headers.
-   * To access only the response body, use `anular2()` instead.
+   * To access only the response body, use `conteoAnular()` instead.
    *
    * This method doesn't expect any request body.
    */
-  anular2$Response(params: Anular2$Params, context?: HttpContext): Promise<StrictHttpResponse<ConteoResponse>> {
-    const obs = anular2(this.http, this.rootUrl, params, context);
+  conteoAnular$Response(params: ConteoAnular$Params, context?: HttpContext): Promise<StrictHttpResponse<ConteoResponse>> {
+    const obs = conteoAnular(this.http, this.rootUrl, params, context);
     return firstValueFrom(obs);
   }
 
   /**
    * This method provides access only to the response body.
-   * To access the full response (for headers, for example), `anular2$Response()` instead.
+   * To access the full response (for headers, for example), `conteoAnular$Response()` instead.
    *
    * This method doesn't expect any request body.
    */
-  anular2(params: Anular2$Params, context?: HttpContext): Promise<ConteoResponse> {
-    const resp = this.anular2$Response(params, context);
+  conteoAnular(params: ConteoAnular$Params, context?: HttpContext): Promise<ConteoResponse> {
+    const resp = this.conteoAnular$Response(params, context);
     return resp.then((r: StrictHttpResponse<ConteoResponse>): ConteoResponse => r.body);
   }
 
-  /** Path part for operation `obtener6()` */
-  static readonly Obtener6Path = '/api/inventario/conteos/{id}';
+  /** Path part for operation `conteoObtener()` */
+  static readonly ConteoObtenerPath = '/api/inventario/conteos/{id}';
 
   /**
    * This method provides access to the full `HttpResponse`, allowing access to response headers.
-   * To access only the response body, use `obtener6()` instead.
+   * To access only the response body, use `conteoObtener()` instead.
    *
    * This method doesn't expect any request body.
    */
-  obtener6$Response(params: Obtener6$Params, context?: HttpContext): Promise<StrictHttpResponse<{
+  conteoObtener$Response(params: ConteoObtener$Params, context?: HttpContext): Promise<StrictHttpResponse<{
 }>> {
-    const obs = obtener6(this.http, this.rootUrl, params, context);
+    const obs = conteoObtener(this.http, this.rootUrl, params, context);
     return firstValueFrom(obs);
   }
 
   /**
    * This method provides access only to the response body.
-   * To access the full response (for headers, for example), `obtener6$Response()` instead.
+   * To access the full response (for headers, for example), `conteoObtener$Response()` instead.
    *
    * This method doesn't expect any request body.
    */
-  obtener6(params: Obtener6$Params, context?: HttpContext): Promise<{
+  conteoObtener(params: ConteoObtener$Params, context?: HttpContext): Promise<{
 }> {
-    const resp = this.obtener6$Response(params, context);
+    const resp = this.conteoObtener$Response(params, context);
     return resp.then((r: StrictHttpResponse<{
 }>): {
 } => r.body);

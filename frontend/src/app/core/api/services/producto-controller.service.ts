@@ -9,31 +9,31 @@ import { BaseService } from '../base-service';
 import { ApiConfiguration } from '../api-configuration';
 import { StrictHttpResponse } from '../strict-http-response';
 
-import { actualizar4 } from '../fn/producto-controller/actualizar-4';
-import { Actualizar4$Params } from '../fn/producto-controller/actualizar-4';
-import { actualizarVariante } from '../fn/producto-controller/actualizar-variante';
-import { ActualizarVariante$Params } from '../fn/producto-controller/actualizar-variante';
-import { agregarVariantes } from '../fn/producto-controller/agregar-variantes';
-import { AgregarVariantes$Params } from '../fn/producto-controller/agregar-variantes';
-import { buscarVariante } from '../fn/producto-controller/buscar-variante';
-import { BuscarVariante$Params } from '../fn/producto-controller/buscar-variante';
 import { CostoResponse } from '../models/costo-response';
-import { crear5 } from '../fn/producto-controller/crear-5';
-import { Crear5$Params } from '../fn/producto-controller/crear-5';
-import { definirCosto } from '../fn/producto-controller/definir-costo';
-import { DefinirCosto$Params } from '../fn/producto-controller/definir-costo';
-import { definirCostoVariante } from '../fn/producto-controller/definir-costo-variante';
-import { DefinirCostoVariante$Params } from '../fn/producto-controller/definir-costo-variante';
-import { definirStockMinimo } from '../fn/producto-controller/definir-stock-minimo';
-import { DefinirStockMinimo$Params } from '../fn/producto-controller/definir-stock-minimo';
-import { etiquetas } from '../fn/producto-controller/etiquetas';
-import { Etiquetas$Params } from '../fn/producto-controller/etiquetas';
-import { listar5 } from '../fn/producto-controller/listar-5';
-import { Listar5$Params } from '../fn/producto-controller/listar-5';
-import { obtener } from '../fn/producto-controller/obtener';
-import { Obtener$Params } from '../fn/producto-controller/obtener';
 import { PageResponseProductoResumenResponse } from '../models/page-response-producto-resumen-response';
+import { productoActualizar } from '../fn/producto-controller/producto-actualizar';
+import { ProductoActualizar$Params } from '../fn/producto-controller/producto-actualizar';
+import { productoActualizarVariante } from '../fn/producto-controller/producto-actualizar-variante';
+import { ProductoActualizarVariante$Params } from '../fn/producto-controller/producto-actualizar-variante';
+import { productoAgregarVariantes } from '../fn/producto-controller/producto-agregar-variantes';
+import { ProductoAgregarVariantes$Params } from '../fn/producto-controller/producto-agregar-variantes';
+import { productoBuscarVariante } from '../fn/producto-controller/producto-buscar-variante';
+import { ProductoBuscarVariante$Params } from '../fn/producto-controller/producto-buscar-variante';
+import { productoCrear } from '../fn/producto-controller/producto-crear';
+import { ProductoCrear$Params } from '../fn/producto-controller/producto-crear';
+import { productoDefinirCosto } from '../fn/producto-controller/producto-definir-costo';
+import { ProductoDefinirCosto$Params } from '../fn/producto-controller/producto-definir-costo';
+import { productoDefinirCostoVariante } from '../fn/producto-controller/producto-definir-costo-variante';
+import { ProductoDefinirCostoVariante$Params } from '../fn/producto-controller/producto-definir-costo-variante';
+import { productoDefinirStockMinimo } from '../fn/producto-controller/producto-definir-stock-minimo';
+import { ProductoDefinirStockMinimo$Params } from '../fn/producto-controller/producto-definir-stock-minimo';
 import { ProductoDetalleResponse } from '../models/producto-detalle-response';
+import { productoEtiquetas } from '../fn/producto-controller/producto-etiquetas';
+import { ProductoEtiquetas$Params } from '../fn/producto-controller/producto-etiquetas';
+import { productoListar } from '../fn/producto-controller/producto-listar';
+import { ProductoListar$Params } from '../fn/producto-controller/producto-listar';
+import { productoObtener } from '../fn/producto-controller/producto-obtener';
+import { ProductoObtener$Params } from '../fn/producto-controller/producto-obtener';
 import { VarianteResponse } from '../models/variante-response';
 
 @Injectable({ providedIn: 'root' })
@@ -42,278 +42,278 @@ export class ProductoControllerService extends BaseService {
     super(config, http);
   }
 
-  /** Path part for operation `obtener()` */
-  static readonly ObtenerPath = '/api/productos/{id}';
+  /** Path part for operation `productoObtener()` */
+  static readonly ProductoObtenerPath = '/api/productos/{id}';
 
   /**
    * This method provides access to the full `HttpResponse`, allowing access to response headers.
-   * To access only the response body, use `obtener()` instead.
+   * To access only the response body, use `productoObtener()` instead.
    *
    * This method doesn't expect any request body.
    */
-  obtener$Response(params: Obtener$Params, context?: HttpContext): Promise<StrictHttpResponse<ProductoDetalleResponse>> {
-    const obs = obtener(this.http, this.rootUrl, params, context);
+  productoObtener$Response(params: ProductoObtener$Params, context?: HttpContext): Promise<StrictHttpResponse<ProductoDetalleResponse>> {
+    const obs = productoObtener(this.http, this.rootUrl, params, context);
     return firstValueFrom(obs);
   }
 
   /**
    * This method provides access only to the response body.
-   * To access the full response (for headers, for example), `obtener$Response()` instead.
+   * To access the full response (for headers, for example), `productoObtener$Response()` instead.
    *
    * This method doesn't expect any request body.
    */
-  obtener(params: Obtener$Params, context?: HttpContext): Promise<ProductoDetalleResponse> {
-    const resp = this.obtener$Response(params, context);
+  productoObtener(params: ProductoObtener$Params, context?: HttpContext): Promise<ProductoDetalleResponse> {
+    const resp = this.productoObtener$Response(params, context);
     return resp.then((r: StrictHttpResponse<ProductoDetalleResponse>): ProductoDetalleResponse => r.body);
   }
 
-  /** Path part for operation `actualizar4()` */
-  static readonly Actualizar4Path = '/api/productos/{id}';
+  /** Path part for operation `productoActualizar()` */
+  static readonly ProductoActualizarPath = '/api/productos/{id}';
 
   /**
    * This method provides access to the full `HttpResponse`, allowing access to response headers.
-   * To access only the response body, use `actualizar4()` instead.
+   * To access only the response body, use `productoActualizar()` instead.
    *
    * This method sends `application/json` and handles request body of type `application/json`.
    */
-  actualizar4$Response(params: Actualizar4$Params, context?: HttpContext): Promise<StrictHttpResponse<ProductoDetalleResponse>> {
-    const obs = actualizar4(this.http, this.rootUrl, params, context);
+  productoActualizar$Response(params: ProductoActualizar$Params, context?: HttpContext): Promise<StrictHttpResponse<ProductoDetalleResponse>> {
+    const obs = productoActualizar(this.http, this.rootUrl, params, context);
     return firstValueFrom(obs);
   }
 
   /**
    * This method provides access only to the response body.
-   * To access the full response (for headers, for example), `actualizar4$Response()` instead.
+   * To access the full response (for headers, for example), `productoActualizar$Response()` instead.
    *
    * This method sends `application/json` and handles request body of type `application/json`.
    */
-  actualizar4(params: Actualizar4$Params, context?: HttpContext): Promise<ProductoDetalleResponse> {
-    const resp = this.actualizar4$Response(params, context);
+  productoActualizar(params: ProductoActualizar$Params, context?: HttpContext): Promise<ProductoDetalleResponse> {
+    const resp = this.productoActualizar$Response(params, context);
     return resp.then((r: StrictHttpResponse<ProductoDetalleResponse>): ProductoDetalleResponse => r.body);
   }
 
-  /** Path part for operation `definirStockMinimo()` */
-  static readonly DefinirStockMinimoPath = '/api/productos/{id}/stock-minimo';
+  /** Path part for operation `productoDefinirStockMinimo()` */
+  static readonly ProductoDefinirStockMinimoPath = '/api/productos/{id}/stock-minimo';
 
   /**
    * This method provides access to the full `HttpResponse`, allowing access to response headers.
-   * To access only the response body, use `definirStockMinimo()` instead.
+   * To access only the response body, use `productoDefinirStockMinimo()` instead.
    *
    * This method sends `application/json` and handles request body of type `application/json`.
    */
-  definirStockMinimo$Response(params: DefinirStockMinimo$Params, context?: HttpContext): Promise<StrictHttpResponse<ProductoDetalleResponse>> {
-    const obs = definirStockMinimo(this.http, this.rootUrl, params, context);
+  productoDefinirStockMinimo$Response(params: ProductoDefinirStockMinimo$Params, context?: HttpContext): Promise<StrictHttpResponse<ProductoDetalleResponse>> {
+    const obs = productoDefinirStockMinimo(this.http, this.rootUrl, params, context);
     return firstValueFrom(obs);
   }
 
   /**
    * This method provides access only to the response body.
-   * To access the full response (for headers, for example), `definirStockMinimo$Response()` instead.
+   * To access the full response (for headers, for example), `productoDefinirStockMinimo$Response()` instead.
    *
    * This method sends `application/json` and handles request body of type `application/json`.
    */
-  definirStockMinimo(params: DefinirStockMinimo$Params, context?: HttpContext): Promise<ProductoDetalleResponse> {
-    const resp = this.definirStockMinimo$Response(params, context);
+  productoDefinirStockMinimo(params: ProductoDefinirStockMinimo$Params, context?: HttpContext): Promise<ProductoDetalleResponse> {
+    const resp = this.productoDefinirStockMinimo$Response(params, context);
     return resp.then((r: StrictHttpResponse<ProductoDetalleResponse>): ProductoDetalleResponse => r.body);
   }
 
-  /** Path part for operation `definirCosto()` */
-  static readonly DefinirCostoPath = '/api/productos/{id}/costo';
+  /** Path part for operation `productoDefinirCosto()` */
+  static readonly ProductoDefinirCostoPath = '/api/productos/{id}/costo';
 
   /**
    * This method provides access to the full `HttpResponse`, allowing access to response headers.
-   * To access only the response body, use `definirCosto()` instead.
+   * To access only the response body, use `productoDefinirCosto()` instead.
    *
    * This method sends `application/json` and handles request body of type `application/json`.
    */
-  definirCosto$Response(params: DefinirCosto$Params, context?: HttpContext): Promise<StrictHttpResponse<CostoResponse>> {
-    const obs = definirCosto(this.http, this.rootUrl, params, context);
+  productoDefinirCosto$Response(params: ProductoDefinirCosto$Params, context?: HttpContext): Promise<StrictHttpResponse<CostoResponse>> {
+    const obs = productoDefinirCosto(this.http, this.rootUrl, params, context);
     return firstValueFrom(obs);
   }
 
   /**
    * This method provides access only to the response body.
-   * To access the full response (for headers, for example), `definirCosto$Response()` instead.
+   * To access the full response (for headers, for example), `productoDefinirCosto$Response()` instead.
    *
    * This method sends `application/json` and handles request body of type `application/json`.
    */
-  definirCosto(params: DefinirCosto$Params, context?: HttpContext): Promise<CostoResponse> {
-    const resp = this.definirCosto$Response(params, context);
+  productoDefinirCosto(params: ProductoDefinirCosto$Params, context?: HttpContext): Promise<CostoResponse> {
+    const resp = this.productoDefinirCosto$Response(params, context);
     return resp.then((r: StrictHttpResponse<CostoResponse>): CostoResponse => r.body);
   }
 
-  /** Path part for operation `definirCostoVariante()` */
-  static readonly DefinirCostoVariantePath = '/api/productos/variantes/{varianteId}/costo';
+  /** Path part for operation `productoDefinirCostoVariante()` */
+  static readonly ProductoDefinirCostoVariantePath = '/api/productos/variantes/{varianteId}/costo';
 
   /**
    * This method provides access to the full `HttpResponse`, allowing access to response headers.
-   * To access only the response body, use `definirCostoVariante()` instead.
+   * To access only the response body, use `productoDefinirCostoVariante()` instead.
    *
    * This method sends `application/json` and handles request body of type `application/json`.
    */
-  definirCostoVariante$Response(params: DefinirCostoVariante$Params, context?: HttpContext): Promise<StrictHttpResponse<CostoResponse>> {
-    const obs = definirCostoVariante(this.http, this.rootUrl, params, context);
+  productoDefinirCostoVariante$Response(params: ProductoDefinirCostoVariante$Params, context?: HttpContext): Promise<StrictHttpResponse<CostoResponse>> {
+    const obs = productoDefinirCostoVariante(this.http, this.rootUrl, params, context);
     return firstValueFrom(obs);
   }
 
   /**
    * This method provides access only to the response body.
-   * To access the full response (for headers, for example), `definirCostoVariante$Response()` instead.
+   * To access the full response (for headers, for example), `productoDefinirCostoVariante$Response()` instead.
    *
    * This method sends `application/json` and handles request body of type `application/json`.
    */
-  definirCostoVariante(params: DefinirCostoVariante$Params, context?: HttpContext): Promise<CostoResponse> {
-    const resp = this.definirCostoVariante$Response(params, context);
+  productoDefinirCostoVariante(params: ProductoDefinirCostoVariante$Params, context?: HttpContext): Promise<CostoResponse> {
+    const resp = this.productoDefinirCostoVariante$Response(params, context);
     return resp.then((r: StrictHttpResponse<CostoResponse>): CostoResponse => r.body);
   }
 
-  /** Path part for operation `listar5()` */
-  static readonly Listar5Path = '/api/productos';
+  /** Path part for operation `productoListar()` */
+  static readonly ProductoListarPath = '/api/productos';
 
   /**
    * This method provides access to the full `HttpResponse`, allowing access to response headers.
-   * To access only the response body, use `listar5()` instead.
+   * To access only the response body, use `productoListar()` instead.
    *
    * This method doesn't expect any request body.
    */
-  listar5$Response(params?: Listar5$Params, context?: HttpContext): Promise<StrictHttpResponse<PageResponseProductoResumenResponse>> {
-    const obs = listar5(this.http, this.rootUrl, params, context);
+  productoListar$Response(params?: ProductoListar$Params, context?: HttpContext): Promise<StrictHttpResponse<PageResponseProductoResumenResponse>> {
+    const obs = productoListar(this.http, this.rootUrl, params, context);
     return firstValueFrom(obs);
   }
 
   /**
    * This method provides access only to the response body.
-   * To access the full response (for headers, for example), `listar5$Response()` instead.
+   * To access the full response (for headers, for example), `productoListar$Response()` instead.
    *
    * This method doesn't expect any request body.
    */
-  listar5(params?: Listar5$Params, context?: HttpContext): Promise<PageResponseProductoResumenResponse> {
-    const resp = this.listar5$Response(params, context);
+  productoListar(params?: ProductoListar$Params, context?: HttpContext): Promise<PageResponseProductoResumenResponse> {
+    const resp = this.productoListar$Response(params, context);
     return resp.then((r: StrictHttpResponse<PageResponseProductoResumenResponse>): PageResponseProductoResumenResponse => r.body);
   }
 
-  /** Path part for operation `crear5()` */
-  static readonly Crear5Path = '/api/productos';
+  /** Path part for operation `productoCrear()` */
+  static readonly ProductoCrearPath = '/api/productos';
 
   /**
    * This method provides access to the full `HttpResponse`, allowing access to response headers.
-   * To access only the response body, use `crear5()` instead.
+   * To access only the response body, use `productoCrear()` instead.
    *
    * This method sends `application/json` and handles request body of type `application/json`.
    */
-  crear5$Response(params: Crear5$Params, context?: HttpContext): Promise<StrictHttpResponse<ProductoDetalleResponse>> {
-    const obs = crear5(this.http, this.rootUrl, params, context);
+  productoCrear$Response(params: ProductoCrear$Params, context?: HttpContext): Promise<StrictHttpResponse<ProductoDetalleResponse>> {
+    const obs = productoCrear(this.http, this.rootUrl, params, context);
     return firstValueFrom(obs);
   }
 
   /**
    * This method provides access only to the response body.
-   * To access the full response (for headers, for example), `crear5$Response()` instead.
+   * To access the full response (for headers, for example), `productoCrear$Response()` instead.
    *
    * This method sends `application/json` and handles request body of type `application/json`.
    */
-  crear5(params: Crear5$Params, context?: HttpContext): Promise<ProductoDetalleResponse> {
-    const resp = this.crear5$Response(params, context);
+  productoCrear(params: ProductoCrear$Params, context?: HttpContext): Promise<ProductoDetalleResponse> {
+    const resp = this.productoCrear$Response(params, context);
     return resp.then((r: StrictHttpResponse<ProductoDetalleResponse>): ProductoDetalleResponse => r.body);
   }
 
-  /** Path part for operation `agregarVariantes()` */
-  static readonly AgregarVariantesPath = '/api/productos/{id}/variantes';
+  /** Path part for operation `productoAgregarVariantes()` */
+  static readonly ProductoAgregarVariantesPath = '/api/productos/{id}/variantes';
 
   /**
    * This method provides access to the full `HttpResponse`, allowing access to response headers.
-   * To access only the response body, use `agregarVariantes()` instead.
+   * To access only the response body, use `productoAgregarVariantes()` instead.
    *
    * This method sends `application/json` and handles request body of type `application/json`.
    */
-  agregarVariantes$Response(params: AgregarVariantes$Params, context?: HttpContext): Promise<StrictHttpResponse<ProductoDetalleResponse>> {
-    const obs = agregarVariantes(this.http, this.rootUrl, params, context);
+  productoAgregarVariantes$Response(params: ProductoAgregarVariantes$Params, context?: HttpContext): Promise<StrictHttpResponse<ProductoDetalleResponse>> {
+    const obs = productoAgregarVariantes(this.http, this.rootUrl, params, context);
     return firstValueFrom(obs);
   }
 
   /**
    * This method provides access only to the response body.
-   * To access the full response (for headers, for example), `agregarVariantes$Response()` instead.
+   * To access the full response (for headers, for example), `productoAgregarVariantes$Response()` instead.
    *
    * This method sends `application/json` and handles request body of type `application/json`.
    */
-  agregarVariantes(params: AgregarVariantes$Params, context?: HttpContext): Promise<ProductoDetalleResponse> {
-    const resp = this.agregarVariantes$Response(params, context);
+  productoAgregarVariantes(params: ProductoAgregarVariantes$Params, context?: HttpContext): Promise<ProductoDetalleResponse> {
+    const resp = this.productoAgregarVariantes$Response(params, context);
     return resp.then((r: StrictHttpResponse<ProductoDetalleResponse>): ProductoDetalleResponse => r.body);
   }
 
-  /** Path part for operation `etiquetas()` */
-  static readonly EtiquetasPath = '/api/productos/etiquetas';
+  /** Path part for operation `productoEtiquetas()` */
+  static readonly ProductoEtiquetasPath = '/api/productos/etiquetas';
 
   /**
    * This method provides access to the full `HttpResponse`, allowing access to response headers.
-   * To access only the response body, use `etiquetas()` instead.
+   * To access only the response body, use `productoEtiquetas()` instead.
    *
    * This method sends `application/json` and handles request body of type `application/json`.
    */
-  etiquetas$Response(params: Etiquetas$Params, context?: HttpContext): Promise<StrictHttpResponse<Blob>> {
-    const obs = etiquetas(this.http, this.rootUrl, params, context);
+  productoEtiquetas$Response(params: ProductoEtiquetas$Params, context?: HttpContext): Promise<StrictHttpResponse<Blob>> {
+    const obs = productoEtiquetas(this.http, this.rootUrl, params, context);
     return firstValueFrom(obs);
   }
 
   /**
    * This method provides access only to the response body.
-   * To access the full response (for headers, for example), `etiquetas$Response()` instead.
+   * To access the full response (for headers, for example), `productoEtiquetas$Response()` instead.
    *
    * This method sends `application/json` and handles request body of type `application/json`.
    */
-  etiquetas(params: Etiquetas$Params, context?: HttpContext): Promise<Blob> {
-    const resp = this.etiquetas$Response(params, context);
+  productoEtiquetas(params: ProductoEtiquetas$Params, context?: HttpContext): Promise<Blob> {
+    const resp = this.productoEtiquetas$Response(params, context);
     return resp.then((r: StrictHttpResponse<Blob>): Blob => r.body);
   }
 
-  /** Path part for operation `actualizarVariante()` */
-  static readonly ActualizarVariantePath = '/api/productos/variantes/{varianteId}';
+  /** Path part for operation `productoActualizarVariante()` */
+  static readonly ProductoActualizarVariantePath = '/api/productos/variantes/{varianteId}';
 
   /**
    * This method provides access to the full `HttpResponse`, allowing access to response headers.
-   * To access only the response body, use `actualizarVariante()` instead.
+   * To access only the response body, use `productoActualizarVariante()` instead.
    *
    * This method sends `application/json` and handles request body of type `application/json`.
    */
-  actualizarVariante$Response(params: ActualizarVariante$Params, context?: HttpContext): Promise<StrictHttpResponse<VarianteResponse>> {
-    const obs = actualizarVariante(this.http, this.rootUrl, params, context);
+  productoActualizarVariante$Response(params: ProductoActualizarVariante$Params, context?: HttpContext): Promise<StrictHttpResponse<VarianteResponse>> {
+    const obs = productoActualizarVariante(this.http, this.rootUrl, params, context);
     return firstValueFrom(obs);
   }
 
   /**
    * This method provides access only to the response body.
-   * To access the full response (for headers, for example), `actualizarVariante$Response()` instead.
+   * To access the full response (for headers, for example), `productoActualizarVariante$Response()` instead.
    *
    * This method sends `application/json` and handles request body of type `application/json`.
    */
-  actualizarVariante(params: ActualizarVariante$Params, context?: HttpContext): Promise<VarianteResponse> {
-    const resp = this.actualizarVariante$Response(params, context);
+  productoActualizarVariante(params: ProductoActualizarVariante$Params, context?: HttpContext): Promise<VarianteResponse> {
+    const resp = this.productoActualizarVariante$Response(params, context);
     return resp.then((r: StrictHttpResponse<VarianteResponse>): VarianteResponse => r.body);
   }
 
-  /** Path part for operation `buscarVariante()` */
-  static readonly BuscarVariantePath = '/api/productos/variantes/codigo/{codigo}';
+  /** Path part for operation `productoBuscarVariante()` */
+  static readonly ProductoBuscarVariantePath = '/api/productos/variantes/codigo/{codigo}';
 
   /**
    * This method provides access to the full `HttpResponse`, allowing access to response headers.
-   * To access only the response body, use `buscarVariante()` instead.
+   * To access only the response body, use `productoBuscarVariante()` instead.
    *
    * This method doesn't expect any request body.
    */
-  buscarVariante$Response(params: BuscarVariante$Params, context?: HttpContext): Promise<StrictHttpResponse<VarianteResponse>> {
-    const obs = buscarVariante(this.http, this.rootUrl, params, context);
+  productoBuscarVariante$Response(params: ProductoBuscarVariante$Params, context?: HttpContext): Promise<StrictHttpResponse<VarianteResponse>> {
+    const obs = productoBuscarVariante(this.http, this.rootUrl, params, context);
     return firstValueFrom(obs);
   }
 
   /**
    * This method provides access only to the response body.
-   * To access the full response (for headers, for example), `buscarVariante$Response()` instead.
+   * To access the full response (for headers, for example), `productoBuscarVariante$Response()` instead.
    *
    * This method doesn't expect any request body.
    */
-  buscarVariante(params: BuscarVariante$Params, context?: HttpContext): Promise<VarianteResponse> {
-    const resp = this.buscarVariante$Response(params, context);
+  productoBuscarVariante(params: ProductoBuscarVariante$Params, context?: HttpContext): Promise<VarianteResponse> {
+    const resp = this.productoBuscarVariante$Response(params, context);
     return resp.then((r: StrictHttpResponse<VarianteResponse>): VarianteResponse => r.body);
   }
 
