@@ -64,6 +64,9 @@ class XmlUblFirmaTest {
         XMLSignature firma = XMLSignatureFactory.getInstance("DOM").unmarshalXMLSignature(contexto);
         assertThat(firma.validate(contexto)).isTrue();
         assertThat(firmado.hash()).isNotBlank();
+        // El "&" de la razón social va escapado en el texto y se lee igual al volver a parsear.
+        assertThat(firmado.xml()).contains("CONSORCIO TEXTIL C&amp;J S.A.C.").doesNotContain("C&J");
+        assertThat(cbc(leido, "RegistrationName")).isEqualTo("CONSORCIO TEXTIL C&J S.A.C.");
     }
 
     @Test
@@ -246,8 +249,9 @@ class XmlUblFirmaTest {
     private static Empresa empresa() {
         Empresa e = new Empresa();
         e.setRuc("20000000001");
-        e.setRazonSocial("EMPRESA DEMO S.A.C.");
-        e.setNombreComercial("AllStore & Co.");
+        // Con "&" en la razón social y en el nombre comercial: en XML debe ir escapado (&amp;).
+        e.setRazonSocial("CONSORCIO TEXTIL C&J S.A.C.");
+        e.setNombreComercial("KISSME JEANS & Co.");
         e.setDireccionFiscal("Jr. Gamarra 100, La Victoria");
         e.setUbigeo("150115");
         return e;

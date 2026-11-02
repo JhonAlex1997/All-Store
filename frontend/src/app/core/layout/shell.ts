@@ -4,6 +4,7 @@ import { ButtonModule } from 'primeng/button';
 import { TooltipModule } from 'primeng/tooltip';
 
 import { SesionService } from '../auth/sesion.service';
+import { MarcaService } from '../marca/marca.service';
 import { menuPara } from './menu';
 
 const NOMBRE_ROL = { ADMIN: 'Administrador', CAJERO: 'Cajero', ALMACENERO: 'Almacenero' } as const;
@@ -18,6 +19,7 @@ const NOMBRE_ROL = { ADMIN: 'Administrador', CAJERO: 'Cajero', ALMACENERO: 'Alma
 })
 export class Shell {
   protected readonly sesion = inject(SesionService);
+  protected readonly marca = inject(MarcaService);
   /** Sin menú mientras el usuario deba cambiar su contraseña (el guard tampoco lo deja navegar). */
   protected readonly menu = computed(() => (this.sesion.debeCambiarPassword() ? [] : menuPara(this.sesion.rol())));
   protected readonly nombreRol = computed(() => {

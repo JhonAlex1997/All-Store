@@ -1,8 +1,8 @@
 <div class="shell" [class.menu-abierto]="menuAbierto()">
   <aside class="lateral" aria-label="Menú principal">
     <a class="marca" routerLink="/" (click)="menuAbierto.set(false)">
-      <span class="logo">A</span>
-      <span class="nombre">All<b>Store</b></span>
+      <span class="logo">{{ marca.inicial() }}</span>
+      <span class="nombre">{{ marca.partes().inicio }} <b>{{ marca.partes().fin }}</b></span>
     </a>
 
     <nav>

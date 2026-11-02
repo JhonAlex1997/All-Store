@@ -1,6 +1,6 @@
 <section class="marca">
   <div class="costura"></div>
-  <div class="logo"><span class="remache"></span>AllStore <small>Jeans</small></div>
+  <div class="logo"><span class="remache"></span>{{ marca.nombre() }}</div>
   <div class="lema">
     <h1>Vende, factura y controla tu tienda <span>en un solo lugar</span>.</h1>
     <p>Caja, boletas y facturas electrónicas ante SUNAT, inventario por talla y color, y el comprobante al cliente
@@ -10,7 +10,7 @@
       <div><i></i>Precio por mayor automático</div>
       <div><i></i>Stock por talla y color</div>
     </div>
-    <div class="pie-marca">AllStore Jeans · Sistema de ventas y facturación</div>
+    <div class="pie-marca">{{ marca.nombre() }} · Sistema de ventas y facturación</div>
   </div>
 </section>
 

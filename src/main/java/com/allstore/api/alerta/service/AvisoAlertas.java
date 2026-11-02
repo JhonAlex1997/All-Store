@@ -4,6 +4,7 @@ import com.allstore.api.alerta.config.AlertaProperties;
 import com.allstore.api.alerta.dto.Alerta;
 import com.allstore.api.alerta.dto.AlertasResponse;
 import com.allstore.api.common.exception.BusinessException;
+import com.allstore.api.empresa.dto.MarcaResponse;
 import com.allstore.api.empresa.entity.Empresa;
 import com.allstore.api.empresa.service.EmpresaService;
 import com.allstore.api.entrega.config.EntregaProperties;
@@ -95,8 +96,7 @@ public class AvisoAlertas {
     }
 
     static String asunto(AlertasResponse alertas, Empresa empresa) {
-        String negocio = empresa == null ? "AllStore"
-                : StringUtils.hasText(empresa.getNombreComercial()) ? empresa.getNombreComercial() : empresa.getRazonSocial();
+        String negocio = empresa == null ? MarcaResponse.SIN_CONFIGURAR : EmpresaService.nombreVisible(empresa);
         StringBuilder asunto = new StringBuilder(negocio).append(": ");
         if (alertas.criticas() > 0) {
             asunto.append(alertas.criticas()).append(alertas.criticas() == 1 ? " alerta crítica" : " alertas críticas");
@@ -113,7 +113,7 @@ public class AvisoAlertas {
                 .append(FECHA_HORA.format(alertas.revisadas())).append("\n");
         seccion(texto, "CRÍTICAS (requieren atención hoy)", alertas, Alerta.Nivel.CRITICA);
         seccion(texto, "ADVERTENCIAS", alertas, Alerta.Nivel.ADVERTENCIA);
-        return texto.append("\nRevísalas en el panel de SUNAT de AllStore. Este aviso se repite hasta que se resuelvan.\n")
+        return texto.append("\nRevísalas en el panel de SUNAT del sistema. Este aviso se repite hasta que se resuelvan.\n")
                 .toString();
     }
 

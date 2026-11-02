@@ -96,6 +96,8 @@ public class SecurityConfig {
                         // Enlace de descarga que recibe el cliente: solo lectura, protegido por un
                         // código aleatorio imposible de adivinar
                         .requestMatchers(HttpMethod.GET, "/api/publico/comprobantes/**").permitAll()
+                        // Nombre de la tienda para la pantalla de login (solo el nombre comercial)
+                        .requestMatchers(HttpMethod.GET, "/api/publico/marca").permitAll()
                         // Swagger solo existe con el perfil dev (en producción está apagado).
                         .requestMatchers("/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**").permitAll()
                         .requestMatchers("/error").permitAll()

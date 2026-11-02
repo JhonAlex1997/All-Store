@@ -237,6 +237,18 @@ class SeguridadIntegrationTest {
     }
 
     @Test
+    void laMarcaSeVeSinSesionYSoloExponeElNombre() throws Exception {
+        mockMvc.perform(get("/api/publico/marca"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.nombre").isNotEmpty())
+                .andExpect(jsonPath("$.configurada").isBoolean())
+                .andExpect(jsonPath("$.ruc").doesNotExist())
+                .andExpect(jsonPath("$.direccionFiscal").doesNotExist());
+        // Solo lectura: no abre la puerta a modificar la empresa sin sesión.
+        mockMvc.perform(post("/api/publico/marca")).andExpect(status().isUnauthorized());
+    }
+
+    @Test
     void elErrorDeUnaDescargaLlegaComoJsonAunqueSePidaUnArchivo() throws Exception {
         // El cliente del front pide los PDF con Accept: application/octet-stream; si fallan, debe llegar
         // el error real (404 con mensaje), no un 500 vacío por no poder negociar JSON.

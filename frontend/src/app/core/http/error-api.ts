@@ -13,7 +13,7 @@ export interface ErrorApi {
   solicitud?: string;
 }
 
-const SIN_BACKEND = 'No se llegó al servidor de AllStore. Revisa que el backend esté encendido (puerto 8080) '
+const SIN_BACKEND = 'No se llegó al servidor del sistema. Revisa que el backend esté encendido (puerto 8080) '
   + 'y que el front se haya iniciado con "npm start".';
 
 /** Normaliza cualquier error HTTP a ErrorApi, aunque el cuerpo venga como Blob, texto o vacío. */

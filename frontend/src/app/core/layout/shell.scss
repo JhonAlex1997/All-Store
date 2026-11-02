@@ -28,6 +28,8 @@
   letter-spacing: .02em;
 
   b { color: var(--as-cobre); font-weight: 700; }
+
+  .nombre { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 }
 
 .logo {

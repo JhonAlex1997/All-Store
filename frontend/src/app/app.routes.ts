@@ -14,7 +14,7 @@ const MODULOS: Partial<Record<string, Route['loadChildren']>> = {};
 
 function rutaDeModulo(op: OpcionMenu): Route {
   const cargar = MODULOS[op.ruta];
-  const base: Route = { path: op.ruta, canActivate: [rolGuard], data: { roles: op.roles }, title: `${op.etiqueta} · AllStore` };
+  const base: Route = { path: op.ruta, canActivate: [rolGuard], data: { roles: op.roles }, title: op.etiqueta };
   return cargar
     ? { ...base, loadChildren: cargar }
     : {
@@ -33,7 +33,7 @@ export const routes: Routes = [
   {
     path: 'login',
     canActivate: [invitadoGuard],
-    title: 'Ingresar · AllStore',
+    title: 'Ingresar',
     loadComponent: () => import('./paginas/login/login').then((m) => m.Login),
   },
   {
@@ -45,22 +45,22 @@ export const routes: Routes = [
       {
         path: '',
         pathMatch: 'full',
-        title: 'Inicio · AllStore',
+        title: 'Inicio',
         loadComponent: () => import('./paginas/inicio/inicio').then((m) => m.Inicio),
       },
       {
         path: 'cambiar-password',
-        title: 'Cambiar contraseña · AllStore',
+        title: 'Cambiar contraseña',
         loadComponent: () => import('./paginas/cambiar-password/cambiar-password').then((m) => m.CambiarPassword),
       },
       ...MENU.flatMap((g) => g.opciones).map(rutaDeModulo),
       {
         path: 'sin-permiso',
-        title: 'Sin permiso · AllStore',
+        title: 'Sin permiso',
         loadComponent: aviso,
         data: { titulo: 'Sin permiso', texto: 'Tu usuario no tiene acceso a esta sección.', icono: 'pi pi-lock' },
       },
-      { path: '**', title: 'No encontrado · AllStore', loadComponent: aviso },
+      { path: '**', title: 'No encontrado', loadComponent: aviso },
     ],
   },
 ];

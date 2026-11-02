@@ -7,6 +7,7 @@ import com.allstore.api.common.exception.BusinessException;
 import com.allstore.api.common.exception.ResourceNotFoundException;
 import com.allstore.api.empresa.dto.EmpresaRequest;
 import com.allstore.api.empresa.dto.EmpresaResponse;
+import com.allstore.api.empresa.dto.MarcaResponse;
 import com.allstore.api.empresa.entity.Empresa;
 import com.allstore.api.empresa.repository.EmpresaRepository;
 import lombok.RequiredArgsConstructor;
@@ -79,6 +80,19 @@ public class EmpresaService {
     @Transactional(readOnly = true)
     public Optional<Empresa> buscarEntidad() {
         return empresaRepository.findById(Empresa.ID_UNICO);
+    }
+
+    /** Nombre con que se presenta la tienda en el sistema, los correos y las alertas. */
+    @Transactional(readOnly = true)
+    public MarcaResponse marca() {
+        return buscarEntidad()
+                .map(e -> new MarcaResponse(nombreVisible(e), true))
+                .orElseGet(() -> new MarcaResponse(MarcaResponse.SIN_CONFIGURAR, false));
+    }
+
+    /** Nombre comercial; si no se registró, la razón social. */
+    public static String nombreVisible(Empresa e) {
+        return StringUtils.hasText(e.getNombreComercial()) ? e.getNombreComercial() : e.getRazonSocial();
     }
 
     private static String limpiar(String texto) {

@@ -8,6 +8,7 @@ import { InputIconModule } from 'primeng/inputicon';
 import { InputTextModule } from 'primeng/inputtext';
 
 import { SesionService } from '../../core/auth/sesion.service';
+import { MarcaService } from '../../core/marca/marca.service';
 import { mensajeDeError } from '../../core/http/error-api';
 
 /** Solo se recuerda el nombre de usuario, nunca la contraseña. */
@@ -23,6 +24,7 @@ const CLAVE_USUARIO = 'allstore.usuario-recordado';
 export class Login {
   private readonly sesion = inject(SesionService);
   private readonly router = inject(Router);
+  protected readonly marca = inject(MarcaService);
 
   /** Ruta a la que volver tras ingresar (la pone el guard al pedir login). */
   readonly volver = input<string>();

@@ -3,12 +3,14 @@ import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import localeEsPe from '@angular/common/locales/es-PE';
 import {
   ApplicationConfig,
+  inject,
   LOCALE_ID,
+  provideAppInitializer,
   provideBrowserGlobalErrorListeners,
   provideZoneChangeDetection,
 } from '@angular/core';
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
-import { provideRouter, withComponentInputBinding } from '@angular/router';
+import { provideRouter, TitleStrategy, withComponentInputBinding } from '@angular/router';
 import { ConfirmationService, MessageService } from 'primeng/api';
 import { providePrimeNG } from 'primeng/config';
 
@@ -17,6 +19,8 @@ import { provideApiConfiguration } from './core/api/api-configuration';
 import { authInterceptor } from './core/http/auth.interceptor';
 import { erroresInterceptor } from './core/http/errores.interceptor';
 import { idempotenciaInterceptor } from './core/http/idempotencia.interceptor';
+import { MarcaService } from './core/marca/marca.service';
+import { TituloConMarca } from './core/marca/titulo-con-marca';
 import { AllStorePreset } from './core/tema/allstore-preset';
 import { TRADUCCION_PRIMENG } from './core/tema/traduccion-primeng';
 
@@ -27,6 +31,9 @@ export const appConfig: ApplicationConfig = {
     provideBrowserGlobalErrorListeners(),
     provideZoneChangeDetection({ eventCoalescing: true }),
     provideRouter(routes, withComponentInputBinding()),
+    { provide: TitleStrategy, useClass: TituloConMarca },
+    // Nombre de la tienda (nombre comercial de la empresa) antes de mostrar el login.
+    provideAppInitializer(() => inject(MarcaService).cargar()),
     // Orden: primero el token, luego la clave contra doble clic, y al final el manejo de errores
     // (que ve la respuesta antes que los demás).
     provideHttpClient(withInterceptors([authInterceptor, idempotenciaInterceptor, erroresInterceptor])),
