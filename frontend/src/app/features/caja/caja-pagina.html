@@ -60,13 +60,7 @@
 
         <!-- Carrito -->
         <aside class="carrito">
-          <p-selectbutton [options]="tipos" [ngModel]="store.tipo()" (ngModelChange)="cambiarTipo($event)" optionLabel="etiqueta"
-                          optionValue="valor" [allowEmpty]="false" styleClass="tipos" />
-          @if (!store.serie()) {
-            <small class="alerta">No hay serie activa de este comprobante en el local.</small>
-          }
-
-          <div class="seccion"><as-cliente-caja /></div>
+          <div class="titulo-carrito">Venta actual</div>
 
           <div class="lineas">
             @for (l of store.totales().lineas; track l.varianteId) {
@@ -111,6 +105,17 @@
               </small>
             </div>
           }
+
+          <!-- El comprobante y el cliente son de esta venta (la apertura de caja no emite nada). -->
+          <div class="comprobante">
+            <div class="titulo-seccion">Comprobante de esta venta</div>
+            <p-selectbutton [options]="tipos" [ngModel]="store.tipo()" (ngModelChange)="cambiarTipo($event)" optionLabel="etiqueta"
+                            optionValue="valor" [allowEmpty]="false" styleClass="tipos" size="small" />
+            @if (!store.serie()) {
+              <small class="alerta">No hay serie activa de este comprobante en el local.</small>
+            }
+            <as-cliente-caja />
+          </div>
 
           <div class="totales">
             @if (store.totales().ahorroCampana > 0) {

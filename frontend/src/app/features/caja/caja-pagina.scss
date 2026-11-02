@@ -95,10 +95,26 @@ kbd {
   box-shadow: 0 4px 18px rgba(20, 20, 19, .05);
 }
 
-:host ::ng-deep .tipos { display: flex; width: 100%; }
-:host ::ng-deep .tipos .p-togglebutton { flex: 1; }
+.titulo-carrito { font-family: var(--as-serif); font-size: 1.15rem; font-weight: 600; }
 
-.seccion { padding-bottom: .75rem; border-bottom: 1px solid var(--as-borde); }
+.comprobante {
+  display: flex;
+  flex-direction: column;
+  gap: .5rem;
+  padding-top: .75rem;
+  border-top: 1px solid var(--as-borde);
+}
+
+.titulo-seccion {
+  font-size: .72rem;
+  text-transform: uppercase;
+  letter-spacing: .07em;
+  color: var(--as-texto-suave);
+}
+
+/* styleClass de p-selectbutton se aplica a cada botón: el contenedor se estira aparte. */
+.comprobante p-selectbutton { display: flex; width: 100%; }
+:host ::ng-deep .p-togglebutton.tipos { flex: 1; white-space: nowrap; padding-inline: .5rem; }
 
 .lineas { flex: 1; overflow-y: auto; min-height: 80px; margin: 0 -.25rem; padding: 0 .25rem; }
 

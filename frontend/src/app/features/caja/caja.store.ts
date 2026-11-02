@@ -47,7 +47,8 @@ export class CajaStore {
   private readonly guardado = leerCarrito();
   readonly lineas = signal<LineaCarrito[]>(this.guardado?.lineas ?? []);
   readonly porMayorManual = signal(this.guardado?.porMayorManual ?? false);
-  readonly tipo = signal<TipoVenta>(this.guardado?.tipo ?? 'BOLETA');
+  /** Boleta por defecto; el tipo guardado solo se recupera si había una venta a medias. */
+  readonly tipo = signal<TipoVenta>(this.guardado?.lineas?.length ? this.guardado.tipo : 'BOLETA');
   /** null = "Clientes varios". */
   readonly cliente = signal<ClienteResponse | null>(null);
 
