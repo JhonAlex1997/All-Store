@@ -1,5 +1,6 @@
 import { HttpContext } from '@angular/common/http';
 import { ChangeDetectionStrategy, Component, inject, OnInit, signal } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MessageService } from 'primeng/api';
 import { ButtonModule } from 'primeng/button';
@@ -17,13 +18,13 @@ import { rucValidator } from '../../shared/sunat/ruc';
   selector: 'as-datos-empresa',
   imports: [ReactiveFormsModule, ButtonModule, InputNumberModule, InputTextModule, MessageModule],
   templateUrl: './datos-empresa.html',
-  styleUrl: './formulario.scss',
+  styleUrls: ['./formulario.scss', './datos-empresa.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class DatosEmpresa implements OnInit {
   private readonly api = inject(EmpresaControllerService);
   private readonly avisos = inject(MessageService);
-  private readonly marca = inject(MarcaService);
+  protected readonly marca = inject(MarcaService);
 
   protected readonly form = inject(NonNullableFormBuilder).group({
     ruc: ['', [Validators.required, rucValidator]],
@@ -35,6 +36,10 @@ export class DatosEmpresa implements OnInit {
     email: ['', [Validators.email, Validators.maxLength(120)]],
     minimoPrendasPorMayor: [3, [Validators.required, Validators.min(1), Validators.max(1000)]],
   });
+
+  /** Valores del formulario para la vista previa del comprobante. */
+  protected readonly valores = toSignal(this.form.valueChanges, { initialValue: this.form.getRawValue() });
+  protected readonly hoy = new Intl.DateTimeFormat('es-PE', { day: '2-digit', month: '2-digit', year: 'numeric', timeZone: 'America/Lima' }).format(new Date());
 
   protected readonly cargando = signal(true);
   protected readonly guardando = signal(false);

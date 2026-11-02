@@ -1,6 +1,7 @@
 @if (cargando()) {
   <div class="as-tarjeta cargando"><i class="pi pi-spin pi-spinner"></i> Cargando…</div>
 } @else {
+  <div class="disposicion">
   <form class="as-tarjeta" [formGroup]="form" (ngSubmit)="guardar()" novalidate>
     @if (nueva()) {
       <p-message severity="info" styleClass="mb">
@@ -70,4 +71,27 @@
       <p-button type="submit" label="Guardar datos" icon="pi pi-check" [loading]="guardando()" />
     </div>
   </form>
+
+  <aside class="vista-previa" aria-label="Vista previa del comprobante">
+    <div class="titulo-vista">Así sale en tu boleta</div>
+    <div class="papel">
+      @if (marca.logoUrl(); as logo) { <img class="logo" [src]="logo" alt="" /> }
+      @let v = valores();
+      <div class="nombre">{{ v.nombreComercial || v.razonSocial || 'Nombre de tu tienda' }}</div>
+      @if (v.nombreComercial) { <div class="razon">{{ v.razonSocial }}</div> }
+      <div class="ruc">RUC {{ v.ruc || '—' }}</div>
+      <div class="dato">{{ v.direccionFiscal || 'Dirección fiscal' }}</div>
+      @if (v.telefono || v.email) {
+        <div class="dato">{{ v.telefono ? 'Tel. ' + v.telefono : '' }}{{ v.telefono && v.email ? '  ·  ' : '' }}{{ v.email }}</div>
+      }
+      <div class="corte"></div>
+      <div class="tipo">BOLETA DE VENTA ELECTRÓNICA</div>
+      <div class="tipo">B001-00000001</div>
+      <div class="corte"></div>
+      <div class="filas"><span>Fecha:</span><span>{{ hoy }}</span></div>
+      <div class="filas"><span>Cliente:</span><span>Clientes varios</span></div>
+    </div>
+    <p class="nota-vista">Vista aproximada del ticket de 80 mm. Se actualiza mientras escribes.</p>
+  </aside>
+  </div>
 }
