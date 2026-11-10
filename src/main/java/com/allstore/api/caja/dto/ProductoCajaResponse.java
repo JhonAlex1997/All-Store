@@ -1,5 +1,6 @@
 package com.allstore.api.caja.dto;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import java.math.BigDecimal;
 import java.util.List;
 
@@ -18,6 +19,7 @@ public record ProductoCajaResponse(
      * @param precioCampana precio con la mejor campaña vigente (sobre el precio normal), o null si no hay
      * @param stock         unidades en el local de la caja
      */
+    @Schema(name = "ProductoCajaResponseVariante")
     public record Variante(
             Long varianteId,
             String sku,

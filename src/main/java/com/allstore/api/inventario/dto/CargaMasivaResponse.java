@@ -1,5 +1,6 @@
 package com.allstore.api.inventario.dto;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.List;
 
 /**
@@ -20,6 +21,7 @@ public record CargaMasivaResponse(
         int unidades,
         List<ErrorFila> errores
 ) {
+    @Schema(name = "CargaMasivaResponseErrorFila")
     public record ErrorFila(int fila, String mensaje) {
     }
 }

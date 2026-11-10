@@ -1,5 +1,6 @@
 package com.allstore.api.guia.dto;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import com.allstore.api.facturacion.dto.SunatInfo;
 import com.allstore.api.guia.entity.GuiaRemision;
 import com.allstore.api.guia.entity.GuiaRemisionDetalle;
@@ -46,20 +47,25 @@ public record GuiaRemisionResponse(
         SunatInfo sunat
 ) {
     /** @param tipoDocumento código del Catálogo 06 (6 = RUC, 1 = DNI...) */
+    @Schema(name = "GuiaRemisionResponsePersona")
     public record Persona(String tipoDocumento, String numeroDocumento, String nombre) {
     }
 
     /** @param codigoLocal código de anexo SUNAT (solo traslados entre locales) */
+    @Schema(name = "GuiaRemisionResponsePunto")
     public record Punto(String ubigeo, String direccion, String codigoLocal) {
     }
 
+    @Schema(name = "GuiaRemisionResponseTransportista")
     public record Transportista(String ruc, String razonSocial, String registroMtc) {
     }
 
+    @Schema(name = "GuiaRemisionResponseConductor")
     public record Conductor(String tipoDocumento, String numeroDocumento, String nombres, String apellidos,
                             String licencia) {
     }
 
+    @Schema(name = "GuiaRemisionResponseDetalle")
     public record Detalle(int item, Long varianteId, String codigo, String descripcion, String unidadMedida,
                           int cantidad) {
         static Detalle from(GuiaRemisionDetalle d) {

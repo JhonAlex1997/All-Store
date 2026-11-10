@@ -1,5 +1,6 @@
 package com.allstore.api.contabilidad.dto;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.List;
 
 /**
@@ -16,6 +17,7 @@ public record ValidacionSireResponse(String registro, String archivo, int filas,
      * @param fila  número de línea del archivo (0 = nombre del archivo)
      * @param campo número de campo según la estructura oficial (0 = toda la línea)
      */
+    @Schema(name = "ValidacionSireResponseInconsistencia")
     public record Inconsistencia(int fila, int campo, String nombreCampo, String valor, String mensaje) {
     }
 }

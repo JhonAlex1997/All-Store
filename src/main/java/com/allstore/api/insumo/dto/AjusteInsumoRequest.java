@@ -1,5 +1,6 @@
 package com.allstore.api.insumo.dto;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import com.allstore.api.common.validacion.TextoSeguro;
 import com.allstore.api.insumo.entity.MotivoInsumo;
 import jakarta.validation.Valid;
@@ -25,6 +26,7 @@ public record AjusteInsumoRequest(
         @Size(max = 200, message = "Máximo 200 insumos por vez")
         List<@Valid Item> items
 ) {
+    @Schema(name = "AjusteInsumoRequestItem")
     public record Item(
             @NotNull(message = "El insumo es obligatorio")
             Long insumoId,

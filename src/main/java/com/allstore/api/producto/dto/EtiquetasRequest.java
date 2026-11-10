@@ -1,5 +1,6 @@
 package com.allstore.api.producto.dto;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
@@ -27,6 +28,7 @@ public record EtiquetasRequest(
         A4
     }
 
+    @Schema(name = "EtiquetasRequestItem")
     public record Item(
             @NotNull(message = "La prenda es obligatoria")
             Long varianteId,

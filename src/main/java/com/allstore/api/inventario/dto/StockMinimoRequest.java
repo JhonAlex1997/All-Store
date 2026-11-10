@@ -1,5 +1,6 @@
 package com.allstore.api.inventario.dto;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.NotEmpty;
@@ -20,6 +21,7 @@ public record StockMinimoRequest(
         @Size(max = 500, message = "Máximo 500 prendas por vez")
         List<@Valid Item> items
 ) {
+    @Schema(name = "StockMinimoRequestItem")
     public record Item(
             @NotNull(message = "La prenda es obligatoria")
             Long varianteId,

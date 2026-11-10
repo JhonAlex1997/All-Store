@@ -1,5 +1,6 @@
 package com.allstore.api.compra.dto;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import com.allstore.api.compra.entity.Compra;
 import com.allstore.api.compra.entity.CompraDetalle;
 import com.allstore.api.compra.entity.TipoDocumentoCompra;
@@ -14,6 +15,7 @@ public record CompraResponse(Long id, Long proveedorId, String proveedor, String
                              String estado, String motivoAnulacion, String observacion, List<Linea> lineas) {
 
     /** @param tipo PRENDA, INSUMO o SERVICIO */
+    @Schema(name = "CompraResponseLinea")
     public record Linea(int item, String tipo, Long varianteId, Long insumoId, String descripcion, BigDecimal cantidad,
                         BigDecimal costoUnitario, boolean gravado, BigDecimal valor, BigDecimal igv, BigDecimal total) {
 

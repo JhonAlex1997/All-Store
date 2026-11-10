@@ -7167,7 +7167,28 @@
           }
         }
       },
-      "Item": {
+      "StockMinimoRequest": {
+        "type": "object",
+        "properties": {
+          "establecimientoId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/StockMinimoRequestItem"
+            },
+            "maxItems": 500,
+            "minItems": 0
+          }
+        },
+        "required": [
+          "establecimientoId",
+          "items"
+        ]
+      },
+      "StockMinimoRequestItem": {
         "type": "object",
         "properties": {
           "varianteId": {
@@ -7183,27 +7204,6 @@
         },
         "required": [
           "varianteId"
-        ]
-      },
-      "StockMinimoRequest": {
-        "type": "object",
-        "properties": {
-          "establecimientoId": {
-            "type": "integer",
-            "format": "int64"
-          },
-          "items": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/Item"
-            },
-            "maxItems": 500,
-            "minItems": 0
-          }
-        },
-        "required": [
-          "establecimientoId",
-          "items"
         ]
       },
       "ReposicionFila": {
@@ -7270,7 +7270,7 @@
           "items": {
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/Item"
+              "$ref": "#/components/schemas/ConteoCantidadesRequestItem"
             },
             "maxItems": 500,
             "minItems": 0
@@ -7278,6 +7278,29 @@
         },
         "required": [
           "items"
+        ]
+      },
+      "ConteoCantidadesRequestItem": {
+        "type": "object",
+        "properties": {
+          "varianteId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "codigo": {
+            "type": "string",
+            "maxLength": 40,
+            "minLength": 0
+          },
+          "cantidad": {
+            "type": "integer",
+            "format": "int32",
+            "maximum": 100000,
+            "minimum": 0
+          }
+        },
+        "required": [
+          "cantidad"
         ]
       },
       "ConteoResponse": {
@@ -7345,12 +7368,12 @@
           "lineas": {
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/Linea"
+              "$ref": "#/components/schemas/ConteoResponseLinea"
             }
           }
         }
       },
-      "Linea": {
+      "ConteoResponseLinea": {
         "type": "object",
         "properties": {
           "varianteId": {
@@ -8103,106 +8126,6 @@
           }
         }
       },
-      "Cliente": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "integer",
-            "format": "int64"
-          },
-          "tipoDocumento": {
-            "type": "string"
-          },
-          "numeroDocumento": {
-            "type": "string"
-          },
-          "nombre": {
-            "type": "string"
-          },
-          "direccion": {
-            "type": "string"
-          }
-        }
-      },
-      "Detalle": {
-        "type": "object",
-        "properties": {
-          "item": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "varianteId": {
-            "type": "integer",
-            "format": "int64"
-          },
-          "sku": {
-            "type": "string"
-          },
-          "descripcion": {
-            "type": "string"
-          },
-          "unidadMedida": {
-            "type": "string"
-          },
-          "tipoAfectacionIgv": {
-            "type": "string"
-          },
-          "cantidad": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "precioUnitario": {
-            "type": "number"
-          },
-          "descuento": {
-            "type": "number"
-          },
-          "valorVenta": {
-            "type": "number"
-          },
-          "igv": {
-            "type": "number"
-          },
-          "total": {
-            "type": "number"
-          },
-          "campanaId": {
-            "type": "integer",
-            "format": "int64"
-          },
-          "descuentoCampana": {
-            "type": "number"
-          }
-        }
-      },
-      "Pago": {
-        "type": "object",
-        "properties": {
-          "metodo": {
-            "type": "string",
-            "enum": [
-              "EFECTIVO",
-              "TARJETA_DEBITO",
-              "TARJETA_CREDITO",
-              "YAPE",
-              "PLIN",
-              "TRANSFERENCIA"
-            ]
-          },
-          "monto": {
-            "type": "number"
-          },
-          "montoRecibido": {
-            "type": "number"
-          },
-          "vuelto": {
-            "type": "number"
-          },
-          "referencia": {
-            "type": "string"
-          }
-        }
-      },
       "SunatInfo": {
         "type": "object",
         "properties": {
@@ -8276,7 +8199,7 @@
             "type": "string"
           },
           "cliente": {
-            "$ref": "#/components/schemas/Cliente"
+            "$ref": "#/components/schemas/VentaResponseCliente"
           },
           "moneda": {
             "type": "string"
@@ -8372,13 +8295,13 @@
           "detalles": {
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/Detalle"
+              "$ref": "#/components/schemas/VentaResponseDetalle"
             }
           },
           "pagos": {
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/Pago"
+              "$ref": "#/components/schemas/VentaResponsePago"
             }
           },
           "sunat": {
@@ -8391,6 +8314,106 @@
             "type": "string"
           },
           "correoEntrega": {
+            "type": "string"
+          }
+        }
+      },
+      "VentaResponseCliente": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "tipoDocumento": {
+            "type": "string"
+          },
+          "numeroDocumento": {
+            "type": "string"
+          },
+          "nombre": {
+            "type": "string"
+          },
+          "direccion": {
+            "type": "string"
+          }
+        }
+      },
+      "VentaResponseDetalle": {
+        "type": "object",
+        "properties": {
+          "item": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "varianteId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "sku": {
+            "type": "string"
+          },
+          "descripcion": {
+            "type": "string"
+          },
+          "unidadMedida": {
+            "type": "string"
+          },
+          "tipoAfectacionIgv": {
+            "type": "string"
+          },
+          "cantidad": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "precioUnitario": {
+            "type": "number"
+          },
+          "descuento": {
+            "type": "number"
+          },
+          "valorVenta": {
+            "type": "number"
+          },
+          "igv": {
+            "type": "number"
+          },
+          "total": {
+            "type": "number"
+          },
+          "campanaId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "descuentoCampana": {
+            "type": "number"
+          }
+        }
+      },
+      "VentaResponsePago": {
+        "type": "object",
+        "properties": {
+          "metodo": {
+            "type": "string",
+            "enum": [
+              "EFECTIVO",
+              "TARJETA_DEBITO",
+              "TARJETA_CREDITO",
+              "YAPE",
+              "PLIN",
+              "TRANSFERENCIA"
+            ]
+          },
+          "monto": {
+            "type": "number"
+          },
+          "montoRecibido": {
+            "type": "number"
+          },
+          "vuelto": {
+            "type": "number"
+          },
+          "referencia": {
             "type": "string"
           }
         }
@@ -8963,7 +8986,7 @@
           "items": {
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/Item"
+              "$ref": "#/components/schemas/EtiquetasRequestItem"
             },
             "maxItems": 500,
             "minItems": 0
@@ -8974,7 +8997,7 @@
           "items"
         ]
       },
-      "Cantidad": {
+      "EtiquetasRequestItem": {
         "type": "object",
         "properties": {
           "varianteId": {
@@ -8984,12 +9007,11 @@
           "cantidad": {
             "type": "integer",
             "format": "int32",
-            "exclusiveMinimum": 0,
-            "maximum": 100000
+            "maximum": 500,
+            "minimum": 1
           }
         },
         "required": [
-          "cantidad",
           "varianteId"
         ]
       },
@@ -9016,7 +9038,7 @@
           "tallas": {
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/Cantidad"
+              "$ref": "#/components/schemas/OrdenRequestCantidad"
             },
             "maxItems": 200,
             "minItems": 0
@@ -9029,79 +9051,24 @@
           "tallas"
         ]
       },
-      "EtapaInfo": {
+      "OrdenRequestCantidad": {
         "type": "object",
         "properties": {
-          "etapa": {
-            "type": "string",
-            "enum": [
-              "CORTE",
-              "CONFECCION",
-              "LAVADO",
-              "ACABADO"
-            ]
-          },
-          "descripcion": {
-            "type": "string"
-          },
-          "estado": {
-            "type": "string",
-            "enum": [
-              "PENDIENTE",
-              "EN_PROCESO",
-              "TERMINADA"
-            ]
-          },
-          "proveedorId": {
+          "varianteId": {
             "type": "integer",
             "format": "int64"
-          },
-          "taller": {
-            "type": "string"
-          },
-          "fechaInicio": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "fechaFin": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "unidades": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "costoServicio": {
-            "type": "number"
-          },
-          "observacion": {
-            "type": "string"
-          }
-        }
-      },
-      "Insumo": {
-        "type": "object",
-        "properties": {
-          "insumoId": {
-            "type": "integer",
-            "format": "int64"
-          },
-          "codigo": {
-            "type": "string"
-          },
-          "nombre": {
-            "type": "string"
-          },
-          "unidadMedida": {
-            "type": "string"
           },
           "cantidad": {
-            "type": "number"
-          },
-          "costo": {
-            "type": "number"
+            "type": "integer",
+            "format": "int32",
+            "exclusiveMinimum": 0,
+            "maximum": 100000
           }
-        }
+        },
+        "required": [
+          "cantidad",
+          "varianteId"
+        ]
       },
       "OrdenResponse": {
         "type": "object",
@@ -9174,24 +9141,98 @@
           "tallas": {
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/Talla"
+              "$ref": "#/components/schemas/OrdenResponseTalla"
             }
           },
           "etapas": {
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/EtapaInfo"
+              "$ref": "#/components/schemas/OrdenResponseEtapaInfo"
             }
           },
           "insumos": {
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/Insumo"
+              "$ref": "#/components/schemas/OrdenResponseInsumo"
             }
           }
         }
       },
-      "Talla": {
+      "OrdenResponseEtapaInfo": {
+        "type": "object",
+        "properties": {
+          "etapa": {
+            "type": "string",
+            "enum": [
+              "CORTE",
+              "CONFECCION",
+              "LAVADO",
+              "ACABADO"
+            ]
+          },
+          "descripcion": {
+            "type": "string"
+          },
+          "estado": {
+            "type": "string",
+            "enum": [
+              "PENDIENTE",
+              "EN_PROCESO",
+              "TERMINADA"
+            ]
+          },
+          "proveedorId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "taller": {
+            "type": "string"
+          },
+          "fechaInicio": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "fechaFin": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "unidades": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "costoServicio": {
+            "type": "number"
+          },
+          "observacion": {
+            "type": "string"
+          }
+        }
+      },
+      "OrdenResponseInsumo": {
+        "type": "object",
+        "properties": {
+          "insumoId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "codigo": {
+            "type": "string"
+          },
+          "nombre": {
+            "type": "string"
+          },
+          "unidadMedida": {
+            "type": "string"
+          },
+          "cantidad": {
+            "type": "number"
+          },
+          "costo": {
+            "type": "number"
+          }
+        }
+      },
+      "OrdenResponseTalla": {
         "type": "object",
         "properties": {
           "varianteId": {
@@ -9223,7 +9264,7 @@
           "tallas": {
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/Cantidad"
+              "$ref": "#/components/schemas/TerminarOrdenRequestCantidad"
             },
             "maxItems": 200,
             "minItems": 0
@@ -9236,13 +9277,32 @@
           "tallas"
         ]
       },
+      "TerminarOrdenRequestCantidad": {
+        "type": "object",
+        "properties": {
+          "varianteId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "cantidad": {
+            "type": "integer",
+            "format": "int32",
+            "maximum": 100000,
+            "minimum": 0
+          }
+        },
+        "required": [
+          "cantidad",
+          "varianteId"
+        ]
+      },
       "ConsumoRequest": {
         "type": "object",
         "properties": {
           "items": {
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/Item"
+              "$ref": "#/components/schemas/ConsumoRequestItem"
             },
             "maxItems": 100,
             "minItems": 0
@@ -9250,6 +9310,23 @@
         },
         "required": [
           "items"
+        ]
+      },
+      "ConsumoRequestItem": {
+        "type": "object",
+        "properties": {
+          "insumoId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "cantidad": {
+            "type": "number",
+            "minimum": 0.001
+          }
+        },
+        "required": [
+          "cantidad",
+          "insumoId"
         ]
       },
       "EtapaRequest": {
@@ -9516,12 +9593,12 @@
           "errores": {
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/ErrorFila"
+              "$ref": "#/components/schemas/CargaMasivaResponseErrorFila"
             }
           }
         }
       },
-      "ErrorFila": {
+      "CargaMasivaResponseErrorFila": {
         "type": "object",
         "properties": {
           "fila": {
@@ -9560,7 +9637,7 @@
           "items": {
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/Item"
+              "$ref": "#/components/schemas/AjusteInsumoRequestItem"
             },
             "maxItems": 200,
             "minItems": 0
@@ -9570,6 +9647,23 @@
           "establecimientoId",
           "items",
           "motivo"
+        ]
+      },
+      "AjusteInsumoRequestItem": {
+        "type": "object",
+        "properties": {
+          "insumoId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "cantidad": {
+            "type": "number",
+            "minimum": 0.001
+          }
+        },
+        "required": [
+          "cantidad",
+          "insumoId"
         ]
       },
       "MovimientoInsumoResponse": {
@@ -9626,7 +9720,86 @@
           }
         }
       },
-      "Conductor": {
+      "GuiaRemisionRequest": {
+        "type": "object",
+        "properties": {
+          "serieId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "motivo": {
+            "type": "string",
+            "enum": [
+              "VENTA",
+              "TRASLADO_ESTABLECIMIENTOS"
+            ]
+          },
+          "fechaTraslado": {
+            "type": "string",
+            "format": "date"
+          },
+          "comprobanteId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "llegada": {
+            "$ref": "#/components/schemas/GuiaRemisionRequestDireccion"
+          },
+          "establecimientoDestinoId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "pesoBrutoKg": {
+            "type": "number",
+            "minimum": 0.001
+          },
+          "numeroBultos": {
+            "type": "integer",
+            "format": "int32",
+            "exclusiveMinimum": 0
+          },
+          "modalidad": {
+            "type": "string",
+            "enum": [
+              "PUBLICO",
+              "PRIVADO"
+            ]
+          },
+          "transportista": {
+            "$ref": "#/components/schemas/GuiaRemisionRequestTransportista"
+          },
+          "vehiculoM1l": {
+            "type": "boolean"
+          },
+          "conductor": {
+            "$ref": "#/components/schemas/GuiaRemisionRequestConductor"
+          },
+          "placa": {
+            "type": "string",
+            "pattern": "[A-Z0-9]{5,8}"
+          },
+          "observacion": {
+            "type": "string",
+            "maxLength": 250,
+            "minLength": 0
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ItemCantidadRequest"
+            },
+            "maxItems": 500,
+            "minItems": 0
+          }
+        },
+        "required": [
+          "modalidad",
+          "motivo",
+          "pesoBrutoKg",
+          "serieId"
+        ]
+      },
+      "GuiaRemisionRequestConductor": {
         "type": "object",
         "properties": {
           "tipoDocumento": {
@@ -9668,7 +9841,7 @@
           "tipoDocumento"
         ]
       },
-      "Direccion": {
+      "GuiaRemisionRequestDireccion": {
         "type": "object",
         "properties": {
           "ubigeo": {
@@ -9687,86 +9860,7 @@
           "ubigeo"
         ]
       },
-      "GuiaRemisionRequest": {
-        "type": "object",
-        "properties": {
-          "serieId": {
-            "type": "integer",
-            "format": "int64"
-          },
-          "motivo": {
-            "type": "string",
-            "enum": [
-              "VENTA",
-              "TRASLADO_ESTABLECIMIENTOS"
-            ]
-          },
-          "fechaTraslado": {
-            "type": "string",
-            "format": "date"
-          },
-          "comprobanteId": {
-            "type": "integer",
-            "format": "int64"
-          },
-          "llegada": {
-            "$ref": "#/components/schemas/Direccion"
-          },
-          "establecimientoDestinoId": {
-            "type": "integer",
-            "format": "int64"
-          },
-          "pesoBrutoKg": {
-            "type": "number",
-            "minimum": 0.001
-          },
-          "numeroBultos": {
-            "type": "integer",
-            "format": "int32",
-            "exclusiveMinimum": 0
-          },
-          "modalidad": {
-            "type": "string",
-            "enum": [
-              "PUBLICO",
-              "PRIVADO"
-            ]
-          },
-          "transportista": {
-            "$ref": "#/components/schemas/Transportista"
-          },
-          "vehiculoM1l": {
-            "type": "boolean"
-          },
-          "conductor": {
-            "$ref": "#/components/schemas/Conductor"
-          },
-          "placa": {
-            "type": "string",
-            "pattern": "[A-Z0-9]{5,8}"
-          },
-          "observacion": {
-            "type": "string",
-            "maxLength": 250,
-            "minLength": 0
-          },
-          "items": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/ItemCantidadRequest"
-            },
-            "maxItems": 500,
-            "minItems": 0
-          }
-        },
-        "required": [
-          "modalidad",
-          "motivo",
-          "pesoBrutoKg",
-          "serieId"
-        ]
-      },
-      "Transportista": {
+      "GuiaRemisionRequestTransportista": {
         "type": "object",
         "properties": {
           "ruc": {
@@ -9842,13 +9936,13 @@
             "type": "string"
           },
           "destinatario": {
-            "$ref": "#/components/schemas/Persona"
+            "$ref": "#/components/schemas/GuiaRemisionResponsePersona"
           },
           "partida": {
-            "$ref": "#/components/schemas/Punto"
+            "$ref": "#/components/schemas/GuiaRemisionResponsePunto"
           },
           "llegada": {
-            "$ref": "#/components/schemas/Punto"
+            "$ref": "#/components/schemas/GuiaRemisionResponsePunto"
           },
           "pesoBrutoKg": {
             "type": "number"
@@ -9858,13 +9952,13 @@
             "format": "int32"
           },
           "transportista": {
-            "$ref": "#/components/schemas/Transportista"
+            "$ref": "#/components/schemas/GuiaRemisionResponseTransportista"
           },
           "vehiculoM1l": {
             "type": "boolean"
           },
           "conductor": {
-            "$ref": "#/components/schemas/Conductor"
+            "$ref": "#/components/schemas/GuiaRemisionResponseConductor"
           },
           "placa": {
             "type": "string"
@@ -9878,7 +9972,7 @@
           "detalles": {
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/Detalle"
+              "$ref": "#/components/schemas/GuiaRemisionResponseDetalle"
             }
           },
           "sunat": {
@@ -9886,7 +9980,53 @@
           }
         }
       },
-      "Persona": {
+      "GuiaRemisionResponseConductor": {
+        "type": "object",
+        "properties": {
+          "tipoDocumento": {
+            "type": "string"
+          },
+          "numeroDocumento": {
+            "type": "string"
+          },
+          "nombres": {
+            "type": "string"
+          },
+          "apellidos": {
+            "type": "string"
+          },
+          "licencia": {
+            "type": "string"
+          }
+        }
+      },
+      "GuiaRemisionResponseDetalle": {
+        "type": "object",
+        "properties": {
+          "item": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "varianteId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "codigo": {
+            "type": "string"
+          },
+          "descripcion": {
+            "type": "string"
+          },
+          "unidadMedida": {
+            "type": "string"
+          },
+          "cantidad": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
+      "GuiaRemisionResponsePersona": {
         "type": "object",
         "properties": {
           "tipoDocumento": {
@@ -9900,7 +10040,7 @@
           }
         }
       },
-      "Punto": {
+      "GuiaRemisionResponsePunto": {
         "type": "object",
         "properties": {
           "ubigeo": {
@@ -9910,6 +10050,20 @@
             "type": "string"
           },
           "codigoLocal": {
+            "type": "string"
+          }
+        }
+      },
+      "GuiaRemisionResponseTransportista": {
+        "type": "object",
+        "properties": {
+          "ruc": {
+            "type": "string"
+          },
+          "razonSocial": {
+            "type": "string"
+          },
+          "registroMtc": {
             "type": "string"
           }
         }
@@ -9966,7 +10120,7 @@
           "items": {
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/Item"
+              "$ref": "#/components/schemas/CompraRequestItem"
             },
             "maxItems": 300,
             "minItems": 0
@@ -9980,6 +10134,39 @@
           "proveedorId",
           "serie",
           "tipoDocumento"
+        ]
+      },
+      "CompraRequestItem": {
+        "type": "object",
+        "properties": {
+          "varianteId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "insumoId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "descripcion": {
+            "type": "string",
+            "maxLength": 250,
+            "minLength": 0
+          },
+          "cantidad": {
+            "type": "number",
+            "minimum": 0.001
+          },
+          "costoUnitario": {
+            "type": "number",
+            "minimum": 0
+          },
+          "gravado": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "cantidad",
+          "costoUnitario"
         ]
       },
       "CompraResponse": {
@@ -10050,8 +10237,49 @@
           "lineas": {
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/Linea"
+              "$ref": "#/components/schemas/CompraResponseLinea"
             }
+          }
+        }
+      },
+      "CompraResponseLinea": {
+        "type": "object",
+        "properties": {
+          "item": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "tipo": {
+            "type": "string"
+          },
+          "varianteId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "insumoId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "descripcion": {
+            "type": "string"
+          },
+          "cantidad": {
+            "type": "number"
+          },
+          "costoUnitario": {
+            "type": "number"
+          },
+          "gravado": {
+            "type": "boolean"
+          },
+          "valor": {
+            "type": "number"
+          },
+          "igv": {
+            "type": "number"
+          },
+          "total": {
+            "type": "number"
           }
         }
       },
@@ -10141,12 +10369,12 @@
           "movimientos": {
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/Movimiento"
+              "$ref": "#/components/schemas/CajaResponseMovimiento"
             }
           }
         }
       },
-      "Movimiento": {
+      "CajaResponseMovimiento": {
         "type": "object",
         "properties": {
           "id": {
@@ -10452,28 +10680,11 @@
           }
         }
       },
-      "Enlaces": {
-        "type": "object",
-        "properties": {
-          "pdf": {
-            "type": "string"
-          },
-          "ticket": {
-            "type": "string"
-          },
-          "xml": {
-            "type": "string"
-          },
-          "cdr": {
-            "type": "string"
-          }
-        }
-      },
       "EntregaResponse": {
         "type": "object",
         "properties": {
           "enlaces": {
-            "$ref": "#/components/schemas/Enlaces"
+            "$ref": "#/components/schemas/EntregaResponseEnlaces"
           },
           "whatsapp": {
             "type": "string"
@@ -10498,6 +10709,23 @@
             "items": {
               "$ref": "#/components/schemas/EnvioWhatsappResponse"
             }
+          }
+        }
+      },
+      "EntregaResponseEnlaces": {
+        "type": "object",
+        "properties": {
+          "pdf": {
+            "type": "string"
+          },
+          "ticket": {
+            "type": "string"
+          },
+          "xml": {
+            "type": "string"
+          },
+          "cdr": {
+            "type": "string"
           }
         }
       },
@@ -10573,79 +10801,6 @@
           }
         }
       },
-      "BaseDatos": {
-        "type": "object",
-        "properties": {
-          "disponible": {
-            "type": "boolean"
-          },
-          "respuestaMs": {
-            "type": "integer",
-            "format": "int64"
-          },
-          "tamanoMb": {
-            "type": "integer",
-            "format": "int64"
-          },
-          "error": {
-            "type": "string"
-          }
-        }
-      },
-      "Colas": {
-        "type": "object",
-        "properties": {
-          "sunatPendientes": {
-            "type": "integer",
-            "format": "int64"
-          },
-          "sunatError": {
-            "type": "integer",
-            "format": "int64"
-          },
-          "correosPendientes": {
-            "type": "integer",
-            "format": "int64"
-          },
-          "correosError": {
-            "type": "integer",
-            "format": "int64"
-          },
-          "whatsappPendientes": {
-            "type": "integer",
-            "format": "int64"
-          },
-          "whatsappError": {
-            "type": "integer",
-            "format": "int64"
-          }
-        }
-      },
-      "Disco": {
-        "type": "object",
-        "properties": {
-          "libreGb": {
-            "type": "number",
-            "format": "double"
-          },
-          "totalGb": {
-            "type": "number",
-            "format": "double"
-          },
-          "librePorcentaje": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "nivel": {
-            "type": "string",
-            "enum": [
-              "OK",
-              "ATENCION",
-              "CRITICO"
-            ]
-          }
-        }
-      },
       "ErrorRegistrado": {
         "type": "object",
         "properties": {
@@ -10664,18 +10819,6 @@
           },
           "mensaje": {
             "type": "string"
-          }
-        }
-      },
-      "Errores": {
-        "type": "object",
-        "properties": {
-          "ultimas24Horas": {
-            "type": "integer",
-            "format": "int64"
-          },
-          "ultimo": {
-            "$ref": "#/components/schemas/ErrorRegistrado"
           }
         }
       },
@@ -10731,13 +10874,13 @@
             "type": "string"
           },
           "baseDatos": {
-            "$ref": "#/components/schemas/BaseDatos"
+            "$ref": "#/components/schemas/EstadoSistemaResponseBaseDatos"
           },
           "disco": {
-            "$ref": "#/components/schemas/Disco"
+            "$ref": "#/components/schemas/EstadoSistemaResponseDisco"
           },
           "memoria": {
-            "$ref": "#/components/schemas/Memoria"
+            "$ref": "#/components/schemas/EstadoSistemaResponseMemoria"
           },
           "procesos": {
             "type": "array",
@@ -10746,14 +10889,99 @@
             }
           },
           "colas": {
-            "$ref": "#/components/schemas/Colas"
+            "$ref": "#/components/schemas/EstadoSistemaResponseColas"
           },
           "errores": {
-            "$ref": "#/components/schemas/Errores"
+            "$ref": "#/components/schemas/EstadoSistemaResponseErrores"
           }
         }
       },
-      "Memoria": {
+      "EstadoSistemaResponseBaseDatos": {
+        "type": "object",
+        "properties": {
+          "disponible": {
+            "type": "boolean"
+          },
+          "respuestaMs": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "tamanoMb": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "error": {
+            "type": "string"
+          }
+        }
+      },
+      "EstadoSistemaResponseColas": {
+        "type": "object",
+        "properties": {
+          "sunatPendientes": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "sunatError": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "correosPendientes": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "correosError": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "whatsappPendientes": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "whatsappError": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
+      },
+      "EstadoSistemaResponseDisco": {
+        "type": "object",
+        "properties": {
+          "libreGb": {
+            "type": "number",
+            "format": "double"
+          },
+          "totalGb": {
+            "type": "number",
+            "format": "double"
+          },
+          "librePorcentaje": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "nivel": {
+            "type": "string",
+            "enum": [
+              "OK",
+              "ATENCION",
+              "CRITICO"
+            ]
+          }
+        }
+      },
+      "EstadoSistemaResponseErrores": {
+        "type": "object",
+        "properties": {
+          "ultimas24Horas": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "ultimo": {
+            "$ref": "#/components/schemas/ErrorRegistrado"
+          }
+        }
+      },
+      "EstadoSistemaResponseMemoria": {
         "type": "object",
         "properties": {
           "usadaMb": {
@@ -11107,7 +11335,42 @@
           }
         }
       },
-      "DocumentoModificado": {
+      "RegistroVentasResponse": {
+        "type": "object",
+        "properties": {
+          "periodo": {
+            "type": "string"
+          },
+          "ruc": {
+            "type": "string"
+          },
+          "razonSocial": {
+            "type": "string"
+          },
+          "registros": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RegistroVentasResponseRegistro"
+            }
+          },
+          "resumenPorTipo": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RegistroVentasResponseResumen"
+            }
+          },
+          "totales": {
+            "$ref": "#/components/schemas/RegistroVentasResponseResumen"
+          },
+          "advertencias": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "RegistroVentasResponseDocumentoModificado": {
         "type": "object",
         "properties": {
           "fechaEmision": {
@@ -11126,7 +11389,7 @@
           }
         }
       },
-      "Registro": {
+      "RegistroVentasResponseRegistro": {
         "type": "object",
         "properties": {
           "comprobanteId": {
@@ -11175,7 +11438,7 @@
             "type": "string"
           },
           "modifica": {
-            "$ref": "#/components/schemas/DocumentoModificado"
+            "$ref": "#/components/schemas/RegistroVentasResponseDocumentoModificado"
           },
           "situacion": {
             "type": "string",
@@ -11188,42 +11451,7 @@
           }
         }
       },
-      "RegistroVentasResponse": {
-        "type": "object",
-        "properties": {
-          "periodo": {
-            "type": "string"
-          },
-          "ruc": {
-            "type": "string"
-          },
-          "razonSocial": {
-            "type": "string"
-          },
-          "registros": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/Registro"
-            }
-          },
-          "resumenPorTipo": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/Resumen"
-            }
-          },
-          "totales": {
-            "$ref": "#/components/schemas/Resumen"
-          },
-          "advertencias": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          }
-        }
-      },
-      "Resumen": {
+      "RegistroVentasResponseResumen": {
         "type": "object",
         "properties": {
           "tipoComprobante": {
@@ -11253,7 +11481,31 @@
           }
         }
       },
-      "Inconsistencia": {
+      "ValidacionSireResponse": {
+        "type": "object",
+        "properties": {
+          "registro": {
+            "type": "string"
+          },
+          "archivo": {
+            "type": "string"
+          },
+          "filas": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "valido": {
+            "type": "boolean"
+          },
+          "inconsistencias": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ValidacionSireResponseInconsistencia"
+            }
+          }
+        }
+      },
+      "ValidacionSireResponseInconsistencia": {
         "type": "object",
         "properties": {
           "fila": {
@@ -11275,30 +11527,6 @@
           }
         }
       },
-      "ValidacionSireResponse": {
-        "type": "object",
-        "properties": {
-          "registro": {
-            "type": "string"
-          },
-          "archivo": {
-            "type": "string"
-          },
-          "filas": {
-            "type": "integer",
-            "format": "int32"
-          },
-          "valido": {
-            "type": "boolean"
-          },
-          "inconsistencias": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/Inconsistencia"
-            }
-          }
-        }
-      },
       "RegistroComprasResponse": {
         "type": "object",
         "properties": {
@@ -11314,7 +11542,7 @@
           "registros": {
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/Registro"
+              "$ref": "#/components/schemas/RegistroComprasResponseRegistro"
             }
           },
           "documentos": {
@@ -11338,6 +11566,58 @@
             "items": {
               "type": "string"
             }
+          }
+        }
+      },
+      "RegistroComprasResponseRegistro": {
+        "type": "object",
+        "properties": {
+          "compraId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "fechaEmision": {
+            "type": "string",
+            "format": "date"
+          },
+          "tipoComprobante": {
+            "type": "string"
+          },
+          "serie": {
+            "type": "string"
+          },
+          "numero": {
+            "type": "string"
+          },
+          "proveedorTipoDocumento": {
+            "type": "string"
+          },
+          "proveedorNumeroDocumento": {
+            "type": "string"
+          },
+          "proveedorNombre": {
+            "type": "string"
+          },
+          "baseGravada": {
+            "type": "number"
+          },
+          "igv": {
+            "type": "number"
+          },
+          "noGravado": {
+            "type": "number"
+          },
+          "total": {
+            "type": "number"
+          },
+          "moneda": {
+            "type": "string"
+          },
+          "propuestoPorSunat": {
+            "type": "boolean"
+          },
+          "clasificacion": {
+            "type": "string"
           }
         }
       },
@@ -11555,12 +11835,12 @@
           "variantes": {
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/Variante"
+              "$ref": "#/components/schemas/ProductoCajaResponseVariante"
             }
           }
         }
       },
-      "Variante": {
+      "ProductoCajaResponseVariante": {
         "type": "object",
         "properties": {
           "varianteId": {

@@ -5,7 +5,7 @@ import { CajaResponse } from '../../core/api/models/caja-response';
 import { ClienteResponse } from '../../core/api/models/cliente-response';
 import { ProductoCajaResponse } from '../../core/api/models/producto-caja-response';
 import { SerieResponse } from '../../core/api/models/serie-response';
-import { Variante } from '../../core/api/models/variante';
+import { ProductoCajaResponseVariante as Variante } from '../../core/api/models/producto-caja-response-variante';
 import { CajaControllerService } from '../../core/api/services/caja-controller.service';
 import { ClienteControllerService } from '../../core/api/services/cliente-controller.service';
 import { EmpresaControllerService } from '../../core/api/services/empresa-controller.service';

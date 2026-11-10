@@ -8,7 +8,7 @@ import { TooltipModule } from 'primeng/tooltip';
 import { MessageService } from 'primeng/api';
 
 import { ProductoCajaResponse } from '../../core/api/models/producto-caja-response';
-import { Variante } from '../../core/api/models/variante';
+import { ProductoCajaResponseVariante as Variante } from '../../core/api/models/producto-caja-response-variante';
 import { VentaResponse } from '../../core/api/models/venta-response';
 import { CajaControllerService } from '../../core/api/services/caja-controller.service';
 import { EscanerDirective } from '../../shared/escaner/escaner.directive';

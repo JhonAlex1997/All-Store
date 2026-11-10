@@ -1,5 +1,6 @@
 package com.allstore.api.inventario.dto;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import com.allstore.api.inventario.entity.EstadoConteo;
 
 import java.math.BigDecimal;
@@ -35,6 +36,7 @@ public record ConteoResponse(
      * @param stockAlContar stock del sistema cuando se contó (la diferencia se mide contra este)
      * @param ajuste        lo que se ajustó al cerrar (+ / -); null si no se contó o no hubo diferencia
      */
+    @Schema(name = "ConteoResponseLinea")
     public record Linea(Long varianteId, String sku, String producto, String talla, String color, BigDecimal precio,
                         int stockInicial, Integer contado, Integer stockAlContar, Integer diferencia, Integer ajuste) {
     }

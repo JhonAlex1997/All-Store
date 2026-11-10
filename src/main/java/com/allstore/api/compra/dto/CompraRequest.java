@@ -1,5 +1,6 @@
 package com.allstore.api.compra.dto;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import com.allstore.api.common.validacion.TextoSeguro;
 import com.allstore.api.compra.entity.TipoDocumentoCompra;
 import jakarta.validation.Valid;
@@ -54,6 +55,7 @@ public record CompraRequest(
      * @param costoUnitario sin IGV en una factura; en otros documentos, lo pagado por unidad
      * @param gravado       si la línea lleva IGV (por defecto sí); solo cuenta en facturas
      */
+    @Schema(name = "CompraRequestItem")
     public record Item(
             Long varianteId,
             Long insumoId,

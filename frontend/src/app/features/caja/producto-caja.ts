@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component, computed, input, output } from '@an
 import { TooltipModule } from 'primeng/tooltip';
 
 import { ProductoCajaResponse } from '../../core/api/models/producto-caja-response';
-import { Variante } from '../../core/api/models/variante';
+import { ProductoCajaResponseVariante as Variante } from '../../core/api/models/producto-caja-response-variante';
 import { SolesPipe } from '../../shared/formato/soles.pipe';
 
 /** Un modelo en el buscador de la caja: cuadrícula de colores (filas) por tallas (columnas) con su stock. */

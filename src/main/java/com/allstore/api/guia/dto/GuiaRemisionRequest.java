@@ -1,5 +1,6 @@
 package com.allstore.api.guia.dto;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import com.allstore.api.cliente.entity.TipoDocumentoIdentidad;
 import com.allstore.api.common.validacion.TextoSeguro;
 import com.allstore.api.guia.entity.ModalidadTransporte;
@@ -61,6 +62,7 @@ public record GuiaRemisionRequest(
         @Size(max = 500, message = "Máximo 500 prendas por guía")
         List<@Valid ItemCantidadRequest> items
 ) {
+    @Schema(name = "GuiaRemisionRequestDireccion")
     public record Direccion(
             @NotBlank(message = "El ubigeo de llegada es obligatorio")
             @Pattern(regexp = "\\d{6}", message = "El ubigeo tiene 6 dígitos")
@@ -77,6 +79,7 @@ public record GuiaRemisionRequest(
         return Boolean.TRUE.equals(vehiculoM1l);
     }
 
+    @Schema(name = "GuiaRemisionRequestTransportista")
     public record Transportista(
             @NotBlank(message = "El RUC del transportista es obligatorio")
             String ruc,
@@ -88,6 +91,7 @@ public record GuiaRemisionRequest(
     ) {
     }
 
+    @Schema(name = "GuiaRemisionRequestConductor")
     public record Conductor(
             @NotNull(message = "El tipo de documento del conductor es obligatorio")
             TipoDocumentoIdentidad tipoDocumento,

@@ -1,5 +1,6 @@
 package com.allstore.api.produccion.dto;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Digits;
@@ -16,6 +17,7 @@ public record ConsumoRequest(
         @Size(max = 100, message = "Máximo 100 insumos")
         List<@Valid Item> items
 ) {
+    @Schema(name = "ConsumoRequestItem")
     public record Item(
             @NotNull(message = "El insumo es obligatorio")
             Long insumoId,

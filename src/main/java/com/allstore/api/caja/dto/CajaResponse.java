@@ -1,5 +1,6 @@
 package com.allstore.api.caja.dto;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import com.allstore.api.caja.entity.CajaMovimiento;
 import com.allstore.api.caja.entity.CajaSesion;
 import com.allstore.api.caja.entity.EstadoCaja;
@@ -27,6 +28,7 @@ public record CajaResponse(
         String observacionCierre,
         List<Movimiento> movimientos
 ) {
+    @Schema(name = "CajaResponseMovimiento")
     public record Movimiento(Long id, OffsetDateTime fecha, TipoMovimientoCaja tipo, BigDecimal monto, String concepto,
                              String usuario) {
         public static Movimiento from(CajaMovimiento m) {

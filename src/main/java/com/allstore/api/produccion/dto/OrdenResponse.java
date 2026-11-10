@@ -1,5 +1,6 @@
 package com.allstore.api.produccion.dto;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import com.allstore.api.produccion.entity.Etapa;
 import com.allstore.api.produccion.entity.EstadoEtapa;
 import com.allstore.api.produccion.entity.EstadoOrden;
@@ -21,14 +22,17 @@ public record OrdenResponse(Long id, Long productoId, String producto, String es
                             BigDecimal costoUnitario, String motivoAnulacion, List<Talla> tallas, List<EtapaInfo> etapas,
                             List<Insumo> insumos) {
 
+    @Schema(name = "OrdenResponseTalla")
     public record Talla(Long varianteId, String sku, String talla, String color, int planificada, Integer terminada) {
     }
 
+    @Schema(name = "OrdenResponseEtapaInfo")
     public record EtapaInfo(Etapa etapa, String descripcion, EstadoEtapa estado, Long proveedorId, String taller,
                             OffsetDateTime fechaInicio, OffsetDateTime fechaFin, Integer unidades, BigDecimal costoServicio,
                             String observacion) {
     }
 
+    @Schema(name = "OrdenResponseInsumo")
     public record Insumo(Long insumoId, String codigo, String nombre, String unidadMedida, BigDecimal cantidad, BigDecimal costo) {
     }
 

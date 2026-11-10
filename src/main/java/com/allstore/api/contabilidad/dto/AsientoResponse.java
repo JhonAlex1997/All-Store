@@ -1,5 +1,6 @@
 package com.allstore.api.contabilidad.dto;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
@@ -12,6 +13,7 @@ import java.util.List;
  */
 public record AsientoResponse(int numero, LocalDate fecha, String origen, String documento, String glosa, List<Linea> lineas) {
 
+    @Schema(name = "AsientoResponseLinea")
     public record Linea(String cuenta, String denominacion, BigDecimal debe, BigDecimal haber) {
     }
 

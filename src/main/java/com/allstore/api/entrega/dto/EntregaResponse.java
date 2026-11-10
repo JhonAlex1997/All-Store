@@ -1,5 +1,6 @@
 package com.allstore.api.entrega.dto;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.List;
 
 /**
@@ -22,6 +23,7 @@ public record EntregaResponse(
         List<EnvioWhatsappResponse> whatsapps
 ) {
     /** @param xml y cdr solo existen en comprobantes electrónicos (el CDR, cuando SUNAT ya respondió) */
+    @Schema(name = "EntregaResponseEnlaces")
     public record Enlaces(String pdf, String ticket, String xml, String cdr) {
     }
 }

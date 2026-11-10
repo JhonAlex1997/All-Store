@@ -1,5 +1,6 @@
 package com.allstore.api.produccion.dto;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import com.allstore.api.common.validacion.TextoSeguro;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
@@ -31,6 +32,7 @@ public record OrdenRequest(
         @Size(max = 200, message = "Máximo 200 tallas y colores")
         List<@Valid Cantidad> tallas
 ) {
+    @Schema(name = "OrdenRequestCantidad")
     public record Cantidad(
             @NotNull(message = "La prenda es obligatoria")
             Long varianteId,

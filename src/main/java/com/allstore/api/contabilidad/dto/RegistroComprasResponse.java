@@ -1,5 +1,6 @@
 package com.allstore.api.contabilidad.dto;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
@@ -30,6 +31,7 @@ public record RegistroComprasResponse(
      * @param clasificacion          clasificación de los bienes y servicios adquiridos (campo 33 del RCE):
      *                               1 = mercaderías, materias primas e insumos; 5 = otros gastos y servicios
      */
+    @Schema(name = "RegistroComprasResponseRegistro")
     public record Registro(Long compraId, LocalDate fechaEmision, String tipoComprobante, String serie, String numero,
                            String proveedorTipoDocumento, String proveedorNumeroDocumento, String proveedorNombre,
                            BigDecimal baseGravada, BigDecimal igv, BigDecimal noGravado, BigDecimal total, String moneda,

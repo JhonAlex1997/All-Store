@@ -1,5 +1,6 @@
 package com.allstore.api.venta.dto;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import com.allstore.api.empresa.entity.TipoComprobante;
 import com.allstore.api.facturacion.dto.BajaSunatInfo;
 import com.allstore.api.facturacion.dto.SunatInfo;
@@ -77,6 +78,7 @@ public record VentaResponse(
         String correoEntrega
 ) {
     /** Datos del cliente tal como quedaron en el comprobante. */
+    @Schema(name = "VentaResponseCliente")
     public record Cliente(Long id, String tipoDocumento, String numeroDocumento, String nombre, String direccion) {
     }
 
@@ -85,6 +87,7 @@ public record VentaResponse(
      *
      * @param descuentoCampana parte del descuento que dio una campaña de promoción (campanaId)
      */
+    @Schema(name = "VentaResponseDetalle")
     public record Detalle(int item, Long varianteId, String sku, String descripcion, String unidadMedida,
                           String tipoAfectacionIgv, int cantidad, BigDecimal precioUnitario, BigDecimal descuento,
                           BigDecimal valorVenta, BigDecimal igv, BigDecimal total, Long campanaId,
@@ -96,6 +99,7 @@ public record VentaResponse(
         }
     }
 
+    @Schema(name = "VentaResponsePago")
     public record Pago(MetodoPago metodo, BigDecimal monto, BigDecimal montoRecibido, BigDecimal vuelto,
                        String referencia) {
         static Pago from(ComprobantePago p) {

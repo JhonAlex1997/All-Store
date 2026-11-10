@@ -1,5 +1,6 @@
 package com.allstore.api.inventario.dto;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.NotEmpty;
@@ -23,6 +24,7 @@ public record ConteoCantidadesRequest(
 ) {
     public enum Modo { REEMPLAZAR, SUMAR }
 
+    @Schema(name = "ConteoCantidadesRequestItem")
     public record Item(
             Long varianteId,
             @Size(max = 40, message = "El código no puede superar 40 caracteres")

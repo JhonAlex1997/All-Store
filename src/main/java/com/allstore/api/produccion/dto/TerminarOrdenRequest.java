@@ -1,5 +1,6 @@
 package com.allstore.api.produccion.dto;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.NotEmpty;
@@ -21,6 +22,7 @@ public record TerminarOrdenRequest(
         List<@Valid Cantidad> tallas,
         boolean actualizarCostos
 ) {
+    @Schema(name = "TerminarOrdenRequestCantidad")
     public record Cantidad(
             @NotNull(message = "La prenda es obligatoria")
             Long varianteId,

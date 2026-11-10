@@ -1,5 +1,6 @@
 package com.allstore.api.contabilidad.dto;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
@@ -28,6 +29,7 @@ public record RegistroVentasResponse(
      * @param clienteTipoDocumento vacío en boletas menores a S/ 700 sin identificar al cliente
      * @param modifica             notas de crédito y débito: el comprobante que modifican
      */
+    @Schema(name = "RegistroVentasResponseRegistro")
     public record Registro(
             Long comprobanteId,
             LocalDate fechaEmision,
@@ -48,6 +50,7 @@ public record RegistroVentasResponse(
     ) {
     }
 
+    @Schema(name = "RegistroVentasResponseDocumentoModificado")
     public record DocumentoModificado(LocalDate fechaEmision, String tipoComprobante, String serie, long numero) {
     }
 
@@ -63,6 +66,7 @@ public record RegistroVentasResponse(
     }
 
     /** @param tipoComprobante código del Catálogo 01 (null en los totales generales) */
+    @Schema(name = "RegistroVentasResponseResumen")
     public record Resumen(
             String tipoComprobante,
             String descripcion,
