@@ -1,0 +1,63 @@
+.disposicion {
+  display: grid;
+  grid-template-columns: 340px minmax(0, 1fr);
+  gap: 1rem;
+  align-items: start;
+}
+
+h2 { font-size: .95rem; margin: 0; }
+
+.datos {
+  display: flex;
+  flex-direction: column;
+  gap: .9rem;
+}
+
+.activo { display: flex; align-items: center; gap: .5rem; font-size: 13px; font-weight: 600; }
+.completo { grid-column: 1 / -1; }
+
+.derecha { text-align: right; }
+.local { white-space: nowrap; font-size: 12px; }
+.cero { color: #c9c1c2; }
+.propio { color: var(--as-rosa-fuerte); font-size: 11px; }
+.inactiva td { opacity: .55; }
+.acciones { white-space: nowrap; text-align: right; }
+
+.chips { display: flex; flex-wrap: wrap; gap: .35rem; }
+
+.chip {
+  min-width: 44px;
+  padding: .4rem .7rem;
+  border: 1px solid var(--as-borde);
+  border-radius: 99px;
+  background: #fff;
+  font: 600 13px inherit;
+  cursor: pointer;
+
+  &.activo { background: var(--as-tinta); color: #fff; border-color: var(--as-tinta); }
+}
+
+.etiquetas {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: .4rem;
+  max-height: 340px;
+  overflow-y: auto;
+
+  label {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: .5rem;
+    padding: .35rem .5rem;
+    border: 1px solid var(--as-borde);
+    border-radius: 8px;
+    font-size: 13px;
+  }
+
+  input { width: 64px; height: 30px; border: 1px solid var(--as-borde); border-radius: 6px; text-align: center; }
+}
+
+@media (max-width: 1000px) {
+  .disposicion { grid-template-columns: 1fr; }
+}

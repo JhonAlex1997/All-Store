@@ -1,0 +1,49 @@
+@if (modelo(); as m) {
+  <div class="modelo">
+    <div class="cabecera">
+      <div>
+        <b>{{ m.nombre }}</b>
+        <span class="sutil">{{ m.codigo }}</span>
+      </div>
+      <p-button label="Otro modelo" icon="pi pi-arrow-left" [text]="true" size="small" severity="secondary" (onClick)="volver()" />
+    </div>
+    @if (!tallas().length) {
+      <p class="sutil">Este modelo no tiene tallas ni colores activos.</p>
+    } @else {
+      <div class="tabla" [style.grid-template-columns]="'minmax(70px, auto) repeat(' + tallas().length + ', minmax(52px, 1fr))'">
+        <span></span>
+        @for (t of tallas(); track t) { <span class="talla">{{ t }}</span> }
+        @for (c of colores(); track c) {
+          <span class="color">{{ c }}</span>
+          @for (t of tallas(); track t) {
+            @let v = celda(c, t);
+            @if (v?.id; as id) {
+              <input type="number" min="0" class="cantidad" [ngModel]="cantidades()[id] || null"
+                     (ngModelChange)="cambiar(id, $event)" placeholder="0" [attr.aria-label]="m.nombre + ' ' + t + ' ' + c" />
+            } @else {
+              <span class="vacia">–</span>
+            }
+          }
+        }
+      </div>
+      <div class="pie">
+        <span class="sutil">{{ totalElegido() }} unidad{{ totalElegido() === 1 ? '' : 'es' }}</span>
+        <p-button [label]="accion()" icon="pi pi-plus" size="small" [disabled]="!totalElegido()" (onClick)="confirmar()" />
+      </div>
+    }
+  </div>
+} @else {
+  <div class="buscar">
+    <i class="pi pi-search"></i>
+    <input pInputText [(ngModel)]="texto" (ngModelChange)="alEscribir()" (keydown.enter)="alEnter()"
+           placeholder="Busca el modelo o escanea un código" autocomplete="off" aria-label="Buscar modelo" />
+    @if (buscando()) { <i class="pi pi-spin pi-spinner girando"></i> }
+  </div>
+  @if (modelos().length) {
+    <ul class="opciones">
+      @for (p of modelos(); track p.id) {
+        <li><button type="button" (click)="elegirModelo(p.id!)"><b>{{ p.nombre }}</b><span>{{ p.codigo }} · {{ p.categoria }}</span></button></li>
+      }
+    </ul>
+  }
+}

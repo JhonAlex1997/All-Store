@@ -60,6 +60,13 @@ src/app/
   reglas que el backend (`calculo.ts`), cliente por DNI/RUC, cobro mixto con vuelto, impresión del ticket,
   movimientos de efectivo y cierre con arqueo. Atajos: F2 buscar, F9 cobrar. El carrito se guarda en la
   pestaña por si se recarga.
+- **Productos** (`features/productos`): lista con búsqueda y filtros, alta de modelos eligiendo tallas y colores
+  (se crean todas las combinaciones), ficha con precios, prendas, stock por local, precio propio por prenda y
+  etiquetas con código de barras (A4 o rollo). Tallas, colores y categorías en `productos/catalogos`.
+- **Inventario** (`features/inventario`): stock por local, carga desde Excel en dos pasos (revisar sin guardar y
+  luego aplicar), ingresos y salidas, traslados entre locales, kardex con saldo y reposición.
+- `shared/prendas/selector-prendas`: buscador de modelo con cuadrícula color × talla para armar listas con
+  cantidades (inventario, traslados).
 
 ## Agregar un módulo
 

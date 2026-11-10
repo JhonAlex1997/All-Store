@@ -12,6 +12,8 @@ const aviso = () => import('./paginas/aviso/aviso').then((m) => m.Aviso);
  */
 const MODULOS: Partial<Record<string, Route['loadChildren']>> = {
   caja: () => import('./features/caja/caja.routes').then((m) => m.routes),
+  productos: () => import('./features/productos/productos.routes').then((m) => m.routes),
+  inventario: () => import('./features/inventario/inventario.routes').then((m) => m.routes),
   empresa: () => import('./features/empresa/empresa.routes').then((m) => m.routes),
 };
 

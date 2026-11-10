@@ -1,0 +1,169 @@
+@if (producto(); as p) {
+  <div class="as-pagina-titulo">
+    <p-button icon="pi pi-arrow-left" [text]="true" severity="secondary" routerLink="/productos" ariaLabel="Volver a productos" />
+    <div>
+      <h1>{{ p.nombre }}</h1>
+      <div class="as-sub"><span class="as-codigo">{{ p.codigo }}</span> · {{ p.categoria }} · {{ variantes().length }} prendas · {{ totalStock() }} unidades en stock</div>
+    </div>
+    <span style="flex:1"></span>
+    <p-button label="Etiquetas" icon="pi pi-barcode" severity="secondary" [outlined]="true" (onClick)="abrirEtiquetas()" />
+  </div>
+
+  <div class="disposicion">
+    <!-- Datos del modelo -->
+    <form class="as-tarjeta datos" [formGroup]="form" (ngSubmit)="guardar()" novalidate>
+      <h2>Datos y precios</h2>
+      <div class="as-campo">
+        <label for="d-nombre">Nombre</label>
+        <input pInputText id="d-nombre" formControlName="nombre" />
+      </div>
+      <div class="as-campo">
+        <label for="d-cat">Categoría</label>
+        <p-select inputId="d-cat" formControlName="categoriaId" [options]="categorias()" optionLabel="nombre" optionValue="id" />
+      </div>
+      <div class="as-rejilla">
+        <div class="as-campo">
+          <label for="d-precio">Precio</label>
+          <p-inputnumber inputId="d-precio" formControlName="precioVenta" mode="currency" currency="PEN" locale="es-PE"
+                         [min]="0" [minFractionDigits]="2" [maxFractionDigits]="2" />
+        </div>
+        <div class="as-campo">
+          <label for="d-mayor">Por mayor</label>
+          <p-inputnumber inputId="d-mayor" formControlName="precioPorMayor" mode="currency" currency="PEN" locale="es-PE"
+                         [min]="0" [minFractionDigits]="2" [maxFractionDigits]="2" placeholder="Sin precio" />
+        </div>
+      </div>
+      <div class="as-campo">
+        <label for="d-desc">Descripción</label>
+        <input pInputText id="d-desc" formControlName="descripcion" placeholder="Opcional" />
+      </div>
+      <label class="activo"><p-toggleswitch formControlName="activo" /> Modelo activo (se puede vender)</label>
+      @if (puedeEditar) {
+        <p-button type="submit" label="Guardar cambios" icon="pi pi-check" [loading]="guardando()" [disabled]="form.pristine" fluid />
+      }
+    </form>
+
+    <!-- Prendas con stock por local -->
+    <div class="as-tarjeta">
+      <div class="as-barra">
+        <h2>Prendas y stock</h2>
+        <span class="as-espacio"></span>
+        @if (puedeEditar) {
+          <p-button label="Agregar tallas o colores" icon="pi pi-plus" size="small" [outlined]="true" (onClick)="abrirAgregar()" />
+        }
+      </div>
+      <p-table [value]="variantes()" dataKey="id" styleClass="p-datatable-sm" [scrollable]="true">
+        <ng-template #header>
+          <tr>
+            <th>Talla</th>
+            <th>Color</th>
+            <th>SKU / Código de barras</th>
+            <th class="derecha">Precio</th>
+            @for (l of locales(); track l.id) { <th class="derecha local">{{ l.nombre }}</th> }
+            <th></th>
+          </tr>
+        </ng-template>
+        <ng-template #body let-v>
+          <tr [class.inactiva]="v.activo === false">
+            <td><b>{{ v.talla }}</b></td>
+            <td>{{ v.color }}</td>
+            <td><span class="as-codigo">{{ v.sku }}</span><br /><small class="as-sutil">{{ v.codigoBarras }}</small></td>
+            <td class="derecha as-monto">
+              {{ v.precioEfectivo | soles }}
+              @if (v.precioVenta != null) { <br /><small class="propio">precio propio</small> }
+            </td>
+            @for (l of locales(); track l.id) {
+              @let s = stockDe(v.id, l.id);
+              <td class="derecha as-monto" [class.cero]="!s">{{ s }}</td>
+            }
+            <td class="acciones">
+              @if (v.activo === false) { <p-tag value="Inactiva" severity="secondary" /> }
+              @if (puedeEditar) {
+                <p-button icon="pi pi-pencil" [text]="true" severity="secondary" size="small" (onClick)="editarVariante(v)"
+                          ariaLabel="Editar prenda" />
+              }
+            </td>
+          </tr>
+        </ng-template>
+        <ng-template #emptymessage>
+          <tr><td [attr.colspan]="5 + locales().length" class="as-vacio">Este modelo aún no tiene tallas ni colores.</td></tr>
+        </ng-template>
+      </p-table>
+    </div>
+  </div>
+
+  <!-- Editar prenda -->
+  <p-dialog [visible]="!!editandoVariante()" (visibleChange)="$event || editandoVariante.set(null)" [modal]="true"
+            [draggable]="false" [header]="'Prenda ' + (editandoVariante()?.sku ?? '')" [style]="{ width: 'min(440px, 96vw)' }">
+    <div class="as-rejilla">
+      <div class="as-campo">
+        <label for="v-precio">Precio propio</label>
+        <p-inputnumber inputId="v-precio" [(ngModel)]="precioVariante" mode="currency" currency="PEN" locale="es-PE"
+                       [min]="0" [minFractionDigits]="2" [maxFractionDigits]="2" placeholder="El del modelo" />
+      </div>
+      <div class="as-campo">
+        <label for="v-mayor">Por mayor propio</label>
+        <p-inputnumber inputId="v-mayor" [(ngModel)]="mayorVariante" mode="currency" currency="PEN" locale="es-PE"
+                       [min]="0" [minFractionDigits]="2" [maxFractionDigits]="2" placeholder="El del modelo" />
+      </div>
+      <small class="as-ayuda completo">Vacío = usa el precio del modelo. Útil si una talla grande cuesta más.</small>
+      <label class="activo completo"><p-toggleswitch [(ngModel)]="activoVariante" /> Activa (aparece en la caja)</label>
+    </div>
+    <ng-template #footer>
+      <p-button label="Cancelar" severity="secondary" [text]="true" (onClick)="editandoVariante.set(null)" />
+      <p-button label="Guardar" icon="pi pi-check" (onClick)="guardarVariante()" />
+    </ng-template>
+  </p-dialog>
+
+  <!-- Agregar tallas o colores -->
+  <p-dialog [visible]="agregando()" (visibleChange)="agregando.set($event)" [modal]="true" [draggable]="false"
+            header="Agregar tallas o colores" [style]="{ width: 'min(560px, 96vw)' }">
+    <p class="as-ayuda">Se crean las combinaciones talla × color que aún no existan. Las que ya existen no se tocan.</p>
+    <div class="as-campo">
+      <label>Tallas</label>
+      <div class="chips">
+        @for (t of tallas(); track t.id) {
+          <button type="button" class="chip" [class.activo]="tallasNuevas.includes(t.id!)"
+                  (click)="tallasNuevas = alternar(tallasNuevas, t.id!)">{{ t.codigo }}</button>
+        }
+      </div>
+    </div>
+    <div class="as-campo" style="margin-top: 1rem">
+      <label>Colores</label>
+      <div class="chips">
+        @for (c of colores(); track c.id) {
+          <button type="button" class="chip" [class.activo]="coloresNuevos.includes(c.id!)"
+                  (click)="coloresNuevos = alternar(coloresNuevos, c.id!)">{{ c.nombre }}</button>
+        }
+      </div>
+    </div>
+    <ng-template #footer>
+      <p-button label="Cancelar" severity="secondary" [text]="true" (onClick)="agregando.set(false)" />
+      <p-button label="Agregar" icon="pi pi-plus" [disabled]="!tallasNuevas.length || !coloresNuevos.length" (onClick)="agregarVariantes()" />
+    </ng-template>
+  </p-dialog>
+
+  <!-- Etiquetas -->
+  <p-dialog [visible]="etiquetando()" (visibleChange)="etiquetando.set($event)" [modal]="true" [draggable]="false"
+            header="Imprimir etiquetas" [style]="{ width: 'min(560px, 96vw)' }">
+    <p-selectbutton [options]="formatos" [(ngModel)]="formatoEtiqueta" optionLabel="etiqueta" optionValue="valor" [allowEmpty]="false" />
+    <p class="as-ayuda">Cuántas etiquetas de cada prenda (por defecto, una por unidad en stock).</p>
+    <div class="etiquetas">
+      @for (v of variantes(); track v.id) {
+        @if (v.activo !== false) {
+          <label>
+            <span><b>{{ v.talla }}</b> · {{ v.color }}</span>
+            <input type="number" min="0" max="500" [(ngModel)]="cantidadesEtiqueta[v.id!]" />
+          </label>
+        }
+      }
+    </div>
+    <ng-template #footer>
+      <span class="as-sutil">{{ totalEtiquetas() }} etiquetas</span>
+      <p-button label="Cancelar" severity="secondary" [text]="true" (onClick)="etiquetando.set(false)" />
+      <p-button label="Generar PDF" icon="pi pi-print" [disabled]="!totalEtiquetas()" (onClick)="imprimirEtiquetas()" />
+    </ng-template>
+  </p-dialog>
+} @else {
+  <div class="as-tarjeta as-sutil"><i class="pi pi-spin pi-spinner"></i> Cargando…</div>
+}

@@ -55,3 +55,41 @@ h1 { font-family: var(--as-serif); font-weight: 600; letter-spacing: .01em; }
 
 /* Montos: cifras alineadas en tablas y totales. */
 .as-monto { font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+/* ---------- Formularios y tablas de los módulos ---------- */
+.as-rejilla {
+  display: grid;
+  grid-template-columns: repeat(var(--columnas, 2), minmax(0, 1fr));
+  gap: 1rem 1.25rem;
+}
+
+.as-campo {
+  display: flex;
+  flex-direction: column;
+  gap: .35rem;
+  min-width: 0;
+
+  > label { font-weight: 600; font-size: 13px; }
+  &.completo { grid-column: 1 / -1; }
+}
+
+.as-ayuda { color: var(--as-texto-suave); font-size: 12px; }
+.as-error { color: #c23131; font-size: 12px; }
+.as-codigo { font-family: ui-monospace, 'Cascadia Mono', Consolas, monospace; font-weight: 600; }
+.as-sutil { color: var(--as-texto-suave); }
+
+.as-barra {
+  display: flex;
+  align-items: center;
+  gap: .6rem;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
+
+  .as-espacio { flex: 1; }
+}
+
+.as-vacio { text-align: center; color: var(--as-texto-suave); padding: 2rem 1rem !important; }
+
+@media (max-width: 760px) {
+  .as-rejilla { grid-template-columns: 1fr; }
+}
