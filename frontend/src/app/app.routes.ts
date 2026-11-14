@@ -15,6 +15,7 @@ const MODULOS: Partial<Record<string, Route['loadChildren']>> = {
   productos: () => import('./features/productos/productos.routes').then((m) => m.routes),
   inventario: () => import('./features/inventario/inventario.routes').then((m) => m.routes),
   usuarios: () => import('./features/usuarios/usuarios.routes').then((m) => m.routes),
+  ventas: () => import('./features/ventas/ventas.routes').then((m) => m.routes),
   empresa: () => import('./features/empresa/empresa.routes').then((m) => m.routes),
 };
 

@@ -1,0 +1,228 @@
+@if (venta(); as v) {
+  <div class="as-pagina-titulo">
+    <p-button icon="pi pi-arrow-left" [text]="true" severity="secondary" routerLink="/ventas" ariaLabel="Volver a ventas" />
+    <div>
+      <h1>{{ etiquetaTipo(v.tipoComprobante) }} <span class="as-codigo">{{ v.numero }}</span></h1>
+      <div class="as-sub">{{ v.fechaEmision | fechaLima: 'fecha-hora' }} · {{ v.establecimiento }} · Cajero: {{ v.vendedor }}</div>
+    </div>
+    <span style="flex:1"></span>
+    @if (estadoVenta(); as e) { <p-tag [value]="e.etiqueta" [severity]="e.severidad" /> }
+    @if (estadoSunat(); as s) { <p-tag [value]="'SUNAT: ' + s.etiqueta" [severity]="s.severidad" /> }
+  </div>
+
+  <!-- Acciones -->
+  <div class="acciones as-tarjeta">
+    <p-button label="Ticket" icon="pi pi-print" severity="secondary" [outlined]="true" [loading]="ocupado() === 'TICKET'" (onClick)="imprimir('TICKET')" />
+    <p-button label="A4" icon="pi pi-file-pdf" severity="secondary" [outlined]="true" [loading]="ocupado() === 'A4'" (onClick)="imprimir('A4')" />
+    <p-button label="WhatsApp" icon="pi pi-whatsapp" severity="secondary" [outlined]="true" (onClick)="abrir('whatsapp')" />
+    <p-button label="Correo" icon="pi pi-envelope" severity="secondary" [outlined]="true" (onClick)="abrir('correo')" />
+    <span class="separador"></span>
+    @if (puedeNotaCredito()) {
+      <p-button label="Devolución / nota de crédito" icon="pi pi-replay" (onClick)="abrir('nota')" />
+    }
+    @if (puedeConvertir()) {
+      <p-button label="Convertir en boleta o factura" icon="pi pi-sync" (onClick)="abrir('convertir')" />
+    }
+    @if (rechazado() && vigente()) {
+      <p-button label="Reemitir" icon="pi pi-refresh" [loading]="ocupado() === 'reemitir'" (onClick)="reemitir()" />
+    }
+    @if (puedeReenviarSunat()) {
+      <p-button label="Reenviar a SUNAT" icon="pi pi-send" severity="secondary" [loading]="ocupado() === 'sunat'" (onClick)="reenviarSunat()" />
+    }
+    @if (puedeAnular()) {
+      <p-button label="Anular" icon="pi pi-ban" severity="danger" [text]="true" (onClick)="abrir('anular')" />
+    }
+  </div>
+
+  @if (v.estado === 'ANULADO') {
+    <p-message severity="error" styleClass="aviso">Anulado el {{ v.fechaAnulacion | fechaLima: 'fecha-hora' }}: {{ v.motivoAnulacion }}
+      @if (v.bajaSunat?.estado; as b) { · Baja en SUNAT: {{ b }} }</p-message>
+  }
+  @if (v.sunat?.estado === 'RECHAZADO' || v.sunat?.estado === 'OBSERVADO') {
+    <p-message [severity]="v.sunat?.estado === 'RECHAZADO' ? 'error' : 'warn'" styleClass="aviso">
+      SUNAT {{ v.sunat?.codigoRespuesta }}: {{ v.sunat?.descripcionRespuesta }}
+      @if (v.sunat?.estado === 'RECHAZADO') { — Corrige y usa «Reemitir»: el comprobante rechazado no existe para SUNAT. }
+    </p-message>
+  }
+
+  <div class="disposicion">
+    <!-- Prendas -->
+    <div class="as-tarjeta">
+      <h2>Detalle</h2>
+      <p-table [value]="v.detalles ?? []" styleClass="p-datatable-sm">
+        <ng-template #header>
+          <tr><th>Prenda</th><th class="derecha">Cant.</th><th class="derecha">Precio</th><th class="derecha">Descuento</th><th class="derecha">Importe</th></tr>
+        </ng-template>
+        <ng-template #body let-d>
+          <tr>
+            <td>{{ d.descripcion }}<br /><small class="as-codigo as-sutil">{{ d.sku }}</small></td>
+            <td class="derecha">{{ d.cantidad }}</td>
+            <td class="derecha as-monto">{{ d.precioUnitario | soles }}</td>
+            <td class="derecha as-monto">{{ (d.descuento ?? 0) > 0 ? '−' : '' }}{{ (d.descuento ?? 0) > 0 ? (d.descuento | soles) : '' }}
+              @if ((d.descuentoCampana ?? 0) > 0) { <br /><small class="campana">campaña</small> }</td>
+            <td class="derecha as-monto"><b>{{ d.total | soles }}</b></td>
+          </tr>
+        </ng-template>
+      </p-table>
+      <div class="totales">
+        @if ((v.totalDescuento ?? 0) > 0) { <div><span>Descuentos</span><span>− {{ v.totalDescuento | soles }}</span></div> }
+        <div><span>Op. gravadas</span><span>{{ v.opGravadas | soles }}</span></div>
+        <div><span>IGV (18%)</span><span>{{ v.totalIgv | soles }}</span></div>
+        <div class="total"><span>Total</span><span>{{ v.total | soles }}</span></div>
+      </div>
+    </div>
+
+    <!-- Datos -->
+    <div class="lateral">
+      <div class="as-tarjeta">
+        <h2>Cliente</h2>
+        <p class="dato"><b>{{ v.cliente?.nombre }}</b>
+          @if (v.cliente?.numeroDocumento && v.cliente?.tipoDocumento !== '0') { <br /><span class="as-sutil">{{ etiquetaDocumento(v.cliente?.tipoDocumento) }} {{ v.cliente?.numeroDocumento }}</span> }
+          @if (v.cliente?.direccion) { <br /><span class="as-sutil">{{ v.cliente?.direccion }}</span> }</p>
+      </div>
+
+      @if (v.pagos?.length) {
+        <div class="as-tarjeta">
+          <h2>{{ v.tipoComprobante === 'NOTA_CREDITO' ? 'Devolución' : 'Pagos' }}</h2>
+          @for (p of v.pagos; track $index) {
+            <div class="fila"><span>{{ etiquetaMetodo(p.metodo ?? '') }}@if (p.referencia) { <small class="as-sutil"> · {{ p.referencia }}</small> }</span>
+              <b>{{ p.monto | soles }}</b></div>
+            @if (p.montoRecibido) { <div class="fila sutil"><span>Recibido</span><span>{{ p.montoRecibido | soles }}</span></div> }
+          }
+          @if (v.vuelto) { <div class="fila sutil"><span>Vuelto</span><span>{{ v.vuelto | soles }}</span></div> }
+          @if (v.porMayor) { <p class="mayor">Precio por mayor{{ v.porMayorManual ? ' (marcado a mano)' : '' }}</p> }
+        </div>
+      }
+
+      <div class="as-tarjeta">
+        <h2>Relacionados</h2>
+        @if (v.comprobanteOrigen) { <p class="dato">Modifica a <a (click)="irANumero(v.comprobanteOrigen)">{{ v.comprobanteOrigen }}</a>
+          @if (v.sustento) { <br /><span class="as-sutil">{{ v.sustento }}</span> }</p> }
+        @for (n of v.notasCredito ?? []; track n) { <p class="dato">Nota de crédito <a (click)="irANumero(n)">{{ n }}</a></p> }
+        @for (n of v.notasDebito ?? []; track n) { <p class="dato">Nota de débito <a (click)="irANumero(n)">{{ n }}</a></p> }
+        @if (v.convertidoEn) { <p class="dato">Convertida en <a (click)="irANumero(v.convertidoEn)">{{ v.convertidoEn }}</a></p> }
+        @if (v.reemplazaA) { <p class="dato">Reemplaza a <a (click)="irANumero(v.reemplazaA)">{{ v.reemplazaA }}</a></p> }
+        @if (v.reemplazadoPor) { <p class="dato">Reemplazado por <a (click)="irANumero(v.reemplazadoPor)">{{ v.reemplazadoPor }}</a></p> }
+        @if (!v.comprobanteOrigen && !v.notasCredito?.length && !v.notasDebito?.length && !v.convertidoEn && !v.reemplazaA && !v.reemplazadoPor) {
+          <p class="as-sutil dato">Ninguno.</p>
+        }
+        @if (v.sunat?.hash) { <p class="dato as-sutil">Hash: <span class="as-codigo">{{ v.sunat?.hash }}</span></p> }
+      </div>
+    </div>
+  </div>
+
+  <!-- Anular -->
+  <p-dialog [visible]="dialogo() === 'anular'" (visibleChange)="$event || dialogo.set(null)" [modal]="true" [draggable]="false"
+            [header]="'Anular ' + v.numero" [style]="{ width: 'min(480px, 96vw)' }">
+    <p class="as-sutil">
+      @if (v.tipoComprobante === 'NOTA_VENTA') { Se anula en el sistema y las prendas vuelven al stock. }
+      @else { Se anula en el sistema, las prendas vuelven al stock y se comunica la baja a SUNAT. }
+      La caja donde se cobró debe seguir abierta; si ya se cerró, usa una nota de crédito.
+    </p>
+    <div class="as-campo">
+      <label for="a-motivo">Motivo</label>
+      <input pInputText id="a-motivo" [(ngModel)]="motivoAnulacion" maxlength="250" placeholder="Ej. Error en la talla, el cliente desistió" />
+    </div>
+    @if (error(); as e) { <small class="as-error">{{ e }}</small> }
+    <ng-template #footer>
+      <p-button label="Cancelar" severity="secondary" [text]="true" (onClick)="dialogo.set(null)" />
+      <p-button label="Anular" icon="pi pi-ban" severity="danger" [disabled]="!motivoAnulacion.trim()" [loading]="ocupado() === 'anular'" (onClick)="anular()" />
+    </ng-template>
+  </p-dialog>
+
+  <!-- Nota de crédito -->
+  <p-dialog [visible]="dialogo() === 'nota'" (visibleChange)="$event || dialogo.set(null)" [modal]="true" [draggable]="false"
+            header="Devolución con nota de crédito" [style]="{ width: 'min(640px, 96vw)' }">
+    <div class="campos">
+      <div class="as-campo">
+        <label for="n-motivo">Motivo</label>
+        <p-select inputId="n-motivo" [options]="motivosNota()" [(ngModel)]="motivoNota" optionLabel="etiqueta" optionValue="valor" />
+        <small class="as-ayuda">{{ ayudaMotivo() }}</small>
+      </div>
+      @if (motivoNota === 'DEVOLUCION_POR_ITEM') {
+        <div class="as-campo">
+          <label>¿Qué devuelve?</label>
+          <div class="devolver">
+            @for (d of v.detalles ?? []; track d.varianteId) {
+              <label><span>{{ d.descripcion }} <small class="as-sutil">(compró {{ d.cantidad }})</small></span>
+                <input type="number" min="0" [max]="d.cantidad ?? null" [(ngModel)]="devolver[d.varianteId!]" placeholder="0" /></label>
+            }
+          </div>
+          <small class="as-ayuda">A devolver aprox. {{ totalDevolucion() | soles }}. Las prendas vuelven al stock.</small>
+        </div>
+      }
+      <div class="as-campo">
+        <label for="n-sustento">Sustento</label>
+        <input pInputText id="n-sustento" [(ngModel)]="sustento" maxlength="250" placeholder="Ej. Cambio de talla: le quedó chico" />
+      </div>
+      <div class="as-rejilla">
+        <div class="as-campo">
+          <label for="n-reembolso">Se le devuelve en</label>
+          <p-select inputId="n-reembolso" [options]="metodosPago" [(ngModel)]="metodoReembolso" optionLabel="etiqueta" optionValue="valor" />
+        </div>
+        <div class="as-campo">
+          <label for="n-serie">Serie</label>
+          <p-select inputId="n-serie" [options]="seriesNota()" [(ngModel)]="serieNota" optionLabel="codigo" optionValue="id"
+                    placeholder="Sin serie de NC" />
+        </div>
+      </div>
+      @if (metodoReembolso !== 'EFECTIVO') {
+        <input pInputText [(ngModel)]="referenciaReembolso" placeholder="N° de operación del reembolso (opcional)" />
+      }
+      @if (error(); as e) { <small class="as-error">{{ e }}</small> }
+    </div>
+    <ng-template #footer>
+      <p-button label="Cancelar" severity="secondary" [text]="true" (onClick)="dialogo.set(null)" />
+      <p-button label="Emitir nota de crédito" icon="pi pi-check" [loading]="ocupado() === 'nota'" (onClick)="emitirNota()" />
+    </ng-template>
+  </p-dialog>
+
+  <!-- Convertir nota de venta -->
+  <p-dialog [visible]="dialogo() === 'convertir'" (visibleChange)="$event || dialogo.set(null)" [modal]="true" [draggable]="false"
+            [header]="'Convertir ' + v.numero" [style]="{ width: 'min(480px, 96vw)' }">
+    <div class="campos">
+      <p class="as-sutil">Se emite el comprobante electrónico con las mismas prendas y precios; la mercadería ya salió.</p>
+      <div class="tipo-convertir">
+        <button type="button" [class.activo]="tipoConvertir === 'BOLETA'" (click)="tipoConvertir = 'BOLETA'; clienteConvertir.set(null)">Boleta</button>
+        <button type="button" [class.activo]="tipoConvertir === 'FACTURA'" (click)="tipoConvertir = 'FACTURA'; clienteConvertir.set(null)">Factura</button>
+      </div>
+      @if (clienteConvertir(); as c) {
+        <p class="elegido"><b>{{ c.nombre }}</b> · {{ c.tipoDocumento }} {{ c.numeroDocumento }}
+          <p-button icon="pi pi-times" [text]="true" size="small" (onClick)="clienteConvertir.set(null)" ariaLabel="Quitar cliente" /></p>
+      } @else {
+        <div class="buscar-cliente">
+          <input pInputText [(ngModel)]="documentoCliente" maxlength="11" inputmode="numeric" (keydown.enter)="buscarCliente()"
+                 [placeholder]="tipoConvertir === 'FACTURA' ? 'RUC del cliente' : 'DNI o RUC (opcional)'" />
+          <p-button icon="pi pi-search" [loading]="ocupado() === 'cliente'" (onClick)="buscarCliente()" ariaLabel="Buscar cliente" />
+        </div>
+      }
+      @if (error(); as e) { <small class="as-error">{{ e }}</small> }
+    </div>
+    <ng-template #footer>
+      <p-button label="Cancelar" severity="secondary" [text]="true" (onClick)="dialogo.set(null)" />
+      <p-button [label]="'Emitir ' + (tipoConvertir === 'FACTURA' ? 'factura' : 'boleta')" icon="pi pi-check"
+                [loading]="ocupado() === 'convertir'" (onClick)="convertir()" />
+    </ng-template>
+  </p-dialog>
+
+  <!-- WhatsApp y correo -->
+  <p-dialog [visible]="dialogo() === 'whatsapp' || dialogo() === 'correo'" (visibleChange)="$event || dialogo.set(null)" [modal]="true"
+            [draggable]="false" [header]="dialogo() === 'whatsapp' ? 'Enviar por WhatsApp' : 'Enviar por correo'" [style]="{ width: 'min(420px, 96vw)' }">
+    <div class="campos">
+      @if (dialogo() === 'whatsapp') {
+        <input pInputText [(ngModel)]="celular" inputmode="tel" placeholder="Celular (ej. 987654321)" (keydown.enter)="enviarWhatsapp()" />
+      } @else {
+        <input pInputText [(ngModel)]="correo" type="email" placeholder="correo@cliente.com" (keydown.enter)="enviarCorreo()" />
+      }
+      <small class="as-ayuda">Se envía el enlace para ver y descargar el comprobante.</small>
+      @if (error(); as e) { <small class="as-error">{{ e }}</small> }
+    </div>
+    <ng-template #footer>
+      <p-button label="Cancelar" severity="secondary" [text]="true" (onClick)="dialogo.set(null)" />
+      <p-button label="Enviar" icon="pi pi-send" [loading]="ocupado() === 'whatsapp' || ocupado() === 'correo'"
+                (onClick)="dialogo() === 'whatsapp' ? enviarWhatsapp() : enviarCorreo()" />
+    </ng-template>
+  </p-dialog>
+} @else {
+  <div class="as-tarjeta as-sutil"><i class="pi pi-spin pi-spinner"></i> Cargando…</div>
+}

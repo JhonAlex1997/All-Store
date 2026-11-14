@@ -67,6 +67,9 @@ src/app/
   luego aplicar), ingresos y salidas, traslados entre locales, kardex con saldo y reposición.
 - **Usuarios** (`features/usuarios`, solo ADMIN): alta con contraseña temporal generada (se muestra una vez),
   rol, activar o desactivar, reiniciar contraseña y desbloquear. No permite quitarse el rol ni desactivarse a sí mismo.
+- **Ventas** (`features/ventas`): lista con filtros (fechas, tipo, estado, SUNAT, búsqueda) y totales del periodo;
+  detalle con reimpresión, envío por WhatsApp o correo, devolución con nota de crédito (total o por prenda),
+  convertir nota de venta, reemitir lo rechazado, reenviar a SUNAT y anular (solo ADMIN).
 - `shared/prendas/selector-prendas`: buscador de modelo con cuadrícula color × talla para armar listas con
   cantidades (inventario, traslados).
 

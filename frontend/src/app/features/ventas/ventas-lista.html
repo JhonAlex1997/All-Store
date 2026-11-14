@@ -1,0 +1,83 @@
+<div class="as-pagina-titulo">
+  <div>
+    <h1>Ventas</h1>
+    <div class="as-sub">Boletas, facturas, notas de venta y notas de crédito. Haz clic en una para ver el detalle, reimprimir o devolver.</div>
+  </div>
+</div>
+
+<div class="as-tarjeta filtros">
+  <div class="fechas">
+    <label>Desde <input pInputText type="date" [(ngModel)]="desde" (ngModelChange)="filtrar(true)" /></label>
+    <label>Hasta <input pInputText type="date" [(ngModel)]="hasta" (ngModelChange)="filtrar(true)" /></label>
+    <div class="rapidos">
+      <button type="button" (click)="rango(0)">Hoy</button>
+      <button type="button" (click)="rango(1)">Ayer y hoy</button>
+      <button type="button" (click)="rango(6)">7 días</button>
+      <button type="button" (click)="rango('mes')">Este mes</button>
+    </div>
+  </div>
+  <div class="as-barra">
+    <span class="buscar">
+      <i class="pi pi-search"></i>
+      <input pInputText [(ngModel)]="busqueda" (ngModelChange)="filtrar()" placeholder="Número, cliente, DNI o RUC" />
+    </span>
+    <p-multiselect [options]="tipos" [(ngModel)]="tipo" (ngModelChange)="filtrar(true)" optionLabel="etiqueta" optionValue="valor"
+                   placeholder="Todos los tipos" [showHeader]="false" display="chip" />
+    <p-multiselect [options]="estados" [(ngModel)]="estado" (ngModelChange)="filtrar(true)" optionLabel="etiqueta" optionValue="valor"
+                   placeholder="Cualquier estado" [showHeader]="false" />
+    <p-multiselect [options]="estadosSunat" [(ngModel)]="estadoSunat" (ngModelChange)="filtrar(true)" optionLabel="etiqueta"
+                   optionValue="valor" placeholder="SUNAT: todos" [showHeader]="false" />
+  </div>
+</div>
+
+@if (totales(); as t) {
+  <div class="resumen">
+    <div class="as-tarjeta cifra principal"><span>Venta neta</span><strong>{{ t.totalNeto | soles }}</strong>
+      <small>{{ t.cantidadVentas ?? 0 }} venta{{ t.cantidadVentas === 1 ? '' : 's' }}</small></div>
+    <div class="as-tarjeta cifra"><span>Vendido</span><strong>{{ t.totalVentas | soles }}</strong></div>
+    <div class="as-tarjeta cifra"><span>Devoluciones (NC)</span><strong>{{ t.totalNotasCredito | soles }}</strong>
+      <small>{{ t.cantidadNotasCredito ?? 0 }} nota{{ t.cantidadNotasCredito === 1 ? '' : 's' }}</small></div>
+    <div class="as-tarjeta cifra metodos">
+      <span>Cobrado por medio</span>
+      @for (c of cobrado(); track c.metodo) {
+        <div class="fila"><span>{{ c.metodo }}</span><b>{{ c.monto | soles }}</b></div>
+      } @empty { <small>Sin cobros</small> }
+    </div>
+  </div>
+}
+
+<div class="as-tarjeta">
+  <p-table [value]="filas()" [lazy]="true" (onLazyLoad)="cargar($event)" [paginator]="true" [rows]="porPagina"
+           [totalRecords]="total()" [loading]="cargando()" [first]="primero()" dataKey="id" styleClass="p-datatable-sm">
+    <ng-template #header>
+      <tr>
+        <th style="width: 150px">Fecha</th>
+        <th style="width: 150px">Número</th>
+        <th>Cliente</th>
+        <th>Pago</th>
+        <th>Cajero</th>
+        <th class="derecha" style="width: 110px">Total</th>
+        <th style="width: 210px">Estado</th>
+      </tr>
+    </ng-template>
+    <ng-template #body let-v>
+      <tr class="fila-venta" (click)="abrir(v)" (keydown.enter)="abrir(v)" tabindex="0" [class.anulada]="v.estado === 'ANULADO'">
+        <td>{{ v.fechaEmision | fechaLima: 'fecha-hora' }}</td>
+        <td><b class="as-codigo">{{ v.numero }}</b><br /><small class="as-sutil">{{ etiquetaTipo(v.tipoComprobante) }}</small></td>
+        <td>{{ v.clienteNombre }}@if (v.clienteDocumento) { <br /><small class="as-sutil">{{ v.clienteDocumento }}</small> }</td>
+        <td>{{ metodos(v) }}@if (v.porMayor) { <br /><small class="mayor">por mayor</small> }</td>
+        <td class="as-sutil">{{ v.vendedor }}</td>
+        <td class="derecha as-monto" [class.negativo]="v.tipoComprobante === 'NOTA_CREDITO'">
+          {{ v.tipoComprobante === 'NOTA_CREDITO' ? '−' : '' }}{{ v.total | soles }}</td>
+        <td class="estados">
+          @if (estadoVenta(v.estado); as e) { @if (v.estado !== 'EMITIDO') { <p-tag [value]="e.etiqueta" [severity]="e.severidad" /> } }
+          @if (estadoSunatDe(v.estadoSunat); as s) { <p-tag [value]="'SUNAT: ' + s.etiqueta" [severity]="s.severidad" /> }
+          @if (v.estado === 'EMITIDO' && !v.estadoSunat) { <p-tag value="Emitido" severity="success" /> }
+        </td>
+      </tr>
+    </ng-template>
+    <ng-template #emptymessage>
+      <tr><td colspan="7" class="as-vacio">No hay ventas en ese periodo con esos filtros.</td></tr>
+    </ng-template>
+  </p-table>
+</div>

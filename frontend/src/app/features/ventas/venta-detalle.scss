@@ -1,0 +1,97 @@
+h1 .as-codigo { font-size: .9em; }
+h2 { font-size: .95rem; margin: 0 0 .6rem; }
+
+.acciones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .5rem;
+  align-items: center;
+  padding: .75rem 1rem;
+  margin-bottom: 1rem;
+
+  .separador { flex: 1; }
+}
+
+:host ::ng-deep .aviso { margin-bottom: 1rem; }
+
+.disposicion {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 340px;
+  gap: 1rem;
+  align-items: start;
+}
+
+.lateral { display: flex; flex-direction: column; gap: 1rem; }
+
+.derecha { text-align: right; }
+.campana { color: var(--as-rosa-fuerte); font-size: 11px; }
+
+.totales {
+  margin-left: auto;
+  max-width: 280px;
+  padding-top: .75rem;
+
+  div { display: flex; justify-content: space-between; padding: .15rem 0; font-variant-numeric: tabular-nums; }
+  .total { font-size: 1.35rem; font-weight: 700; border-top: 1px solid var(--as-borde); margin-top: .3rem; padding-top: .4rem; }
+}
+
+.dato { margin: 0 0 .5rem; line-height: 1.45; }
+.dato a { color: var(--as-rosa-fuerte); font-weight: 600; cursor: pointer; text-decoration: underline; }
+
+.fila {
+  display: flex;
+  justify-content: space-between;
+  padding: .2rem 0;
+  font-variant-numeric: tabular-nums;
+
+  &.sutil { color: var(--as-texto-suave); font-size: 13px; }
+}
+
+.mayor { color: var(--as-rosa-fuerte); font-weight: 600; font-size: 13px; margin: .5rem 0 0; }
+
+.campos { display: flex; flex-direction: column; gap: 1rem; }
+
+.devolver {
+  display: flex;
+  flex-direction: column;
+  gap: .35rem;
+  max-height: 260px;
+  overflow-y: auto;
+
+  label {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: .75rem;
+    padding: .35rem .5rem;
+    border: 1px solid var(--as-borde);
+    border-radius: 8px;
+    font-size: 13px;
+  }
+
+  input { width: 64px; height: 30px; border: 1px solid var(--as-borde); border-radius: 6px; text-align: center; font-weight: 600; }
+}
+
+.tipo-convertir {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: .5rem;
+
+  button {
+    padding: .7rem;
+    border: 1px solid var(--as-borde);
+    border-radius: 10px;
+    background: #fff;
+    font: 600 14px inherit;
+    cursor: pointer;
+
+    &.activo { background: var(--as-tinta); color: #fff; border-color: var(--as-tinta); }
+  }
+}
+
+.buscar-cliente { display: flex; gap: .4rem; input { flex: 1; } }
+.elegido { display: flex; align-items: center; gap: .4rem; margin: 0; padding: .5rem .7rem; border-radius: 10px; background: var(--as-rosa-claro); }
+
+@media (max-width: 1000px) {
+  .disposicion { grid-template-columns: 1fr; }
+}
