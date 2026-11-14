@@ -1,0 +1,135 @@
+<div class="as-pagina-titulo">
+  <div>
+    <h1>Usuarios</h1>
+    <div class="as-sub">Las cuentas de tu personal. Cada uno entra con su usuario y ve solo lo que su rol permite.</div>
+  </div>
+  <span style="flex:1"></span>
+  <p-button label="Nuevo usuario" icon="pi pi-user-plus" (onClick)="nuevo()" />
+</div>
+
+<div class="as-tarjeta">
+  <div class="as-barra">
+    <span class="as-sutil">{{ visibles().length }} usuario{{ visibles().length === 1 ? '' : 's' }}</span>
+    <span class="as-espacio"></span>
+    @if (inactivos()) {
+      <label class="filtro"><p-toggleswitch [ngModel]="mostrarInactivos()" (ngModelChange)="mostrarInactivos.set($event)" />
+        Mostrar inactivos ({{ inactivos() }})</label>
+    }
+  </div>
+
+  <p-table [value]="visibles()" [loading]="cargando()" dataKey="id" styleClass="p-datatable-sm">
+    <ng-template #header>
+      <tr>
+        <th>Nombre</th>
+        <th>Usuario</th>
+        <th style="width: 140px">Rol</th>
+        <th>Estado</th>
+        <th style="width: 170px">Último ingreso</th>
+        <th style="width: 150px"></th>
+      </tr>
+    </ng-template>
+    <ng-template #body let-u>
+      <tr [class.inactivo]="u.activo === false">
+        <td>
+          <span class="avatar">{{ (u.nombre ?? '?').slice(0, 1).toUpperCase() }}</span>
+          <b>{{ u.nombre }}</b>
+          @if (u.id === yo) { <span class="tu">tú</span> }
+        </td>
+        <td class="as-codigo">{{ u.username }}</td>
+        <td><p-tag [value]="etiquetaRol(u.rol)" [severity]="severidadRol(u.rol)" /></td>
+        <td class="estados">
+          @if (u.activo === false) { <p-tag value="Inactivo" severity="secondary" /> }
+          @else if (u.bloqueado) { <p-tag value="Bloqueado" severity="danger" icon="pi pi-lock" /> }
+          @else { <p-tag value="Activo" severity="success" /> }
+          @if (u.debeCambiarPassword && u.activo !== false) {
+            <p-tag value="Debe cambiar su clave" severity="warn" pTooltip="Aún no entra con la contraseña temporal" />
+          }
+        </td>
+        <td class="as-sutil">{{ u.ultimoAcceso ? (u.ultimoAcceso | fechaLima: 'fecha-hora') : 'Nunca' }}</td>
+        <td class="acciones">
+          @if (u.bloqueado && u.activo !== false) {
+            <p-button icon="pi pi-lock-open" [text]="true" severity="danger" size="small" (onClick)="desbloquear(u)"
+                      pTooltip="Desbloquear (falló varias veces la clave)" ariaLabel="Desbloquear" />
+          }
+          @if (u.id !== yo && u.activo !== false) {
+            <p-button icon="pi pi-key" [text]="true" severity="secondary" size="small" (onClick)="reiniciar(u)"
+                      pTooltip="Reiniciar contraseña" ariaLabel="Reiniciar contraseña" />
+          }
+          <p-button icon="pi pi-pencil" [text]="true" severity="secondary" size="small" (onClick)="editar(u)"
+                    pTooltip="Editar" ariaLabel="Editar usuario" />
+        </td>
+      </tr>
+    </ng-template>
+    <ng-template #emptymessage>
+      <tr><td colspan="6" class="as-vacio">No hay usuarios.</td></tr>
+    </ng-template>
+  </p-table>
+</div>
+
+<!-- Crear o editar -->
+<p-dialog [visible]="!!editando()" (visibleChange)="$event || editando.set(null)" [modal]="true" [draggable]="false"
+          [header]="esNuevo() ? 'Nuevo usuario' : 'Editar usuario'" [style]="{ width: 'min(520px, 96vw)' }">
+  <div class="campos">
+    <div class="as-rejilla">
+      <div class="as-campo">
+        <label for="u-nombre">Nombre y apellido</label>
+        <input pInputText id="u-nombre" [(ngModel)]="nombre" maxlength="150" placeholder="Ej. Rosa Mendoza" />
+      </div>
+      <div class="as-campo">
+        <label for="u-usuario">Usuario</label>
+        <input pInputText id="u-usuario" [(ngModel)]="username" maxlength="50" [disabled]="!esNuevo()"
+               placeholder="Ej. rmendoza" autocomplete="off" autocapitalize="none" spellcheck="false" />
+        @if (!esNuevo()) { <small class="as-ayuda">El usuario no se cambia.</small> }
+      </div>
+    </div>
+
+    <div class="as-campo">
+      <label>Rol</label>
+      <p-selectbutton [options]="roles" [(ngModel)]="rol" optionLabel="etiqueta" optionValue="valor" [allowEmpty]="false"
+                      [disabled]="soyYo()" />
+      <small class="as-ayuda">{{ soyYo() ? 'No puedes cambiar tu propio rol.' : descripcionRol() }}</small>
+    </div>
+
+    @if (esNuevo()) {
+      <div class="as-campo">
+        <label for="u-clave">Contraseña temporal</label>
+        <div class="clave">
+          <input pInputText id="u-clave" [(ngModel)]="clave" class="as-codigo" autocomplete="off" spellcheck="false" />
+          <p-button icon="pi pi-refresh" [outlined]="true" severity="secondary" (onClick)="generarClave()"
+                    pTooltip="Generar otra" ariaLabel="Generar otra contraseña" />
+        </div>
+        <small class="as-ayuda">Se la das a la persona; al entrar por primera vez el sistema le pide crear la suya.</small>
+      </div>
+    } @else {
+      <label class="filtro">
+        <p-toggleswitch [(ngModel)]="activo" [disabled]="soyYo()" />
+        Activo (puede ingresar al sistema)
+      </label>
+      @if (soyYo()) { <small class="as-ayuda">No puedes desactivarte a ti mismo.</small> }
+    }
+
+    @if (error(); as e) { <small class="as-error">{{ e }}</small> }
+  </div>
+  <ng-template #footer>
+    <p-button label="Cancelar" severity="secondary" [text]="true" (onClick)="editando.set(null)" />
+    <p-button [label]="esNuevo() ? 'Crear usuario' : 'Guardar'" icon="pi pi-check" [loading]="guardando()" (onClick)="guardar()" />
+  </ng-template>
+</p-dialog>
+
+<!-- Contraseña temporal (una sola vez) -->
+<p-dialog [visible]="!!credencial()" (visibleChange)="$event || credencial.set(null)" [modal]="true" [draggable]="false"
+          [closable]="false" header="Entrega estos datos" [style]="{ width: 'min(440px, 96vw)' }">
+  @if (credencial(); as c) {
+    <p class="as-sutil">Para <b>{{ c.nombre }}</b>. Anótalos ahora: la contraseña no se vuelve a mostrar.</p>
+    <div class="credencial">
+      <div><span>Usuario</span><b class="as-codigo">{{ c.username }}</b>
+        <p-button icon="pi pi-copy" [text]="true" size="small" (onClick)="copiar(c.username)" ariaLabel="Copiar usuario" /></div>
+      <div><span>Contraseña temporal</span><b class="as-codigo">{{ c.clave }}</b>
+        <p-button icon="pi pi-copy" [text]="true" size="small" (onClick)="copiar(c.clave)" ariaLabel="Copiar contraseña" /></div>
+    </div>
+    <p class="as-ayuda">Al ingresar, el sistema le pedirá cambiarla por una propia.</p>
+  }
+  <ng-template #footer>
+    <p-button label="Listo, ya la anoté" icon="pi pi-check" (onClick)="credencial.set(null)" />
+  </ng-template>
+</p-dialog>

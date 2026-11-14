@@ -1,0 +1,51 @@
+.filtro { display: flex; align-items: center; gap: .5rem; font-size: 13px; font-weight: 600; }
+
+.avatar {
+  display: inline-grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  margin-right: .5rem;
+  border-radius: 50%;
+  background: var(--as-rosa-claro);
+  color: var(--as-rosa-fuerte);
+  font-size: 12px;
+  font-weight: 700;
+  vertical-align: middle;
+}
+
+.tu {
+  margin-left: .4rem;
+  padding: .05rem .4rem;
+  border-radius: 99px;
+  background: var(--as-fondo);
+  color: var(--as-texto-suave);
+  font-size: 11px;
+}
+
+.estados { display: flex; flex-wrap: wrap; gap: .3rem; }
+.acciones { text-align: right; white-space: nowrap; }
+.inactivo td { opacity: .55; }
+
+.campos { display: flex; flex-direction: column; gap: 1rem; }
+
+.clave {
+  display: flex;
+  gap: .4rem;
+
+  input { flex: 1; letter-spacing: .08em; }
+}
+
+.credencial {
+  display: flex;
+  flex-direction: column;
+  gap: .5rem;
+  margin: .5rem 0 1rem;
+  padding: .9rem 1rem;
+  border-radius: 12px;
+  background: var(--as-rosa-claro);
+
+  div { display: flex; align-items: center; gap: .6rem; }
+  span { width: 140px; color: var(--as-texto-suave); font-size: 13px; }
+  b { flex: 1; font-size: 1.15rem; letter-spacing: .06em; }
+}

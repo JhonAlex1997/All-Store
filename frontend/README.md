@@ -65,6 +65,8 @@ src/app/
   etiquetas con código de barras (A4 o rollo). Tallas, colores y categorías en `productos/catalogos`.
 - **Inventario** (`features/inventario`): stock por local, carga desde Excel en dos pasos (revisar sin guardar y
   luego aplicar), ingresos y salidas, traslados entre locales, kardex con saldo y reposición.
+- **Usuarios** (`features/usuarios`, solo ADMIN): alta con contraseña temporal generada (se muestra una vez),
+  rol, activar o desactivar, reiniciar contraseña y desbloquear. No permite quitarse el rol ni desactivarse a sí mismo.
 - `shared/prendas/selector-prendas`: buscador de modelo con cuadrícula color × talla para armar listas con
   cantidades (inventario, traslados).
 

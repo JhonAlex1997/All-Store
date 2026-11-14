@@ -9,20 +9,7 @@ import { PasswordModule } from 'primeng/password';
 
 import { SesionService } from '../../core/auth/sesion.service';
 import { mensajeDeError } from '../../core/http/error-api';
-
-/** Mismas reglas que PoliticaPassword en el backend (que es quien valida de verdad). */
-const MINIMO = 8;
-const MAXIMO_BYTES = 72;
-const LETRA_Y_NUMERO = /^(?=.*[A-Za-z])(?=.*\d).+$/;
-
-function politica(control: AbstractControl<string>): ValidationErrors | null {
-  const valor = control.value ?? '';
-  if (!valor) return null;
-  if (valor.length < MINIMO) return { corta: true };
-  if (new TextEncoder().encode(valor).length > MAXIMO_BYTES) return { larga: true };
-  if (!LETRA_Y_NUMERO.test(valor)) return { patron: true };
-  return null;
-}
+import { politicaPassword } from '../../shared/seguridad/politica-password';
 
 function coinciden(grupo: AbstractControl): ValidationErrors | null {
   const nueva = grupo.get('passwordNueva')?.value;
@@ -47,7 +34,7 @@ export class CambiarPassword {
 
   protected readonly form = inject(NonNullableFormBuilder).group({
     passwordActual: ['', Validators.required],
-    passwordNueva: ['', [Validators.required, politica]],
+    passwordNueva: ['', [Validators.required, politicaPassword]],
     repetir: ['', Validators.required],
   }, { validators: coinciden });
 
