@@ -1,0 +1,150 @@
+<div class="as-pagina-titulo">
+  <div>
+    <h1>{{ saludo }}, {{ primerNombre() }}</h1>
+    <div class="as-sub">{{ rol() === 'ADMIN' ? 'Así va tu tienda hoy.' : '¿Qué quieres hacer hoy?' }}</div>
+  </div>
+</div>
+
+<!-- ===== Administrador ===== -->
+@if (rol() === 'ADMIN') {
+  @let h = hoy();
+  <div class="tiles">
+    <div class="as-tarjeta tile principal">
+      <span>Venta neta de hoy</span>
+      <strong>{{ (h?.totalNeto ?? 0) | soles }}</strong>
+      @if (delta(); as d) {
+        <small><i [class]="d >= 0 ? 'pi pi-arrow-up' : 'pi pi-arrow-down'" aria-hidden="true"></i>
+          {{ d >= 0 ? '+' : '' }}{{ d }}% vs ayer ({{ (ayer()?.totalNeto ?? 0) | soles }})</small>
+      } @else if (ayer()) {
+        <small>Ayer: {{ (ayer()?.totalNeto ?? 0) | soles }}</small>
+      }
+    </div>
+    <div class="as-tarjeta tile"><span>Ventas de hoy</span><strong>{{ h?.cantidadVentas ?? 0 }}</strong>
+      <small>{{ (h?.totalVentas ?? 0) | soles }} vendidos</small></div>
+    <div class="as-tarjeta tile"><span>Ticket promedio</span><strong>{{ ticket() | soles }}</strong><small>por venta</small></div>
+    <div class="as-tarjeta tile"><span>Acumulado del mes</span><strong>{{ netoMes() | soles }}</strong><small>venta neta</small></div>
+  </div>
+
+  <div class="rejilla">
+    <div class="as-tarjeta grafico">
+      <div class="cabecera"><h2>Venta neta, últimos días</h2><span class="as-espacio"></span>
+        <a routerLink="/reportes" class="enlace">Ver reportes <i class="pi pi-arrow-right" aria-hidden="true"></i></a></div>
+      @if (puntosDias().length) {
+        <as-grafico-columnas [puntos]="puntosDias()" titulo="Venta neta por día" [formatear]="solesRedondo" [resaltar]="puntosDias().length - 1" />
+      } @else if (!cargando()) { <p class="as-vacio">Aún no hay ventas en estos días.</p> }
+    </div>
+
+    <div class="as-tarjeta">
+      <div class="cabecera"><h2>Cobrado hoy por método</h2></div>
+      @for (m of metodos(); track m.metodo) {
+        <div class="fila-barra">
+          <span class="nombre">{{ etiquetaMetodo(m.metodo) }}</span>
+          <span class="pista"><span [style.width.%]="m.pct"></span></span>
+          <b>{{ m.monto | soles }}</b>
+        </div>
+      } @empty { <p class="as-vacio">Todavía no hay cobros hoy.</p> }
+      @if ((h?.totalNotasCredito ?? 0) > 0) {
+        <p class="as-ayuda">Devoluciones de hoy: <b>{{ h?.totalNotasCredito | soles }}</b> ({{ h?.cantidadNotasCredito }} notas de crédito).</p>
+      }
+    </div>
+
+    <div class="as-tarjeta">
+      <div class="cabecera"><h2>Lo más vendido del mes</h2></div>
+      @for (p of top(); track p.productoId; let i = $index) {
+        <div class="fila-barra">
+          <span class="nombre"><small class="as-sutil">{{ i + 1 }}.</small> {{ p.producto }}</span>
+          <span class="pista"><span [style.width.%]="(p.total / maxTop()) * 100"></span></span>
+          <b>{{ p.unidades }} <small class="as-sutil">u.</small></b>
+        </div>
+      } @empty { <p class="as-vacio">Sin ventas este mes.</p> }
+    </div>
+
+    <div class="as-tarjeta">
+      <div class="cabecera"><h2>Avisos</h2>
+        @if (alertasCriticas()) { <span class="chip critica">{{ alertasCriticas() }} urgente{{ alertasCriticas() === 1 ? '' : 's' }}</span> }</div>
+      @if (alertas(); as lista) {
+        @for (a of lista.slice(0, 5); track $index) {
+          <div class="alerta" [class.critica]="a.nivel === 'CRITICA'">
+            <i [class]="a.nivel === 'CRITICA' ? 'pi pi-times-circle' : 'pi pi-exclamation-triangle'" aria-hidden="true"></i>
+            <div><span class="nivel">{{ a.nivel === 'CRITICA' ? 'Urgente' : 'Revisar' }}</span> {{ a.mensaje }}
+              @if (a.comprobanteId) { <a [routerLink]="['/ventas', a.comprobanteId]">{{ a.documento ?? 'Ver' }}</a> }</div>
+          </div>
+        } @empty { <p class="todo-bien"><i class="pi pi-check-circle" aria-hidden="true"></i> Todo en orden.</p> }
+        @if (lista.length > 5) { <p class="as-sutil">y {{ lista.length - 5 }} más.</p> }
+      } @else if (!cargando()) { <p class="as-vacio">No se pudieron revisar los avisos.</p> }
+      @if (reposicion(); as r) {
+        @if (r.length) {
+          <a routerLink="/inventario" class="alerta enlace-bloque">
+            <i class="pi pi-box" aria-hidden="true"></i>
+            <div><span class="nivel">Reponer</span> {{ r.length }} prenda{{ r.length === 1 ? '' : 's' }} bajo su stock mínimo.</div>
+          </a>
+        }
+      }
+    </div>
+  </div>
+}
+
+<!-- ===== Cajero ===== -->
+@if (rol() === 'CAJERO') {
+  <div class="rejilla">
+    <div class="as-tarjeta caja" [class.abierta]="caja()?.estado === 'ABIERTA'">
+      @if (caja() === undefined) {
+        <p class="as-sutil">Revisando tu caja…</p>
+      } @else if (caja()?.estado === 'ABIERTA') {
+        @let c = caja()!;
+        <span class="estado"><i class="pi pi-circle-fill" aria-hidden="true"></i> Caja abierta</span>
+        <strong>{{ (c.resumen?.totalVentas ?? 0) | soles }}</strong>
+        <small>{{ c.resumen?.cantidadVentas ?? 0 }} ventas · {{ c.establecimiento }} · desde {{ c.fechaApertura | fechaLima: 'hora' }}</small>
+        <small>Efectivo esperado en caja: <b>{{ (c.resumen?.efectivoEsperado ?? 0) | soles }}</b></small>
+        <a routerLink="/caja" class="boton">Ir a vender <i class="pi pi-arrow-right" aria-hidden="true"></i></a>
+      } @else {
+        <span class="estado"><i class="pi pi-lock" aria-hidden="true"></i> Caja cerrada</span>
+        <p>Abre tu caja con el efectivo inicial para empezar a vender.</p>
+        <a routerLink="/caja" class="boton">Abrir caja <i class="pi pi-arrow-right" aria-hidden="true"></i></a>
+      }
+    </div>
+    <div class="as-tarjeta">
+      <div class="cabecera"><h2>Mis ventas de hoy</h2><span class="as-espacio"></span>
+        @if (misVentasTotal() > misVentas().length) { <a routerLink="/ventas" class="enlace">Ver las {{ misVentasTotal() }}</a> }</div>
+      @for (v of misVentas(); track v.id) {
+        <a class="venta" [routerLink]="['/ventas', v.id]" [class.anulada]="v.estado === 'ANULADO'">
+          <span class="as-codigo">{{ v.numero }}</span>
+          <span class="as-sutil">{{ v.fechaEmision | fechaLima: 'hora' }}</span>
+          <span class="cliente">{{ v.clienteNombre }}</span>
+          <b class="as-monto">{{ v.total | soles }}</b>
+        </a>
+      } @empty { <p class="as-vacio">{{ cargando() ? 'Cargando…' : 'Aún no has vendido hoy.' }}</p> }
+    </div>
+  </div>
+}
+
+<!-- ===== Almacenero ===== -->
+@if (rol() === 'ALMACENERO') {
+  <div class="as-tarjeta">
+    <div class="cabecera"><h2>Por reponer</h2><span class="as-espacio"></span>
+      <a routerLink="/inventario" class="enlace">Ir a inventario <i class="pi pi-arrow-right" aria-hidden="true"></i></a></div>
+    @if (reposicion(); as r) {
+      @for (f of r.slice(0, 8); track f.varianteId + '-' + f.establecimientoId) {
+        <div class="reponer">
+          <span>{{ f.producto }} · <b>{{ f.talla }}</b> · {{ f.color }}<br /><small class="as-sutil">{{ f.establecimiento }}</small></span>
+          <span class="as-sutil">stock {{ f.stock }} / mín. {{ f.minimo }}</span>
+          <b>faltan {{ f.faltan }}</b>
+        </div>
+      } @empty { <p class="todo-bien"><i class="pi pi-check-circle" aria-hidden="true"></i> Todo está sobre su stock mínimo.</p> }
+      @if (r.length > 8) { <p class="as-sutil">y {{ r.length - 8 }} más en Inventario → Reposición.</p> }
+    } @else if (!cargando()) { <p class="as-vacio">No se pudo cargar la reposición.</p> }
+  </div>
+}
+
+<!-- ===== Accesos del rol ===== -->
+@for (grupo of menu(); track grupo.titulo) {
+  <h3>{{ grupo.titulo }}</h3>
+  <div class="accesos">
+    @for (op of grupo.opciones; track op.ruta) {
+      <a class="as-tarjeta acceso" [routerLink]="'/' + op.ruta">
+        <i [class]="op.icono" aria-hidden="true"></i>
+        <span>{{ op.etiqueta }}</span>
+      </a>
+    }
+  </div>
+}

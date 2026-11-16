@@ -70,6 +70,16 @@ src/app/
 - **Ventas** (`features/ventas`): lista con filtros (fechas, tipo, estado, SUNAT, búsqueda) y totales del periodo;
   detalle con reimpresión, envío por WhatsApp o correo, devolución con nota de crédito (total o por prenda),
   convertir nota de venta, reemitir lo rechazado, reenviar a SUNAT y anular (solo ADMIN).
+- **Reportes** (`features/reportes`, solo ADMIN): periodo (hoy, 7 días, este mes, mes pasado o fechas) y local;
+  resumen con venta neta por día, lo más vendido, tallas y colores con su stock, cajeros, horas y días de la
+  semana, campañas, mercadería sin rotación y detalle línea por línea (este último solo se descarga). Todo se
+  baja en Excel o CSV. Los gráficos completan con cero los días y horas sin ventas.
+- **Panel de inicio** (`paginas/inicio`): según el rol. ADMIN ve la venta neta de hoy contra ayer, ticket
+  promedio, acumulado del mes, gráfico de los últimos días, cobrado por método, top 5 del mes, avisos SUNAT y
+  reposición; CAJERO el estado de su caja y sus ventas de hoy; ALMACENERO lo que hay que reponer. Si un
+  indicador falla, se oculta sin aviso y el resto sigue.
+- `shared/graficos/grafico-columnas`: columnas de una serie en SVG (sin librería), con detalle al pasar el
+  mouse o con el teclado y tabla oculta para lectores de pantalla.
 - `shared/prendas/selector-prendas`: buscador de modelo con cuadrícula color × talla para armar listas con
   cantidades (inventario, traslados).
 

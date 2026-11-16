@@ -1,0 +1,193 @@
+<div class="as-pagina-titulo">
+  <div>
+    <h1>Reportes</h1>
+    <div class="as-sub">Cómo va tu tienda: ventas, productos, tallas, cajeros y mercadería que no rota.</div>
+  </div>
+</div>
+
+<!-- Filtros: una sola fila sobre todos los reportes -->
+<div class="as-tarjeta filtros">
+  <div class="rapidos">
+    @for (r of [['hoy', 'Hoy'], ['7', '7 días'], ['mes', 'Este mes'], ['mes-pasado', 'Mes pasado']]; track r[0]) {
+      <button type="button" [class.activo]="rangoActivo() === r[0]" (click)="rango(r[0])">{{ r[1] }}</button>
+    }
+  </div>
+  <label>Desde <input pInputText type="date" [(ngModel)]="desde" (change)="filtrar()" /></label>
+  <label>Hasta <input pInputText type="date" [(ngModel)]="hasta" (change)="filtrar()" /></label>
+  <p-select [options]="locales()" [(ngModel)]="local" (ngModelChange)="cargar()" optionLabel="nombre" optionValue="id"
+            placeholder="Todos los locales" [showClear]="true" />
+  @if (cargando()) { <i class="pi pi-spin pi-spinner as-sutil"></i> }
+</div>
+
+<p-tabs [value]="pestana()" (valueChange)="cambiarPestana($event)">
+  <p-tablist>
+    <p-tab value="resumen">Resumen</p-tab>
+    <p-tab value="productos">Productos</p-tab>
+    <p-tab value="tallas">Tallas y colores</p-tab>
+    <p-tab value="cajeros">Cajeros</p-tab>
+    <p-tab value="horas">Horas y días</p-tab>
+    <p-tab value="campanas">Campañas</p-tab>
+    <p-tab value="rotacion">Sin rotación</p-tab>
+    <p-tab value="detalle">Detalle</p-tab>
+  </p-tablist>
+  <p-tabpanels>
+    <!-- Resumen -->
+    <p-tabpanel value="resumen">
+      @let r = resumen();
+      <div class="tiles">
+        <div class="as-tarjeta tile principal"><span>Venta neta</span><strong>{{ r.neto | soles }}</strong><small>ventas menos devoluciones</small></div>
+        <div class="as-tarjeta tile"><span>Ventas</span><strong>{{ r.comprobantes }}</strong><small>{{ r.ventas | soles }}</small></div>
+        <div class="as-tarjeta tile"><span>Prendas vendidas</span><strong>{{ r.prendas }}</strong></div>
+        <div class="as-tarjeta tile"><span>Ticket promedio</span><strong>{{ r.ticket | soles }}</strong><small>por venta</small></div>
+        <div class="as-tarjeta tile"><span>Devoluciones</span><strong>{{ r.notasCredito | soles }}</strong><small>notas de crédito</small></div>
+      </div>
+      <div class="as-tarjeta">
+        <div class="cabecera"><h2>Venta neta por día</h2>
+          <span class="as-espacio"></span>
+          <p-button label="Excel" icon="pi pi-file-excel" size="small" [outlined]="true" severity="secondary"
+                    [loading]="descargando() === 'ventas-por-diaXLSX'" (onClick)="exportar('XLSX')" />
+        </div>
+        @if (dias().length) {
+          <as-grafico-columnas [puntos]="puntosDias()" titulo="Venta neta por día" [formatear]="solesRedondo" [resaltar]="puntosDias().length - 1" />
+        } @else if (!cargando()) { <p class="as-vacio">No hay ventas en este periodo.</p> }
+      </div>
+    </p-tabpanel>
+
+    <!-- Productos -->
+    <p-tabpanel value="productos">
+      <div class="as-tarjeta">
+        <div class="cabecera"><h2>Lo más vendido</h2><span class="as-espacio"></span>
+          <p-button label="Excel" icon="pi pi-file-excel" size="small" [outlined]="true" severity="secondary" (onClick)="exportar('XLSX')" />
+          <p-button label="CSV" size="small" [text]="true" severity="secondary" (onClick)="exportar('CSV')" /></div>
+        <p-table [value]="productos()" [loading]="cargando()" styleClass="p-datatable-sm" [paginator]="productos().length > 20" [rows]="20">
+          <ng-template #header><tr><th>Modelo</th><th>Categoría</th><th class="d">Unidades</th><th class="d">Ventas</th><th style="width: 35%">Total</th></tr></ng-template>
+          <ng-template #body let-p>
+            <tr>
+              <td><b>{{ p.producto }}</b><br /><small class="as-codigo as-sutil">{{ p.codigo }}</small></td>
+              <td>{{ p.categoria }}</td>
+              <td class="d">{{ p.unidades }}</td>
+              <td class="d">{{ p.comprobantes }}</td>
+              <td><div class="barra"><span [style.width.%]="(p.total / maxProducto()) * 100"></span><b>{{ p.total | soles }}</b>
+                <small class="as-sutil">{{ p.participacion }}%</small></div></td>
+            </tr>
+          </ng-template>
+          <ng-template #emptymessage><tr><td colspan="5" class="as-vacio">Sin ventas en este periodo.</td></tr></ng-template>
+        </p-table>
+      </div>
+    </p-tabpanel>
+
+    <!-- Tallas y colores -->
+    <p-tabpanel value="tallas">
+      <div class="as-tarjeta">
+        <div class="cabecera"><h2>Ventas por talla y color</h2><span class="as-espacio"></span>
+          <p-button label="Excel" icon="pi pi-file-excel" size="small" [outlined]="true" severity="secondary" (onClick)="exportar('XLSX')" /></div>
+        <p class="as-ayuda">Qué combinaciones salen más y cuánto stock les queda: útil para decidir qué producir.</p>
+        <p-table [value]="tallas()" [loading]="cargando()" styleClass="p-datatable-sm" [paginator]="tallas().length > 25" [rows]="25">
+          <ng-template #header><tr><th>Prenda</th><th>Talla</th><th>Color</th><th class="d">Unidades</th><th class="d">Total</th><th class="d">Stock actual</th></tr></ng-template>
+          <ng-template #body let-t>
+            <tr><td>{{ t.producto }}<br /><small class="as-codigo as-sutil">{{ t.sku }}</small></td><td><b>{{ t.talla }}</b></td><td>{{ t.color }}</td>
+              <td class="d"><b>{{ t.unidades }}</b></td><td class="d as-monto">{{ t.total | soles }}</td>
+              <td class="d" [class.alerta]="t.stockActual <= 2">{{ t.stockActual }}</td></tr>
+          </ng-template>
+          <ng-template #emptymessage><tr><td colspan="6" class="as-vacio">Sin ventas en este periodo.</td></tr></ng-template>
+        </p-table>
+      </div>
+    </p-tabpanel>
+
+    <!-- Cajeros -->
+    <p-tabpanel value="cajeros">
+      <div class="as-tarjeta">
+        <div class="cabecera"><h2>Ventas por cajero</h2><span class="as-espacio"></span>
+          <p-button label="Excel" icon="pi pi-file-excel" size="small" [outlined]="true" severity="secondary" (onClick)="exportar('XLSX')" /></div>
+        <p-table [value]="cajeros()" [loading]="cargando()" styleClass="p-datatable-sm">
+          <ng-template #header><tr><th>Cajero</th><th class="d">Ventas</th><th class="d">Prendas</th><th class="d">Vendido</th>
+            <th class="d">Devoluciones</th><th class="d">Neto</th><th class="d">Ticket prom.</th><th class="d">Por mayor manual</th></tr></ng-template>
+          <ng-template #body let-c>
+            <tr><td><b>{{ c.vendedor }}</b></td><td class="d">{{ c.comprobantes }}</td><td class="d">{{ c.prendas }}</td>
+              <td class="d as-monto">{{ c.ventas | soles }}</td><td class="d as-monto">{{ c.notasCredito | soles }}</td>
+              <td class="d as-monto"><b>{{ c.neto | soles }}</b></td><td class="d as-monto">{{ c.ticketPromedio | soles }}</td>
+              <td class="d">{{ c.porMayorManual }}</td></tr>
+          </ng-template>
+          <ng-template #emptymessage><tr><td colspan="8" class="as-vacio">Sin ventas en este periodo.</td></tr></ng-template>
+        </p-table>
+        <p class="as-ayuda">«Por mayor manual»: ventas donde el cajero marcó el precio por mayor sin llegar al mínimo de prendas.</p>
+      </div>
+    </p-tabpanel>
+
+    <!-- Horas y días -->
+    <p-tabpanel value="horas">
+      <div class="dos">
+        <div class="as-tarjeta">
+          <div class="cabecera"><h2>Ventas por hora</h2><span class="as-espacio"></span>
+            <p-button icon="pi pi-file-excel" size="small" [text]="true" severity="secondary" (onClick)="exportar('XLSX', 'ventas-por-hora')" ariaLabel="Excel" /></div>
+          <p class="as-ayuda">Para saber a qué hora reforzar la caja.</p>
+          @if (horas().length) { <as-grafico-columnas [puntos]="puntosHoras()" titulo="Ventas por hora" [formatear]="solesRedondo" /> }
+          @else if (!cargando()) { <p class="as-vacio">Sin ventas.</p> }
+        </div>
+        <div class="as-tarjeta">
+          <div class="cabecera"><h2>Ventas por día de la semana</h2><span class="as-espacio"></span>
+            <p-button icon="pi pi-file-excel" size="small" [text]="true" severity="secondary" (onClick)="exportar('XLSX', 'ventas-por-dia-semana')" ariaLabel="Excel" /></div>
+          <p class="as-ayuda">Los días fuertes y flojos de la tienda.</p>
+          @if (diasSemana().length) { <as-grafico-columnas [puntos]="puntosSemana()" titulo="Ventas por día de la semana" [formatear]="solesRedondo" /> }
+          @else if (!cargando()) { <p class="as-vacio">Sin ventas.</p> }
+        </div>
+      </div>
+    </p-tabpanel>
+
+    <!-- Campañas -->
+    <p-tabpanel value="campanas">
+      <div class="as-tarjeta">
+        <div class="cabecera"><h2>Resultado de las campañas</h2><span class="as-espacio"></span>
+          <p-button label="Excel" icon="pi pi-file-excel" size="small" [outlined]="true" severity="secondary" (onClick)="exportar('XLSX')" /></div>
+        <p-table [value]="campanas()" [loading]="cargando()" styleClass="p-datatable-sm">
+          <ng-template #header><tr><th>Campaña</th><th class="d">Ventas</th><th class="d">Unidades</th><th class="d">Descuento dado</th><th class="d">Vendido</th></tr></ng-template>
+          <ng-template #body let-c>
+            <tr><td><b>{{ c.campana }}</b></td><td class="d">{{ c.comprobantes }}</td><td class="d">{{ c.unidades }}</td>
+              <td class="d as-monto">{{ c.descuento | soles }}</td><td class="d as-monto"><b>{{ c.total | soles }}</b></td></tr>
+          </ng-template>
+          <ng-template #emptymessage><tr><td colspan="5" class="as-vacio">No hubo ventas con campaña en este periodo.</td></tr></ng-template>
+        </p-table>
+      </div>
+    </p-tabpanel>
+
+    <!-- Sin rotación -->
+    <p-tabpanel value="rotacion">
+      <div class="as-tarjeta">
+        <div class="cabecera"><h2>Mercadería que no se vende</h2><span class="as-espacio"></span>
+          <label class="dias">Sin ventas hace
+            <p-select [options]="[30, 60, 90, 180]" [(ngModel)]="diasSinVender" (ngModelChange)="cargar()" /> días</label>
+          <p-button label="Excel" icon="pi pi-file-excel" size="small" [outlined]="true" severity="secondary" (onClick)="exportar('XLSX')" /></div>
+        <p class="as-ayuda">Prendas con stock que no se venden hace {{ diasSinVender }} días o más: candidatas a campaña o liquidación.
+          Valor inmovilizado: <b>{{ valorSinRotacion() | soles }}</b> (a precio de venta).</p>
+        <p-table [value]="sinRotacion()" [loading]="cargando()" styleClass="p-datatable-sm" [paginator]="sinRotacion().length > 25" [rows]="25">
+          <ng-template #header><tr><th>Prenda</th><th>Talla</th><th>Color</th><th class="d">Stock</th><th class="d">Valor</th><th>Última venta</th><th class="d">Días</th></tr></ng-template>
+          <ng-template #body let-s>
+            <tr><td>{{ s.producto }}<br /><small class="as-codigo as-sutil">{{ s.sku }}</small></td><td>{{ s.talla }}</td><td>{{ s.color }}</td>
+              <td class="d">{{ s.stock }}</td><td class="d as-monto">{{ s.valorStock | soles }}</td>
+              <td>{{ s.ultimaVenta ? (s.ultimaVenta | fechaLima) : 'Nunca' }}</td><td class="d"><b>{{ s.diasSinVender }}</b></td></tr>
+          </ng-template>
+          <ng-template #emptymessage><tr><td colspan="7" class="as-vacio">Todo se está vendiendo.</td></tr></ng-template>
+        </p-table>
+      </div>
+    </p-tabpanel>
+
+    <!-- Detalle: solo descarga (puede tener miles de filas; el backend no lo sirve como JSON) -->
+    <p-tabpanel value="detalle">
+      <div class="as-tarjeta descarga">
+        <i class="pi pi-file-excel" aria-hidden="true"></i>
+        <div>
+          <h2>Detalle línea por línea</h2>
+          <p class="as-ayuda">Cada prenda de cada comprobante del periodo elegido ({{ desde | fechaLima }} al {{ hasta | fechaLima }}):
+            fecha, documento, cliente, prenda, talla, color, cantidad, precio, descuento, cajero y forma de pago.
+            Las notas de crédito restan. Es el archivo para analizar a fondo o pasarle a tu contador.</p>
+          <div class="botones">
+            <p-button label="Descargar Excel" icon="pi pi-download" [loading]="descargando() === 'detalle-ventasXLSX'"
+                      [disabled]="!!descargando()" (onClick)="exportar('XLSX', 'detalle-ventas')" />
+            <p-button label="CSV" severity="secondary" [outlined]="true" [loading]="descargando() === 'detalle-ventasCSV'"
+                      [disabled]="!!descargando()" (onClick)="exportar('CSV', 'detalle-ventas')" />
+          </div>
+        </div>
+      </div>
+    </p-tabpanel>
+  </p-tabpanels>
+</p-tabs>
