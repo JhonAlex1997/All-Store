@@ -1,0 +1,149 @@
+<div class="as-pagina-titulo">
+  <div>
+    <h1>Campañas</h1>
+    <div class="as-sub">Promociones por fechas. La caja aplica sola la mejor oferta de cada prenda; no se acumulan entre sí.</div>
+  </div>
+  <span style="flex:1"></span>
+  <p-button label="Nueva campaña" icon="pi pi-plus" (onClick)="nueva()" />
+</div>
+
+<div class="as-barra">
+  <p-selectbutton [options]="vistas" [ngModel]="vista()" (ngModelChange)="$event && vista.set($event)" optionLabel="etiqueta"
+                  optionValue="valor" [allowEmpty]="false" />
+  <span class="as-espacio"></span>
+  @if (cuenta().vigentes) {
+    <span class="as-sutil">{{ cuenta().vigentes }} vigente{{ cuenta().vigentes === 1 ? '' : 's' }} hoy</span>
+  }
+</div>
+
+<div class="lista">
+  @for (c of visibles(); track c.id) {
+    <article class="as-tarjeta campana" [class.apagada]="c.estado === 'TERMINADA' || c.estado === 'PAUSADA'">
+      <div class="valor">
+        @switch (c.tipo) {
+          @case ('PORCENTAJE') { <strong>−{{ c.valor }}%</strong> }
+          @case ('MONTO') { <strong>−S/ {{ monto(c.valor) }}</strong> }
+          @default { <small>a</small><strong>S/ {{ monto(c.valor) }}</strong> }
+        }
+      </div>
+      <div class="cuerpo">
+        <div class="titulo">
+          <h2>{{ c.nombre }}</h2>
+          <p-tag [value]="estados[c.estado].etiqueta" [severity]="estados[c.estado].severidad" />
+        </div>
+        @if (c.descripcion) { <p class="descripcion">{{ c.descripcion }}</p> }
+        <div class="datos">
+          <span><i class="pi pi-calendar" aria-hidden="true"></i> {{ c.fechaInicio | fechaLima }} al {{ c.fechaFin | fechaLima }}</span>
+          <span><i class="pi pi-tag" aria-hidden="true"></i> {{ alcanceTexto(c) }}</span>
+          <span><i class="pi pi-shop" aria-hidden="true"></i> {{ c.establecimiento ?? 'Todos los locales' }}</span>
+        </div>
+      </div>
+      <div class="acciones">
+        @if (c.estado !== 'TERMINADA') {
+          <p-button [icon]="c.activo === false ? 'pi pi-play' : 'pi pi-pause'" [text]="true" severity="secondary" size="small"
+                    [loading]="cambiando() === c.id" [disabled]="cambiando() !== null" (onClick)="alternar(c)"
+                    [pTooltip]="c.activo === false ? 'Reanudar' : 'Pausar'" [ariaLabel]="c.activo === false ? 'Reanudar campaña' : 'Pausar campaña'" />
+        }
+        <p-button icon="pi pi-copy" [text]="true" severity="secondary" size="small" (onClick)="duplicar(c)"
+                  pTooltip="Duplicar con fechas nuevas" ariaLabel="Duplicar campaña" />
+        <p-button icon="pi pi-pencil" [text]="true" severity="secondary" size="small" (onClick)="editar(c)"
+                  pTooltip="Editar" ariaLabel="Editar campaña" />
+      </div>
+    </article>
+  } @empty {
+    <div class="as-tarjeta vacio">
+      @if (cargando()) { <p class="as-sutil">Cargando…</p> }
+      @else {
+        <i class="pi pi-percentage" aria-hidden="true"></i>
+        <p>{{ vista() === 'terminadas' ? 'Aún no termina ninguna campaña.' : 'No hay campañas vigentes ni próximas.' }}</p>
+        @if (vista() !== 'terminadas') {
+          <p class="as-sutil">Ej.: «Día de la Madre: 20 % en jeans mom», «Liquidación de shorts a S/ 39.90».</p>
+          <p-button label="Crear la primera" icon="pi pi-plus" (onClick)="nueva()" />
+        }
+      }
+    </div>
+  }
+</div>
+
+<!-- Crear o editar -->
+<p-dialog [visible]="!!editando()" (visibleChange)="$event || editando.set(null)" [modal]="true" [draggable]="false"
+          [header]="esNueva() ? 'Nueva campaña' : 'Editar campaña'" [style]="{ width: 'min(640px, 96vw)' }">
+  <div class="campos">
+    <div class="as-campo">
+      <label for="k-nombre">Nombre</label>
+      <input pInputText id="k-nombre" [(ngModel)]="nombre" maxlength="100" placeholder="Ej. Día de la Madre" autocomplete="off" />
+    </div>
+
+    <div class="as-campo">
+      <label>Descuento</label>
+      <div class="descuento">
+        <p-selectbutton [options]="tiposDescuento" [ngModel]="tipo()" (ngModelChange)="$event && tipo.set($event)"
+                        optionLabel="etiqueta" optionValue="valor" [allowEmpty]="false" />
+        <p-inputnumber [ngModel]="valor()" (ngModelChange)="valor.set($event)" [min]="0.01" [max]="tipo() === 'PORCENTAJE' ? 99.99 : 99999"
+                       [minFractionDigits]="tipo() === 'PORCENTAJE' ? 0 : 2" [maxFractionDigits]="2" [prefix]="tipo() === 'PORCENTAJE' ? '' : 'S/ '"
+                       [suffix]="tipo() === 'PORCENTAJE' ? ' %' : ''" inputId="k-valor" ariaLabel="Valor del descuento"
+                       [placeholder]="tipo() === 'PORCENTAJE' ? '20 %' : 'S/ 0.00'" locale="en-US" />
+      </div>
+      @if (ejemplo(); as e) {
+        <small class="ejemplo">
+          Ej.: {{ e.producto }} de <s>{{ e.normal | soles }}</s> a <b>{{ e.final | soles }}</b>
+          @if (!e.aplica) { <span class="as-sutil">(no baja: el precio fijo es mayor que el normal)</span> }
+        </small>
+      }
+    </div>
+
+    <div class="as-rejilla fechas">
+      <div class="as-campo">
+        <label for="k-inicio">Desde</label>
+        <input pInputText id="k-inicio" type="date" [(ngModel)]="fechaInicio" />
+      </div>
+      <div class="as-campo">
+        <label for="k-fin">Hasta <span class="as-sutil">(incluido)</span></label>
+        <input pInputText id="k-fin" type="date" [(ngModel)]="fechaFin" [min]="fechaInicio" />
+      </div>
+      <div class="as-campo">
+        <label for="k-local">Local</label>
+        <p-select inputId="k-local" [options]="locales()" [(ngModel)]="local" optionLabel="nombre" optionValue="id"
+                  placeholder="Todos los locales" [showClear]="true" appendTo="body" />
+      </div>
+    </div>
+
+    <div class="as-campo">
+      <label>¿A qué prendas aplica?</label>
+      <p-selectbutton [options]="opcionesAlcance" [ngModel]="alcance()" (ngModelChange)="$event && alcance.set($event)"
+                      optionLabel="etiqueta" optionValue="valor" [allowEmpty]="false" />
+      @switch (alcance()) {
+        @case ('categorias') {
+          <p-multiselect [options]="categorias()" [(ngModel)]="categoriaIds" optionLabel="nombre" optionValue="id" display="chip"
+                         placeholder="Elige las categorías" [filter]="categorias().length > 8" appendTo="body" ariaLabel="Categorías" />
+        }
+        @case ('modelos') {
+          <p-multiselect [options]="productos()" [ngModel]="productoIds()" (ngModelChange)="productoIds.set($event)" optionLabel="nombre"
+                         optionValue="id" display="chip" placeholder="Busca y elige los modelos" [filter]="true" filterBy="nombre,codigo"
+                         [virtualScroll]="productos().length > 50" [virtualScrollItemSize]="38" appendTo="body" ariaLabel="Modelos"
+                         [maxSelectedLabels]="6" selectedItemsLabel="{0} modelos">
+            <ng-template #item let-p><span>{{ p.nombre }}</span><span class="as-codigo as-sutil op-codigo">{{ p.codigo }} · {{ p.precioVenta | soles }}</span></ng-template>
+          </p-multiselect>
+        }
+        @default { <small class="as-sutil">Todas las prendas de la tienda.</small> }
+      }
+      @if (varianteIds.length && alcance() !== 'todo') {
+        <small class="as-sutil">Además incluye {{ varianteIds.length }} prenda{{ varianteIds.length === 1 ? '' : 's' }} suelta{{ varianteIds.length === 1 ? '' : 's' }} (talla y color) que se mantienen.</small>
+      }
+    </div>
+
+    <div class="as-campo">
+      <label for="k-desc">Nota <span class="as-sutil">(opcional, para ti)</span></label>
+      <textarea pTextarea id="k-desc" [(ngModel)]="descripcion" rows="2" maxlength="500" placeholder="Ej. Solo jeans de la temporada pasada"></textarea>
+    </div>
+
+    @if (!esNueva()) {
+      <label class="filtro"><p-toggleswitch [(ngModel)]="activo" /> Activa <span class="as-sutil">(pausada no se aplica en caja)</span></label>
+    }
+    @if (error()) { <p class="error" role="alert"><i class="pi pi-exclamation-circle" aria-hidden="true"></i> {{ error() }}</p> }
+  </div>
+  <ng-template #footer>
+    <p-button label="Cancelar" [text]="true" severity="secondary" (onClick)="editando.set(null)" />
+    <p-button [label]="esNueva() ? 'Crear campaña' : 'Guardar cambios'" icon="pi pi-check" [loading]="guardando()" (onClick)="guardar()" />
+  </ng-template>
+</p-dialog>

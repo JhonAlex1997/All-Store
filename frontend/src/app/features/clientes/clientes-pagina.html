@@ -1,0 +1,184 @@
+<div class="as-pagina-titulo">
+  <div>
+    <h1>Clientes</h1>
+    <div class="as-sub">Tus compradores: con su DNI o RUC les emites boleta o factura y ves todo lo que te compraron.</div>
+  </div>
+  <span style="flex:1"></span>
+  <p-button label="Nuevo cliente" icon="pi pi-user-plus" (onClick)="nuevo()" />
+</div>
+
+<div class="as-tarjeta">
+  <div class="as-barra filtros">
+    <span class="buscar">
+      <i class="pi pi-search" aria-hidden="true"></i>
+      <input pInputText type="search" [(ngModel)]="busqueda" (ngModelChange)="buscarLuego()" (keydown.enter)="filtrar()"
+             placeholder="Nombre, DNI o RUC" aria-label="Buscar cliente" autocomplete="off" />
+    </span>
+    @if (esAdmin()) {
+      <p-select [options]="filtroTipos" [(ngModel)]="tipoFiltro" (ngModelChange)="filtrar()" optionLabel="etiqueta" optionValue="valor" />
+      <label class="filtro"><p-toggleswitch [ngModel]="verInactivos()" (ngModelChange)="verInactivos.set($event); filtrar()" /> Ver inactivos</label>
+    }
+    <span class="as-espacio"></span>
+    @if (!faltaBusqueda()) { <span class="as-sutil">{{ total() }} cliente{{ total() === 1 ? '' : 's' }}</span> }
+  </div>
+
+  <p-table [value]="clientes()" [lazy]="true" (onLazyLoad)="cargar($event)" [loading]="cargando()" [paginator]="total() > porPagina"
+             [rows]="porPagina" [totalRecords]="total()" [first]="primero()" dataKey="id" styleClass="p-datatable-sm" [rowHover]="true">
+      <ng-template #header>
+        <tr>
+          <th>Cliente</th>
+          <th style="width: 170px">Documento</th>
+          <th>Contacto</th>
+          <th style="width: 120px"></th>
+        </tr>
+      </ng-template>
+      <ng-template #body let-c>
+        <tr [class.inactivo]="c.activo === false" class="fila" (click)="abrirFicha(c)">
+          <td>
+            <b>{{ c.nombre }}</b>
+            @if (c.generico) { <p-tag value="Genérico" severity="secondary" pTooltip="Para ventas con boleta sin identificar al comprador" /> }
+            @if (c.activo === false) { <p-tag value="Inactivo" severity="secondary" /> }
+            @if (c.direccion) { <br /><small class="as-sutil">{{ c.direccion }}</small> }
+          </td>
+          <td><span class="tipo">{{ etiquetaTipo(c.tipoDocumento) }}</span> <span class="as-codigo">{{ c.numeroDocumento }}</span></td>
+          <td class="as-sutil">{{ c.telefono }}@if (c.telefono && c.email) {<br />}{{ c.email }}</td>
+          <td class="acciones">
+            @if (!c.generico) {
+              <p-button icon="pi pi-pencil" [text]="true" severity="secondary" size="small" (onClick)="editar(c); $event.stopPropagation()"
+                        pTooltip="Editar" ariaLabel="Editar cliente" />
+            }
+            <p-button icon="pi pi-angle-right" [text]="true" severity="secondary" size="small" (onClick)="abrirFicha(c); $event.stopPropagation()"
+                      pTooltip="Ver compras" ariaLabel="Ver compras del cliente" />
+          </td>
+        </tr>
+      </ng-template>
+      <ng-template #emptymessage>
+        <tr><td colspan="4" class="as-vacio">
+          @if (faltaBusqueda()) {
+            <i class="pi pi-search" aria-hidden="true"></i> Escribe al menos 3 letras del nombre o dígitos del documento para buscar.
+          } @else {
+            No se encontró ningún cliente.
+            <p-button label="Registrarlo" [link]="true" (onClick)="nuevo()" />
+          }
+        </td></tr>
+      </ng-template>
+    </p-table>
+</div>
+
+<!-- Crear o editar -->
+<p-dialog [visible]="!!editando()" (visibleChange)="$event || editando.set(null)" [modal]="true" [draggable]="false"
+          [header]="esNuevo() ? 'Nuevo cliente' : 'Editar cliente'" [style]="{ width: 'min(600px, 96vw)' }">
+  <div class="campos">
+    <div class="documento">
+      <div class="as-campo">
+        <label for="c-tipo">Documento</label>
+        <p-select inputId="c-tipo" [options]="tipos" [ngModel]="tipoDocumento" (ngModelChange)="cambiarTipo($event)"
+                  optionLabel="etiqueta" optionValue="valor" appendTo="body" />
+      </div>
+      <div class="as-campo">
+        <label for="c-numero">Número</label>
+        <div class="con-boton">
+          <input pInputText id="c-numero" [(ngModel)]="numero" maxlength="15" autocomplete="off"
+                 [attr.inputmode]="puedeConsultar() ? 'numeric' : null" (keydown.enter)="puedeConsultar() && consultar()" />
+          @if (puedeConsultar()) {
+            <p-button [label]="tipoDocumento === 'RUC' ? 'Consultar SUNAT' : 'Consultar RENIEC'" icon="pi pi-search" severity="secondary"
+                      [outlined]="true" [loading]="consultando()" (onClick)="consultar()" />
+          }
+        </div>
+        <small class="as-sutil">{{ tipoActual()?.ayuda }}</small>
+      </div>
+    </div>
+
+    @if (yaExiste()) {
+      <div class="aviso">
+        <i class="pi pi-info-circle" aria-hidden="true"></i>
+        <span>Este documento ya está registrado.</span>
+        <p-button label="Abrir su ficha" [link]="true" (onClick)="abrirExistente()" />
+      </div>
+    }
+    @if (consulta(); as d) {
+      <div class="consulta" [class.alerta]="d.advertencia">
+        <i [class]="d.advertencia ? 'pi pi-exclamation-triangle' : 'pi pi-check-circle'" aria-hidden="true"></i>
+        <span>
+          Datos traídos de {{ d.fuente ?? 'la consulta' }}.
+          @if (d.estado) { Estado: <b>{{ d.estado }}</b>. }
+          @if (d.condicion) { Condición: <b>{{ d.condicion }}</b>. }
+          @if (d.advertencia) { <br />{{ d.advertencia }} }
+        </span>
+      </div>
+    }
+
+    <div class="as-campo">
+      <label for="c-nombre">{{ tipoDocumento === 'RUC' ? 'Razón social' : 'Nombre y apellidos' }}</label>
+      <input pInputText id="c-nombre" [(ngModel)]="nombre" maxlength="200" autocomplete="off" />
+    </div>
+    <div class="as-rejilla dos">
+      <div class="as-campo ancho">
+        <label for="c-direccion">Dirección <span class="as-sutil">(opcional; en factura sale impresa)</span></label>
+        <input pInputText id="c-direccion" [(ngModel)]="direccion" maxlength="250" autocomplete="off" />
+      </div>
+      <div class="as-campo">
+        <label for="c-ubigeo">Ubigeo <span class="as-sutil">(opcional)</span></label>
+        <input pInputText id="c-ubigeo" [(ngModel)]="ubigeo" maxlength="6" inputmode="numeric" placeholder="150115" />
+      </div>
+      <div class="as-campo">
+        <label for="c-telefono">Celular <span class="as-sutil">(opcional)</span></label>
+        <input pInputText id="c-telefono" [(ngModel)]="telefono" maxlength="20" inputmode="tel" placeholder="Para enviarle su comprobante por WhatsApp" />
+      </div>
+      <div class="as-campo ancho">
+        <label for="c-email">Correo <span class="as-sutil">(opcional)</span></label>
+        <input pInputText id="c-email" type="email" [(ngModel)]="email" maxlength="150" autocomplete="off" />
+      </div>
+    </div>
+    @if (!esNuevo()) {
+      <label class="filtro"><p-toggleswitch [(ngModel)]="activo" /> Activo <span class="as-sutil">(si lo desactivas ya no aparece al buscar en caja)</span></label>
+    }
+    @if (error()) { <p class="error" role="alert"><i class="pi pi-exclamation-circle" aria-hidden="true"></i> {{ error() }}</p> }
+  </div>
+  <ng-template #footer>
+    <p-button label="Cancelar" [text]="true" severity="secondary" (onClick)="editando.set(null)" />
+    <p-button [label]="esNuevo() ? 'Registrar cliente' : 'Guardar cambios'" icon="pi pi-check" [loading]="guardando()" (onClick)="guardar()" />
+  </ng-template>
+</p-dialog>
+
+<!-- Ficha -->
+<p-dialog [visible]="!!ficha()" (visibleChange)="$event || ficha.set(null)" [modal]="true" [draggable]="false" [dismissableMask]="true"
+          [header]="ficha()?.nombre ?? ''" [style]="{ width: 'min(720px, 96vw)' }">
+  @if (ficha(); as c) {
+    <div class="ficha-datos">
+      <span><span class="tipo">{{ etiquetaTipo(c.tipoDocumento) }}</span> <span class="as-codigo">{{ c.numeroDocumento }}</span></span>
+      @if (c.puedeRecibirFactura) { <p-tag value="Puede recibir factura" severity="info" /> }
+      @if (c.telefono) { <span><i class="pi pi-phone" aria-hidden="true"></i> {{ c.telefono }}</span> }
+      @if (c.email) { <span><i class="pi pi-envelope" aria-hidden="true"></i> {{ c.email }}</span> }
+      @if (c.direccion) { <span class="ancho"><i class="pi pi-map-marker" aria-hidden="true"></i> {{ c.direccion }}</span> }
+    </div>
+
+    @if (totales(); as t) {
+      <div class="tiles">
+        <div class="as-tarjeta tile"><span>Compró en total</span><strong>{{ (t.totalNeto ?? 0) | soles }}</strong><small>neto de devoluciones</small></div>
+        <div class="as-tarjeta tile"><span>Compras</span><strong>{{ t.cantidadVentas ?? 0 }}</strong></div>
+        <div class="as-tarjeta tile"><span>Ticket promedio</span>
+          <strong>{{ ((t.cantidadVentas ?? 0) ? (t.totalVentas ?? 0) / (t.cantidadVentas ?? 1) : 0) | soles }}</strong></div>
+      </div>
+    }
+
+    <h3>{{ esAdmin() ? 'Últimas compras' : 'Ventas que le hiciste' }}</h3>
+    @for (v of compras(); track v.id) {
+      <a class="compra" [routerLink]="['/ventas', v.id]" [class.anulada]="v.estado === 'ANULADO'" (click)="ficha.set(null)">
+        <span class="as-codigo">{{ v.numero }}</span>
+        <span class="as-sutil">{{ v.fechaEmision | fechaLima: 'fecha-hora' }}</span>
+        <span class="as-sutil">{{ etiquetaDocumento(v.tipoComprobante) }}</span>
+        <b class="as-monto">{{ v.tipoComprobante === 'NOTA_CREDITO' ? '−' : '' }}{{ v.total | soles }}</b>
+      </a>
+    } @empty {
+      <p class="as-vacio">{{ cargandoFicha() ? 'Cargando…' : 'Todavía no tiene compras.' }}</p>
+    }
+    @if (comprasTotal() > compras().length) { <p class="as-sutil">Y {{ comprasTotal() - compras().length }} más.</p> }
+  }
+  <ng-template #footer>
+    @if (ficha() && !ficha()!.generico) {
+      <p-button label="Editar datos" icon="pi pi-pencil" severity="secondary" [outlined]="true" (onClick)="editar(ficha()!)" />
+    }
+    <p-button label="Cerrar" (onClick)="ficha.set(null)" />
+  </ng-template>
+</p-dialog>

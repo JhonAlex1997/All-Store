@@ -70,6 +70,14 @@ src/app/
 - **Ventas** (`features/ventas`): lista con filtros (fechas, tipo, estado, SUNAT, búsqueda) y totales del periodo;
   detalle con reimpresión, envío por WhatsApp o correo, devolución con nota de crédito (total o por prenda),
   convertir nota de venta, reemitir lo rechazado, reenviar a SUNAT y anular (solo ADMIN).
+- **Clientes** (`features/clientes`, ADMIN y CAJERO): búsqueda paginada en el servidor, alta con consulta a
+  RENIEC (DNI) o SUNAT (RUC) y aviso si el documento ya existe, edición, desactivar, y ficha con sus compras.
+  El administrador ve además lo que compró en total; el cajero solo busca (mínimo 3 caracteres, regla del
+  backend) y en la ficha ve las ventas que él hizo. El cliente genérico «Clientes varios» no se edita.
+- **Campañas** (`features/campanas`, solo ADMIN): % de descuento, soles menos o precio fijo; por fechas, en un
+  local o en todos; para todo el catálogo, categorías o modelos (conserva las prendas sueltas al editar).
+  Ejemplo de precio en vivo con el mismo redondeo del backend (`campanas-reglas.ts`), pausar o reanudar,
+  y duplicar con fechas nuevas. Estados: vigente, próxima, pausada y terminada.
 - **Reportes** (`features/reportes`, solo ADMIN): periodo (hoy, 7 días, este mes, mes pasado o fechas) y local;
   resumen con venta neta por día, lo más vendido, tallas y colores con su stock, cajeros, horas y días de la
   semana, campañas, mercadería sin rotación y detalle línea por línea (este último solo se descarga). Todo se
