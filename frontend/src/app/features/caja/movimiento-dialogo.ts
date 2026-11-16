@@ -8,6 +8,7 @@ import { InputTextModule } from 'primeng/inputtext';
 import { SelectButtonModule } from 'primeng/selectbutton';
 
 import { CajaControllerService } from '../../core/api/services/caja-controller.service';
+import { nuevaClave } from '../../core/http/idempotencia.interceptor';
 import { redondear } from './calculo';
 import { CajaStore } from './caja.store';
 
@@ -55,8 +56,10 @@ export class MovimientoDialogo {
   protected concepto = '';
   protected monto: number | null = null;
   protected readonly guardando = signal(false);
+  private clave = nuevaClave();
 
   protected limpiar(): void {
+    this.clave = nuevaClave();
     this.tipo = 'EGRESO';
     this.concepto = '';
     this.monto = null;
@@ -67,6 +70,7 @@ export class MovimientoDialogo {
     this.guardando.set(true);
     try {
       this.store.sesion.set(await this.api.cajaRegistrarMovimiento({
+        'Idempotency-Key': this.clave,
         body: { tipo: this.tipo, concepto: this.concepto.trim(), monto: redondear(this.monto) },
       }));
       this.avisos.add({ severity: 'success', summary: this.tipo === 'EGRESO' ? 'Egreso registrado' : 'Ingreso registrado' });

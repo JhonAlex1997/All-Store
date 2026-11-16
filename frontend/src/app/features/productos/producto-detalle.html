@@ -111,7 +111,7 @@
     </div>
     <ng-template #footer>
       <p-button label="Cancelar" severity="secondary" [text]="true" (onClick)="editandoVariante.set(null)" />
-      <p-button label="Guardar" icon="pi pi-check" (onClick)="guardarVariante()" />
+      <p-button label="Guardar" icon="pi pi-check" [loading]="guardando()" (onClick)="guardarVariante()" />
     </ng-template>
   </p-dialog>
 
@@ -139,7 +139,7 @@
     </div>
     <ng-template #footer>
       <p-button label="Cancelar" severity="secondary" [text]="true" (onClick)="agregando.set(false)" />
-      <p-button label="Agregar" icon="pi pi-plus" [disabled]="!tallasNuevas.length || !coloresNuevos.length" (onClick)="agregarVariantes()" />
+      <p-button label="Agregar" icon="pi pi-plus" [loading]="guardando()" [disabled]="!tallasNuevas.length || !coloresNuevos.length" (onClick)="agregarVariantes()" />
     </ng-template>
   </p-dialog>
 
@@ -161,9 +161,14 @@
     <ng-template #footer>
       <span class="as-sutil">{{ totalEtiquetas() }} etiquetas</span>
       <p-button label="Cancelar" severity="secondary" [text]="true" (onClick)="etiquetando.set(false)" />
-      <p-button label="Generar PDF" icon="pi pi-print" [disabled]="!totalEtiquetas()" (onClick)="imprimirEtiquetas()" />
+      <p-button label="Generar PDF" icon="pi pi-print" [loading]="guardando()" [disabled]="!totalEtiquetas()" (onClick)="imprimirEtiquetas()" />
     </ng-template>
   </p-dialog>
+} @else if (noDisponible(); as motivo) {
+  <div class="as-tarjeta as-sutil no-disponible">
+    <p>{{ motivo }}</p>
+    <p-button label="Volver a productos" icon="pi pi-arrow-left" [outlined]="true" routerLink="/productos" />
+  </div>
 } @else {
   <div class="as-tarjeta as-sutil"><i class="pi pi-spin pi-spinner"></i> Cargando…</div>
 }

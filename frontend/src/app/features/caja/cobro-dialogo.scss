@@ -104,5 +104,5 @@
 
 @media (max-width: 560px) {
   .metodos { grid-template-columns: repeat(2, 1fr); }
-  .envio-campos { grid-template-columns: 1fr; }
+  .envio-campos { grid-template-columns: minmax(0, 1fr); }
 }

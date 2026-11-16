@@ -112,7 +112,7 @@ interface Elemento {
     .campos { display: flex; flex-direction: column; gap: 1rem; }
     .activo { display: flex; align-items: center; gap: .5rem; font-weight: 600; font-size: 13px; }
     .mayus { text-transform: uppercase; }
-    @media (max-width: 1000px) { .columnas { grid-template-columns: 1fr; } }
+    @media (max-width: 1000px) { .columnas { grid-template-columns: minmax(0, 1fr); } }
   `,
   changeDetection: ChangeDetectionStrategy.OnPush,
 })

@@ -141,7 +141,7 @@ nav { padding: .75rem .6rem 1rem; border-top: 1px solid rgba(255, 255, 255, .07)
 .boton-menu, .velo { display: none; }
 
 @media (max-width: 900px) {
-  .shell { grid-template-columns: 1fr; }
+  .shell { grid-template-columns: minmax(0, 1fr); }
 
   .lateral {
     position: fixed;

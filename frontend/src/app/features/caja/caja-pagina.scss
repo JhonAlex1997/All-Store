@@ -232,6 +232,6 @@ kbd {
 
 @media (max-width: 1100px) {
   .pos { height: auto; }
-  .cuerpo { grid-template-columns: 1fr; }
+  .cuerpo { grid-template-columns: minmax(0, 1fr); }
   .resultados { overflow: visible; }
 }

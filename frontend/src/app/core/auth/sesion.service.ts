@@ -82,7 +82,10 @@ export class SesionService {
   /** Sesión rechazada por el servidor (401): se limpia sin volver a llamar al backend. */
   expirada(): void {
     this.limpiar();
-    const actual = this.router.url;
+    // Si el 401 llega mientras se abre una pantalla, la navegación aún no terminó: se vuelve a su destino.
+    const navegando = this.router.getCurrentNavigation()?.finalUrl?.toString();
+    // En la carga inicial (F5) el router aún no tiene ruta: la dirección real está en la barra del navegador.
+    const actual = navegando ?? (this.router.navigated ? this.router.url : location.pathname + location.search);
     void this.router.navigate(['/login'], {
       queryParams: actual && !actual.startsWith('/login') ? { volver: actual } : undefined,
     });

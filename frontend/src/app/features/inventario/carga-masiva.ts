@@ -8,6 +8,7 @@ import { SelectModule } from 'primeng/select';
 import { CargaMasivaResponse } from '../../core/api/models/carga-masiva-response';
 import { EstablecimientoResponse } from '../../core/api/models/establecimiento-response';
 import { InventarioControllerService } from '../../core/api/services/inventario-controller.service';
+import { nuevaClave } from '../../core/http/idempotencia.interceptor';
 import { descargar } from '../../shared/impresion/descargar';
 
 /**
@@ -94,7 +95,7 @@ import { descargar } from '../../shared/impresion/descargar';
     .cifras strong { font-size: 1.5rem; font-variant-numeric: tabular-nums; }
     .cifras span { color: var(--as-texto-suave); font-size: 12.5px; }
     .errores { margin: 0; padding-left: 1.2rem; max-height: 260px; overflow-y: auto; font-size: 13px; }
-    @media (max-width: 1000px) { .pasos { grid-template-columns: 1fr; } }
+    @media (max-width: 1000px) { .pasos { grid-template-columns: minmax(0, 1fr); } }
   `,
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -111,6 +112,7 @@ export class CargaMasiva {
   protected readonly procesando = signal<'revisar' | 'aplicar' | null>(null);
   /** Se aplica solo lo que se revisó sin errores (mismo archivo y local). */
   private readonly revisadoPara = signal<string | null>(null);
+  private claveOperacion = nuevaClave();
   protected readonly listoParaAplicar = computed(() => {
     const r = this.resultado();
     return !!r && !r.aplicada && !r.errores?.length && this.revisadoPara() === this.clave();
@@ -134,6 +136,7 @@ export class CargaMasiva {
       return;
     }
     this.archivo.set(archivo);
+    this.claveOperacion = nuevaClave();
     this.resultado.set(null);
     this.revisadoPara.set(null);
   }
@@ -144,7 +147,11 @@ export class CargaMasiva {
     if (!archivo || !local || this.procesando()) return;
     this.procesando.set(aplicar ? 'aplicar' : 'revisar');
     try {
-      const r = await this.api.inventarioCargaMasiva({ establecimientoId: local, aplicar, body: { archivo } });
+      const r = await this.api.inventarioCargaMasiva({
+        establecimientoId: local, aplicar, body: { archivo },
+        // Solo aplicar modifica datos: con la misma clave, un doble clic no carga el stock dos veces.
+        'Idempotency-Key': aplicar ? this.claveOperacion : undefined,
+      });
       this.resultado.set(r);
       this.revisadoPara.set(r.errores?.length ? null : this.clave());
       if (r.aplicada) {

@@ -16,6 +16,7 @@ import { CategoriaControllerService } from '../../core/api/services/categoria-co
 import { ColorControllerService } from '../../core/api/services/color-controller.service';
 import { ProductoControllerService } from '../../core/api/services/producto-controller.service';
 import { TallaControllerService } from '../../core/api/services/talla-controller.service';
+import { nuevaClave } from '../../core/http/idempotencia.interceptor';
 
 /** Alta de un modelo: datos, precios y las tallas y colores con que se fabrica (se crean todas las combinaciones). */
 @Component({
@@ -106,6 +107,7 @@ export class NuevoProducto {
   protected readonly coloresElegidos = signal(new Set<number>());
   protected readonly combinaciones = computed(() => this.tallasElegidas().size * this.coloresElegidos().size);
   protected readonly guardando = signal(false);
+  private clave = nuevaClave();
 
   protected readonly form = inject(NonNullableFormBuilder).group({
     codigo: ['', [Validators.required, Validators.maxLength(30), Validators.pattern(/^[A-Za-z0-9-]+$/)]],
@@ -121,6 +123,7 @@ export class NuevoProducto {
   });
 
   protected async alAbrir(): Promise<void> {
+    this.clave = nuevaClave();
     this.form.reset({ codigo: '', nombre: '', categoriaId: 0, precioVenta: null, precioPorMayor: null });
     this.tallasElegidas.set(new Set());
     this.coloresElegidos.set(new Set());
@@ -165,6 +168,7 @@ export class NuevoProducto {
     this.guardando.set(true);
     try {
       const creado = await this.api.productoCrear({
+        'Idempotency-Key': this.clave,
         body: {
           codigo: v.codigo.trim().toUpperCase(),
           nombre: v.nombre.trim(),

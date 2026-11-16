@@ -22,6 +22,7 @@ import { SunatControllerService } from '../../core/api/services/sunat-controller
 import { VentaControllerService } from '../../core/api/services/venta-controller.service';
 import { SesionService } from '../../core/auth/sesion.service';
 import { mensajeDeError } from '../../core/http/error-api';
+import { nuevaClave } from '../../core/http/idempotencia.interceptor';
 import { SIN_AVISO } from '../../core/http/errores.interceptor';
 import { FechaLimaPipe } from '../../shared/formato/fecha-lima.pipe';
 import { SolesPipe } from '../../shared/formato/soles.pipe';
@@ -65,6 +66,8 @@ export class VentaDetalle {
   protected readonly ocupado = signal<string | null>(null);
   protected readonly dialogo = signal<Dialogo>(null);
   protected readonly error = signal<string | null>(null);
+  /** El comprobante no existe o no se puede ver (por ejemplo, un cajero con la venta de otro). */
+  protected readonly noDisponible = signal<string | null>(null);
   protected readonly metodosPago = METODOS_PAGO;
   protected readonly etiquetaMetodo = etiquetaMetodo;
   protected readonly etiquetaDocumento = etiquetaDocumento;
@@ -81,6 +84,12 @@ export class VentaDetalle {
     return this.esAdmin && (e === 'PENDIENTE' || e === 'ERROR');
   });
   protected readonly motivosNota = computed(() => MOTIVOS_NOTA.filter((m) => !m.soloFactura || this.tipo() === 'FACTURA'));
+
+  /**
+   * Una clave por diálogo abierto: si el clic se repite o la red se corta y se reintenta, el backend
+   * reconoce la misma operación y no anula, devuelve ni convierte dos veces.
+   */
+  private clave = nuevaClave();
 
   // Anular
   protected motivoAnulacion = '';
@@ -106,7 +115,10 @@ export class VentaDetalle {
       const id = Number(this.id());
       this.venta.set(null);
       this.dialogo.set(null);
-      void this.api.ventaObtener({ id }).then((v) => this.venta.set(v));
+      this.noDisponible.set(null);
+      this.api.ventaObtener({ id }, sinAviso())
+        .then((v) => this.venta.set(v))
+        .catch((e) => this.noDisponible.set(mensajeDeError(e)));
     });
   }
 
@@ -140,6 +152,7 @@ export class VentaDetalle {
   protected async abrir(d: Exclude<Dialogo, null>): Promise<void> {
     const v = this.venta();
     this.error.set(null);
+    this.clave = nuevaClave();
     if (d === 'anular') this.motivoAnulacion = '';
     if (d === 'whatsapp') this.celular = v?.whatsappEntrega ?? '';
     if (d === 'correo') this.correo = v?.correoEntrega ?? '';
@@ -175,7 +188,7 @@ export class VentaDetalle {
     const v = this.venta();
     if (!v?.id || !this.motivoAnulacion.trim()) return;
     await this.accion('anular', async () => {
-      this.venta.set(await this.api.ventaAnular({ id: v.id!, body: { motivo: this.motivoAnulacion.trim() } }, sinAviso()));
+      this.venta.set(await this.api.ventaAnular({ id: v.id!, 'Idempotency-Key': this.clave, body: { motivo: this.motivoAnulacion.trim() } }, sinAviso()));
       this.avisos.add({ severity: 'success', summary: 'Comprobante anulado', detail: v.numero });
     });
   }
@@ -195,6 +208,7 @@ export class VentaDetalle {
     await this.accion('nota', async () => {
       const nota = await this.api.ventaEmitirNotaCredito({
         id: v.id!,
+        'Idempotency-Key': this.clave,
         body: {
           serieId: this.serieNota!, motivo: this.motivoNota, sustento: this.sustento.trim(),
           metodoReembolso: this.metodoReembolso, referenciaReembolso: this.referenciaReembolso.trim() || undefined,
@@ -242,7 +256,7 @@ export class VentaDetalle {
     }
     await this.accion('convertir', async () => {
       const nuevo = await this.api.ventaConvertir({
-        id: v.id!, body: { tipoComprobante: this.tipoConvertir, serieId: serie.id!, clienteId: cliente?.id },
+        id: v.id!, 'Idempotency-Key': this.clave, body: { tipoComprobante: this.tipoConvertir, serieId: serie.id!, clienteId: cliente?.id },
       }, sinAviso());
       this.avisos.add({ severity: 'success', summary: 'Convertida', detail: `Se emitió ${nuevo.numero}.` });
       await this.router.navigate(['/ventas', nuevo.id]);
@@ -254,7 +268,8 @@ export class VentaDetalle {
     if (!v?.id) return;
     await this.accion('whatsapp', async () => {
       const r = await this.entregaApi.entregaEnviarWhatsapp({ id: v.id!, body: { celular: this.celular.trim() || undefined } }, sinAviso());
-      if (r.enlace) window.open(r.enlace, '_blank', 'noopener');
+      // Solo se abre si es un enlace de WhatsApp: nunca una dirección arbitraria venida en la respuesta.
+      if (r.enlace && /^https:\/\/(wa\.me|api\.whatsapp\.com)\//.test(r.enlace)) window.open(r.enlace, '_blank', 'noopener');
       this.avisos.add({ severity: 'success', summary: 'WhatsApp', detail: r.enlace ? 'Se abrió WhatsApp con el mensaje listo.' : `Enviado a ${r.telefono ?? ''}.` });
     });
   }
@@ -282,7 +297,7 @@ export class VentaDetalle {
     const v = this.venta();
     if (!v?.id) return;
     await this.trabajando('reemitir', async () => {
-      const nuevo = await this.api.ventaReemitir({ id: v.id!, body: {} });
+      const nuevo = await this.api.ventaReemitir({ id: v.id!, 'Idempotency-Key': `reemitir-${v.id}-${this.clave}`, body: {} });
       this.avisos.add({ severity: 'success', summary: 'Reemitido', detail: `Se emitió ${nuevo.numero} en reemplazo.` });
       await this.router.navigate(['/ventas', nuevo.id]);
     });

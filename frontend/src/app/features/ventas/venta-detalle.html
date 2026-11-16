@@ -106,7 +106,7 @@
         @if (!v.comprobanteOrigen && !v.notasCredito?.length && !v.notasDebito?.length && !v.convertidoEn && !v.reemplazaA && !v.reemplazadoPor) {
           <p class="as-sutil dato">Ninguno.</p>
         }
-        @if (v.sunat?.hash) { <p class="dato as-sutil">Hash: <span class="as-codigo">{{ v.sunat?.hash }}</span></p> }
+        @if (v.sunat?.hash) { <p class="dato as-sutil">Hash: <span class="as-codigo hash">{{ v.sunat?.hash }}</span></p> }
       </div>
     </div>
   </div>
@@ -223,6 +223,12 @@
                 (onClick)="dialogo() === 'whatsapp' ? enviarWhatsapp() : enviarCorreo()" />
     </ng-template>
   </p-dialog>
+} @else if (noDisponible(); as motivo) {
+  <div class="as-tarjeta no-disponible">
+    <i class="pi pi-lock"></i>
+    <p>{{ motivo }}</p>
+    <p-button label="Volver a ventas" icon="pi pi-arrow-left" [outlined]="true" routerLink="/ventas" />
+  </div>
 } @else {
   <div class="as-tarjeta as-sutil"><i class="pi pi-spin pi-spinner"></i> Cargando…</div>
 }

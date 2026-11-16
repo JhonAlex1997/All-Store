@@ -188,7 +188,7 @@ input[pInputText] { padding-top: .75rem; padding-bottom: .75rem; font-size: 15px
 }
 
 @media (max-width: 900px) {
-  :host { grid-template-columns: 1fr; }
+  :host { grid-template-columns: minmax(0, 1fr); }
   .marca { display: none; }
   .tarjeta { padding: 28px 22px; }
 }

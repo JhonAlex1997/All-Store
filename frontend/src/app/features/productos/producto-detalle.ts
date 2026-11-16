@@ -25,6 +25,7 @@ import { InventarioControllerService } from '../../core/api/services/inventario-
 import { ProductoControllerService } from '../../core/api/services/producto-controller.service';
 import { TallaControllerService } from '../../core/api/services/talla-controller.service';
 import { SesionService } from '../../core/auth/sesion.service';
+import { mensajeDeError } from '../../core/http/error-api';
 import { SolesPipe } from '../../shared/formato/soles.pipe';
 import { abrirPdf } from '../../shared/impresion/imprimir-pdf';
 
@@ -57,6 +58,7 @@ export class ProductoDetalle implements OnInit {
   /** Stock por variante y local: stock[varianteId][establecimientoId]. */
   protected readonly stock = signal<Record<number, Record<number, number>>>({});
   protected readonly guardando = signal(false);
+  protected readonly noDisponible = signal<string | null>(null);
 
   protected readonly variantes = computed(() => this.producto()?.variantes ?? []);
   protected readonly totalStock = computed(() =>
@@ -100,7 +102,11 @@ export class ProductoDetalle implements OnInit {
     ]);
     this.categorias.set(categorias);
     this.locales.set(locales);
-    await this.cargar();
+    try {
+      await this.cargar();
+    } catch (e) {
+      this.noDisponible.set(mensajeDeError(e));
+    }
   }
 
   protected stockDe(varianteId: number | undefined, localId: number | undefined): number {
@@ -139,7 +145,9 @@ export class ProductoDetalle implements OnInit {
 
   protected async guardarVariante(): Promise<void> {
     const v = this.editandoVariante();
-    if (!v?.id) return;
+    if (!v?.id || this.guardando()) return;
+    this.guardando.set(true);
+    try {
     await this.api.productoActualizarVariante({
       varianteId: v.id,
       body: { precioVenta: this.precioVariante ?? undefined, precioPorMayor: this.mayorVariante ?? undefined, activo: this.activoVariante },
@@ -147,6 +155,9 @@ export class ProductoDetalle implements OnInit {
     this.editandoVariante.set(null);
     this.avisos.add({ severity: 'success', summary: 'Prenda actualizada', detail: v.sku });
     await this.cargar();
+    } finally {
+      this.guardando.set(false);
+    }
   }
 
   protected async abrirAgregar(): Promise<void> {
@@ -172,11 +183,16 @@ export class ProductoDetalle implements OnInit {
 
   protected async agregarVariantes(): Promise<void> {
     const p = this.producto();
-    if (!p?.id || !this.tallasNuevas.length || !this.coloresNuevos.length) return;
+    if (!p?.id || !this.tallasNuevas.length || !this.coloresNuevos.length || this.guardando()) return;
     const antes = this.variantes().length;
-    this.producto.set(await this.api.productoAgregarVariantes({
-      id: p.id, body: { tallaIds: this.tallasNuevas, colorIds: this.coloresNuevos },
-    }));
+    this.guardando.set(true);
+    try {
+      this.producto.set(await this.api.productoAgregarVariantes({
+        id: p.id, body: { tallaIds: this.tallasNuevas, colorIds: this.coloresNuevos },
+      }));
+    } finally {
+      this.guardando.set(false);
+    }
     const nuevas = this.variantes().length - antes;
     this.agregando.set(false);
     this.avisos.add({ severity: 'success', summary: nuevas ? `${nuevas} prenda${nuevas === 1 ? '' : 's'} nueva${nuevas === 1 ? '' : 's'}` : 'Esas combinaciones ya existían' });
@@ -203,10 +219,15 @@ export class ProductoDetalle implements OnInit {
     const items = Object.entries(this.cantidadesEtiqueta)
       .filter(([, c]) => c > 0)
       .map(([id, cantidad]) => ({ varianteId: Number(id), cantidad }));
-    if (!items.length) return;
-    const pdf = await this.api.productoEtiquetas({ body: { formato: this.formatoEtiqueta, items } });
-    abrirPdf(pdf);
-    this.etiquetando.set(false);
+    if (!items.length || this.guardando()) return;
+    this.guardando.set(true);
+    try {
+      const pdf = await this.api.productoEtiquetas({ body: { formato: this.formatoEtiqueta, items } });
+      abrirPdf(pdf);
+      this.etiquetando.set(false);
+    } finally {
+      this.guardando.set(false);
+    }
   }
 
   private async cargar(): Promise<void> {

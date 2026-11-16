@@ -8,6 +8,7 @@ import { ClienteRequest } from '../../core/api/models/cliente-request';
 import { ClienteControllerService } from '../../core/api/services/cliente-controller.service';
 import { mensajeDeError } from '../../core/http/error-api';
 import { SIN_AVISO } from '../../core/http/errores.interceptor';
+import { nuevaClave } from '../../core/http/idempotencia.interceptor';
 import { esRucValido } from '../../shared/sunat/ruc';
 import { CajaStore } from './caja.store';
 
@@ -76,6 +77,9 @@ export class ClienteCaja {
   protected readonly manual = signal(false);
   protected readonly error = signal<string | null>(null);
   private readonly numeroActual = signal('');
+  /** Evita registrar dos veces al mismo cliente por doble clic o Enter + clic. */
+  private registrando = false;
+  private readonly clave = nuevaClave();
 
   protected readonly placeholder = computed(() => (this.store.tipo() === 'FACTURA' ? 'RUC del cliente' : 'DNI o RUC (opcional)'));
   protected readonly tipoDetectado = computed<Tipo>(() => (this.numeroActual().length === 11 ? 'RUC' : 'DNI'));
@@ -111,18 +115,20 @@ export class ClienteCaja {
   protected async registrar(): Promise<void> {
     const numero = this.numeroActual();
     const tipo = this.validar(numero);
-    if (!tipo || !this.nombre.trim()) return;
+    if (!tipo || !this.nombre.trim() || this.registrando) return;
     const body: ClienteRequest = {
       tipoDocumento: tipo,
       numeroDocumento: numero,
       nombre: this.nombre.trim(),
       direccion: this.direccion.trim() || undefined,
     };
+    this.registrando = true;
     this.buscando.set(true);
     try {
-      this.store.cliente.set(await this.api.clienteCrear({ body }));
+      this.store.cliente.set(await this.api.clienteCrear({ 'Idempotency-Key': `cliente-${tipo}-${numero}-${this.clave}`, body }));
       this.limpiar();
     } finally {
+      this.registrando = false;
       this.buscando.set(false);
     }
   }

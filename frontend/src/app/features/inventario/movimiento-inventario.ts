@@ -7,6 +7,7 @@ import { SelectModule } from 'primeng/select';
 
 import { EstablecimientoResponse } from '../../core/api/models/establecimiento-response';
 import { InventarioControllerService } from '../../core/api/services/inventario-controller.service';
+import { nuevaClave } from '../../core/http/idempotencia.interceptor';
 import { PrendaElegida, SelectorPrendas } from '../../shared/prendas/selector-prendas';
 import { Motivo, MOTIVOS_MANUALES } from './etiquetas-inventario';
 
@@ -84,7 +85,7 @@ import { Motivo, MOTIVOS_MANUALES } from './etiquetas-inventario';
     .lineas li { display: flex; align-items: center; gap: .6rem; padding: .45rem 0; border-bottom: 1px dashed var(--as-borde); }
     .lineas li > span { flex: 1; min-width: 0; }
     .lineas input { width: 70px; height: 32px; border: 1px solid var(--as-borde); border-radius: 8px; text-align: center; font-weight: 600; }
-    @media (max-width: 1000px) { .disposicion { grid-template-columns: 1fr; } }
+    @media (max-width: 1000px) { .disposicion { grid-template-columns: minmax(0, 1fr); } }
   `,
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -102,6 +103,8 @@ export class MovimientoInventario {
   protected readonly destino = signal<number | null>(null);
   protected readonly lineas = signal<PrendaElegida[]>([]);
   protected readonly guardando = signal(false);
+  /** Se renueva tras registrar: un doble clic o un reintento no mueve el stock dos veces. */
+  private clave = nuevaClave();
   protected readonly totalUnidades = computed(() => this.lineas().reduce((s, l) => s + l.cantidad, 0));
 
   protected readonly impedimento = computed<string | null>(() => {
@@ -143,9 +146,9 @@ export class MovimientoInventario {
     this.guardando.set(true);
     try {
       if (this.modo() === 'ajuste') {
-        await this.api.inventarioRegistrarMovimiento({ body: { establecimientoId: origen, motivo: this.motivo, items, observacion } });
+        await this.api.inventarioRegistrarMovimiento({ 'Idempotency-Key': this.clave, body: { establecimientoId: origen, motivo: this.motivo, items, observacion } });
       } else {
-        await this.api.inventarioTrasladar({ body: { origenId: origen, destinoId: this.destino()!, items, observacion } });
+        await this.api.inventarioTrasladar({ 'Idempotency-Key': this.clave, body: { origenId: origen, destinoId: this.destino()!, items, observacion } });
       }
       this.avisos.add({
         severity: 'success',
@@ -154,6 +157,7 @@ export class MovimientoInventario {
       });
       this.lineas.set([]);
       this.observacion = '';
+      this.clave = nuevaClave();
     } finally {
       this.guardando.set(false);
     }

@@ -33,7 +33,11 @@ export class Shell {
     return (nombre ?? '?').split(/\s+/).filter(Boolean).slice(0, 2).map((p) => p[0]).join('').toUpperCase();
   }
 
+  private saliendo = false;
+
   protected salir(): void {
-    void this.sesion.cerrar();
+    if (this.saliendo) return;
+    this.saliendo = true;
+    void this.sesion.cerrar().finally(() => (this.saliendo = false));
   }
 }

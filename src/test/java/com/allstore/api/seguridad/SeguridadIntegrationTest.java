@@ -21,6 +21,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -133,6 +134,26 @@ class SeguridadIntegrationTest {
         mockMvc.perform(get("/api/usuarios").header("Authorization", "Bearer " + admin))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].passwordHash").doesNotExist());
+    }
+
+    @Test
+    void unAdministradorNoPuedeQuitarseElRolNiDesactivarse() throws Exception {
+        String admin = login("t_admin", PASSWORD);
+        Long id = usuarioRepository.findByUsernameIgnoreCase("t_admin").orElseThrow().getId();
+
+        mockMvc.perform(put("/api/usuarios/" + id).header("Authorization", "Bearer " + admin)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"nombre\":\"Admin Prueba\",\"rol\":\"CAJERO\",\"activo\":true}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("No puedes quitarte el rol de administrador ni desactivarte a ti mismo"));
+        mockMvc.perform(put("/api/usuarios/" + id).header("Authorization", "Bearer " + admin)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"nombre\":\"Admin Prueba\",\"rol\":\"ADMIN\",\"activo\":false}"))
+                .andExpect(status().isBadRequest());
+
+        Usuario sigue = usuarioRepository.findByUsernameIgnoreCase("t_admin").orElseThrow();
+        assertThat(sigue.getRol()).isEqualTo(Rol.ADMIN);
+        assertThat(sigue.isActivo()).isTrue();
     }
 
     @Test

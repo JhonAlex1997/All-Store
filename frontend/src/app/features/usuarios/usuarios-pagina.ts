@@ -13,6 +13,7 @@ import { TooltipModule } from 'primeng/tooltip';
 import { UsuarioResponse } from '../../core/api/models/usuario-response';
 import { UsuarioControllerService } from '../../core/api/services/usuario-controller.service';
 import { Rol, SesionService } from '../../core/auth/sesion.service';
+import { nuevaClave } from '../../core/http/idempotencia.interceptor';
 import { FechaLimaPipe } from '../../shared/formato/fecha-lima.pipe';
 import { mensajePolitica, passwordTemporal, politicaPassword } from '../../shared/seguridad/politica-password';
 
@@ -55,6 +56,8 @@ export class UsuariosPagina implements OnInit {
   protected activo = true;
   protected clave = '';
   protected readonly guardando = signal(false);
+  /** Una por alta: si el clic se repite o se reintenta, no se crea el usuario dos veces. */
+  private claveOperacion = nuevaClave();
   protected readonly error = signal<string | null>(null);
 
   /** Contraseña temporal recién creada o reiniciada: se muestra una sola vez para entregarla. */
@@ -91,6 +94,7 @@ export class UsuariosPagina implements OnInit {
     this.rol = 'CAJERO';
     this.activo = true;
     this.clave = passwordTemporal();
+    this.claveOperacion = nuevaClave();
     this.error.set(null);
     this.editando.set('nuevo');
   }
@@ -121,6 +125,7 @@ export class UsuariosPagina implements OnInit {
     try {
       if (e === 'nuevo') {
         const creado = await this.api.usuarioCrear({
+          'Idempotency-Key': this.claveOperacion,
           body: { username: this.username.trim(), nombre: this.nombre.trim(), rol: this.rol, passwordTemporal: this.clave },
         });
         this.credencial.set({ nombre: creado.nombre ?? '', username: creado.username ?? '', clave: this.clave });
@@ -153,9 +158,15 @@ export class UsuariosPagina implements OnInit {
   }
 
   protected async desbloquear(u: UsuarioResponse): Promise<void> {
-    await this.api.usuarioDesbloquear({ id: u.id! });
-    this.avisos.add({ severity: 'success', summary: 'Usuario desbloqueado', detail: `${u.nombre} ya puede volver a ingresar.` });
-    await this.cargar();
+    if (this.guardando()) return;
+    this.guardando.set(true);
+    try {
+      await this.api.usuarioDesbloquear({ id: u.id! });
+      this.avisos.add({ severity: 'success', summary: 'Usuario desbloqueado', detail: `${u.nombre} ya puede volver a ingresar.` });
+      await this.cargar();
+    } finally {
+      this.guardando.set(false);
+    }
   }
 
   protected async copiar(texto: string): Promise<void> {

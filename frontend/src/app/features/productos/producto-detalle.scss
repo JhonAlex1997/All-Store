@@ -59,5 +59,7 @@ h2 { font-size: .95rem; margin: 0; }
 }
 
 @media (max-width: 1000px) {
-  .disposicion { grid-template-columns: 1fr; }
+  .disposicion { grid-template-columns: minmax(0, 1fr); }
 }
+
+.no-disponible { display: flex; flex-direction: column; align-items: center; gap: .75rem; padding: 2.5rem 1rem; text-align: center; }

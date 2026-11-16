@@ -66,6 +66,7 @@ export class LogoEmpresa {
   }
 
   private async subir(archivo: File): Promise<void> {
+    if (this.subiendo()) return;
     if (!['image/png', 'image/jpeg'].includes(archivo.type)) {
       this.avisos.add({ severity: 'warn', summary: 'Formato no admitido', detail: 'El logo debe ser PNG o JPG.' });
       return;

@@ -91,5 +91,11 @@ h1 { font-family: var(--as-serif); font-weight: 600; letter-spacing: .01em; }
 .as-vacio { text-align: center; color: var(--as-texto-suave); padding: 2rem 1rem !important; }
 
 @media (max-width: 760px) {
-  .as-rejilla { grid-template-columns: 1fr; }
+  .as-rejilla { grid-template-columns: minmax(0, 1fr); }
 }
+
+/* Las tablas anchas se desplazan dentro de su tarjeta en vez de ensanchar la pantalla (celular). */
+.p-datatable-table-container { overflow-x: auto; }
+
+/* Los botones del encabezado bajan de línea en pantallas angostas. */
+.as-pagina-titulo { flex-wrap: wrap; }

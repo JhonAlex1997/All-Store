@@ -47,7 +47,7 @@ small { font-size: 12px; }
 :host ::ng-deep .mb { margin-bottom: 1rem; }
 
 @media (max-width: 760px) {
-  .rejilla { grid-template-columns: 1fr; }
+  .rejilla { grid-template-columns: minmax(0, 1fr); }
   .ancho-2, .ancho-3 { grid-column: auto; }
 }
 
@@ -70,7 +70,7 @@ small { font-size: 12px; }
 .mayusculas { text-transform: uppercase; }
 
 @media (max-width: 760px) {
-  .rejilla.dos { grid-template-columns: 1fr; }
+  .rejilla.dos { grid-template-columns: minmax(0, 1fr); }
   .cabecera { flex-direction: column; }
 }
 

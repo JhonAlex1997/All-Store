@@ -10,6 +10,7 @@ import { CajaControllerService } from '../../core/api/services/caja-controller.s
 import { EstablecimientoControllerService } from '../../core/api/services/establecimiento-controller.service';
 import { SesionService } from '../../core/auth/sesion.service';
 import { redondear } from './calculo';
+import { nuevaClave } from '../../core/http/idempotencia.interceptor';
 import { CajaStore } from './caja.store';
 
 /** Apertura de caja: el local donde se vende y el sencillo con que se empieza. */
@@ -59,6 +60,8 @@ export class AbrirCaja implements OnInit {
   protected readonly locales = signal<EstablecimientoResponse[]>([]);
   protected readonly cargando = signal(true);
   protected readonly abriendo = signal(false);
+  /** Misma clave en los reintentos: la caja se abre una sola vez. */
+  private readonly clave = nuevaClave();
   protected local: number | null = null;
   /** Vacío al empezar: si arrancara en 0.00, lo que se escribe iría a los decimales. */
   protected monto: number | null = null;
@@ -79,7 +82,7 @@ export class AbrirCaja implements OnInit {
     if (!this.local || this.abriendo()) return;
     this.abriendo.set(true);
     try {
-      const sesion = await this.cajaApi.cajaAbrir({ body: { establecimientoId: this.local, montoApertura: redondear(this.monto) } });
+      const sesion = await this.cajaApi.cajaAbrir({ 'Idempotency-Key': this.clave, body: { establecimientoId: this.local, montoApertura: redondear(this.monto) } });
       await this.store.alAbrir(sesion);
     } finally {
       this.abriendo.set(false);

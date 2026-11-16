@@ -8,6 +8,7 @@ import { InputTextModule } from 'primeng/inputtext';
 import { CajaResponse } from '../../core/api/models/caja-response';
 import { CajaControllerService } from '../../core/api/services/caja-controller.service';
 import { SolesPipe } from '../../shared/formato/soles.pipe';
+import { nuevaClave } from '../../core/http/idempotencia.interceptor';
 import { centimos, redondear, soles } from './calculo';
 import { CajaStore } from './caja.store';
 import { etiquetaMetodo } from './etiquetas';
@@ -31,6 +32,7 @@ export class CierreDialogo {
   protected contado: number | null = null;
   protected observacion = '';
   protected readonly cerrando = signal(false);
+  private clave = nuevaClave();
   /** Resultado del cierre, para mostrar la diferencia antes de volver a la pantalla de apertura. */
   protected readonly cerrada = signal<CajaResponse | null>(null);
   private readonly contadoActual = signal<number | null>(null);
@@ -45,6 +47,7 @@ export class CierreDialogo {
   });
 
   protected async alAbrir(): Promise<void> {
+    this.clave = nuevaClave();
     this.contado = null;
     this.contadoActual.set(null);
     this.observacion = '';
@@ -65,6 +68,7 @@ export class CierreDialogo {
     this.cerrando.set(true);
     try {
       this.cerrada.set(await this.api.cajaCerrar({
+        'Idempotency-Key': this.clave,
         body: { montoContado: redondear(this.contado), observacion: this.observacion.trim() || undefined },
       }));
     } finally {
