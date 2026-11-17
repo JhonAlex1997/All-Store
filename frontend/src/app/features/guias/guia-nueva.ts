@@ -149,13 +149,18 @@ export class GuiaNueva {
     this.buscandoVenta.set(true);
     this.errorVenta.set(null);
     try {
-      const r = await this.ventasApi.ventaListar({ busqueda: numero, size: 10 }, sinAviso());
-      const encontrada = (r.content ?? []).find((v) => (v.tipoComprobante === 'BOLETA' || v.tipoComprobante === 'FACTURA')
-        && (v.numero ?? '').toUpperCase().includes(numero));
-      if (!encontrada?.id) {
-        this.errorVenta.set('No se encontró una boleta o factura con ese número.');
+      // Con un número (B001-15 o B001-00000015) el backend busca serie y correlativo exactos.
+      if (!/^[A-Z0-9]{4}-\d{1,8}$/.test(numero)) {
+        this.errorVenta.set('Escribe el número completo del comprobante, ej. B001-15 o F001-00000015.');
         return;
       }
+      const r = await this.ventasApi.ventaListar({ busqueda: numero, size: 1 }, sinAviso());
+      const encontrada = r.content?.[0];
+      if (!encontrada?.id) {
+        this.errorVenta.set(`No se encontró el comprobante ${numero}.`);
+        return;
+      }
+      // cargarVenta explica por qué no sirve una nota de venta, un anulado o uno sin cliente.
       await this.cargarVenta(encontrada.id);
     } catch (e) {
       this.errorVenta.set(mensajeDeError(e));
@@ -258,6 +263,7 @@ export class GuiaNueva {
 
   private async cargarVenta(id: number): Promise<void> {
     this.errorVenta.set(null);
+    this.motivo.set('VENTA');
     try {
       const v = await this.ventasApi.ventaObtener({ id }, sinAviso());
       if (v.tipoComprobante !== 'BOLETA' && v.tipoComprobante !== 'FACTURA') {
@@ -270,7 +276,16 @@ export class GuiaNueva {
         this.errorVenta.set(`${v.numero} no está vigente.`);
         return;
       }
-      this.motivo.set('VENTA');
+      if (v.sunat?.estado === 'RECHAZADO') {
+        this.errorVenta.set(`SUNAT rechazó ${v.numero}: no sustenta una guía. Reemítelo primero.`);
+        return;
+      }
+      // Catálogo 06: '0' = sin documento. SUNAT exige identificar al destinatario de la guía.
+      if (!v.cliente?.numeroDocumento || v.cliente.tipoDocumento === '0') {
+        this.errorVenta.set(`${v.numero} se emitió sin identificar al cliente (${v.cliente?.nombre ?? 'Clientes varios'}). `
+          + 'La guía exige DNI o RUC del destinatario: registra al cliente al cobrar, o emite una nota de crédito y una boleta nueva a su nombre.');
+        return;
+      }
       this.ventaElegida.set(v);
       this.numeroVenta = v.numero ?? '';
       this.entregarTodo.set(true);
