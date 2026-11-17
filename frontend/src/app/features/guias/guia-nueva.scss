@@ -1,0 +1,38 @@
+.volver { font-size: 13px; color: var(--as-texto-suave); text-decoration: none; }
+h2 { font-size: .95rem; margin: 0; }
+
+.sin-serie { display: flex; gap: .6rem; align-items: flex-start; margin-bottom: 1rem; font-size: 13px; background: #fff8e6;
+  > i { color: #a46a00; margin-top: .15rem; } }
+
+.disposicion { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 1rem; align-items: start; }
+.columna { display: flex; flex-direction: column; gap: 1rem; min-width: 0; }
+.bloque { display: flex; flex-direction: column; gap: .9rem; min-width: 0; }
+
+.as-rejilla.dos { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.as-rejilla.tres { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.as-rejilla.llegada { grid-template-columns: 120px minmax(0, 1fr); }
+
+.punto { margin: 0; font-size: 13px; > i { color: var(--as-rosa-fuerte); margin-right: .25rem; } }
+.venta { display: flex; align-items: center; gap: .5rem; justify-content: space-between; padding: .55rem .7rem; border-radius: 8px;
+  background: var(--as-rosa-claro); font-size: 13.5px; }
+.buscar-venta { display: flex; gap: .5rem; input { flex: 1; min-width: 0; } }
+.interruptor { display: flex; align-items: center; gap: .55rem; font-size: 13px; cursor: pointer; }
+
+.prendas { position: sticky; top: 1rem; }
+.lineas { list-style: none; margin: 0; padding: 0; max-height: 50vh; overflow-y: auto; }
+.lineas li { display: flex; align-items: center; gap: .6rem; padding: .45rem 0; border-bottom: 1px dashed var(--as-borde); font-size: 13.5px; }
+.lineas li > span:first-child { flex: 1; min-width: 0; }
+.lineas input { width: 70px; height: 32px; border: 1px solid var(--as-borde); border-radius: 8px; text-align: center; font-weight: 600; }
+.cantidad-fija { width: 70px; text-align: center; font-weight: 600; }
+.error { margin: 0; font-size: 13px; }
+.pie { text-align: center; }
+
+:host ::ng-deep p-inputnumber, :host ::ng-deep p-inputnumber .p-inputnumber, :host ::ng-deep p-inputnumber input { width: 100%; }
+
+@media (max-width: 1100px) {
+  .disposicion { grid-template-columns: minmax(0, 1fr); }
+  .prendas { position: static; }
+}
+@media (max-width: 640px) {
+  .as-rejilla.dos, .as-rejilla.tres, .as-rejilla.llegada { grid-template-columns: minmax(0, 1fr); }
+}

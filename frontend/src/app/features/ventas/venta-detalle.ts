@@ -83,6 +83,10 @@ export class VentaDetalle {
     const e = this.venta()?.sunat?.estado;
     return this.esAdmin && (e === 'PENDIENTE' || e === 'ERROR');
   });
+  /** La guía de una venta se sustenta en una boleta o factura vigente que SUNAT no rechazó (GuiaRemisionService). */
+  protected readonly puedeGuia = computed(() => this.vigente() && this.esElectronico() && !this.rechazado());
+  protected readonly puedeReintentarBaja = computed(() =>
+    this.esAdmin && this.venta()?.estado === 'ANULADO' && this.venta()?.bajaSunat?.estado === 'RECHAZADO');
   protected readonly motivosNota = computed(() => MOTIVOS_NOTA.filter((m) => !m.soloFactura || this.tipo() === 'FACTURA'));
 
   /**
@@ -134,6 +138,22 @@ export class VentaDetalle {
   protected estadoSunat() {
     const e = this.venta()?.sunat?.estado;
     return e ? ESTADOS_SUNAT[e] : null;
+  }
+
+  protected estadoBaja() {
+    const e = this.venta()?.bajaSunat?.estado;
+    return e ? ESTADOS_SUNAT[e] : null;
+  }
+
+  /** Genera una baja nueva (otro número) para lo anulado cuya baja rechazó SUNAT; la envía el proceso programado. */
+  protected async reintentarBaja(): Promise<void> {
+    const v = this.venta();
+    if (!v?.id) return;
+    await this.trabajando('baja', async () => {
+      const r = await this.sunatApi.sunatReintentarBaja({ comprobanteId: v.id!, 'Idempotency-Key': `baja-${v.id}-${this.clave}` });
+      this.avisos.add({ severity: 'success', summary: 'Baja generada', detail: `${r.documento ?? 'La baja'} se enviará a SUNAT en unos minutos.` });
+      await this.cargar();
+    });
   }
 
   protected ayudaMotivo(): string {

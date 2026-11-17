@@ -1,0 +1,159 @@
+<div class="as-pagina-titulo">
+  <div>
+    <h1>SUNAT</h1>
+    <div class="as-sub">Comprobantes, guías y bajas enviados a SUNAT. El sistema los envía solo cada pocos minutos; aquí ves lo que falta y puedes enviarlo al momento.</div>
+  </div>
+  <span style="flex:1"></span>
+  <p-button label="Actualizar" icon="pi pi-refresh" severity="secondary" [outlined]="true" [loading]="cargando()" (onClick)="actualizar()" />
+</div>
+
+@if (entorno() === 'BETA') {
+  <div class="as-tarjeta beta" role="status">
+    <i class="pi pi-info-circle" aria-hidden="true"></i>
+    <div><b>Ambiente de pruebas (BETA).</b> Lo que se envía aquí no tiene validez ante SUNAT. Al instalar el sistema para vender de verdad se configura en producción (<span class="as-codigo">SUNAT_ENTORNO=PRODUCCION</span>, con tu usuario SOL y certificado).</div>
+  </div>
+}
+
+<div class="estados" role="group" aria-label="Filtrar por estado">
+  <button type="button" class="as-tarjeta estado" [class.activo]="filtro() === 'TODOS'" (click)="elegir('TODOS')" [attr.aria-pressed]="filtro() === 'TODOS'">
+    <span>Por atender</span><strong [class.cero]="!porAtender()">{{ porAtender() }}</strong>
+    <small>con error, rechazados o sin enviar</small>
+  </button>
+  @for (e of ordenEstados; track e) {
+    <button type="button" class="as-tarjeta estado" [class]="'tono-' + estados[e].severidad" [class.activo]="filtro() === e"
+            (click)="elegir(e)" [attr.aria-pressed]="filtro() === e">
+      <span>{{ estados[e].etiqueta }}</span><strong [class.cero]="!conteos()[e]">{{ conteos()[e] ?? '–' }}</strong>
+    </button>
+  }
+</div>
+
+@if (alertas(); as lista) {
+  @if (lista.length) {
+    <section class="as-tarjeta avisos" aria-label="Avisos de SUNAT">
+      <h2>Para atender</h2>
+      @for (a of lista; track $index) {
+        <div class="alerta" [class.critica]="a.nivel === 'CRITICA'">
+          <i [class]="a.nivel === 'CRITICA' ? 'pi pi-times-circle' : 'pi pi-exclamation-triangle'" aria-hidden="true"></i>
+          <div class="texto"><span class="nivel">{{ a.nivel === 'CRITICA' ? 'Urgente' : 'Revisar' }}</span> {{ a.mensaje }}</div>
+          @if (a.comprobanteId) {
+            <a class="ir" [routerLink]="['/ventas', a.comprobanteId]">Abrir {{ a.documento }}</a>
+          } @else if (a.envioId) {
+            <button type="button" class="ir" (click)="abrirEnvio(a.envioId)">Ver detalle</button>
+          }
+        </div>
+      }
+    </section>
+  }
+}
+
+<div class="as-tarjeta">
+  <div class="as-barra cabecera-tabla">
+    <h2>{{ tituloTabla() }}</h2>
+    @if (filtro() !== 'TODOS') { <p-button label="Ver todos" [text]="true" size="small" (onClick)="elegir('TODOS')" /> }
+  </div>
+  <p-table [value]="filas()" [lazy]="true" (onLazyLoad)="cargar($event)" [paginator]="true" [rows]="porPagina"
+           [totalRecords]="total()" [loading]="cargando()" [first]="primero()" dataKey="id" styleClass="p-datatable-sm">
+    <ng-template #header>
+      <tr>
+        <th>Documento</th>
+        <th style="width: 140px">Enviado</th>
+        <th style="width: 130px">Estado</th>
+        <th>Respuesta de SUNAT</th>
+        <th style="width: 130px"></th>
+      </tr>
+    </ng-template>
+    <ng-template #body let-e>
+      <tr class="fila" (click)="abrir(e)" (keydown.enter)="abrir(e)" tabindex="0">
+        <td><b class="as-codigo">{{ e.numero }}</b><br /><small class="as-sutil">{{ tipoDe(e) }}</small></td>
+        <td>
+          @if (e.fechaEnvio) { {{ e.fechaEnvio | fechaLima: 'fecha-hora' }} } @else { <span class="as-sutil">Aún no</span> }
+          @if (e.intentos > 1) { <br /><small class="as-sutil">{{ e.intentos }} intentos</small> }
+        </td>
+        <td>@if (etiquetaEstado(e.estado); as s) { <p-tag [value]="s.etiqueta" [severity]="s.severidad" /> }</td>
+        <td class="respuesta">
+          @if (e.descripcionRespuesta) {
+            @if (e.codigoRespuesta) { <span class="as-codigo">{{ e.codigoRespuesta }}</span> · } {{ e.descripcionRespuesta }}
+          } @else if (e.estado === 'PENDIENTE' && e.proximoIntento) {
+            <span class="as-sutil">Próximo intento: {{ e.proximoIntento | fechaLima: 'fecha-hora' }}</span>
+          }
+        </td>
+        <td class="acciones" (click)="$event.stopPropagation()" (keydown.enter)="$event.stopPropagation()">
+          @if (esReenviable(e)) {
+            <p-button [label]="e.ticket ? 'Consultar' : 'Enviar'" icon="pi pi-send" size="small" [outlined]="true"
+                      [loading]="enviando() === e.id" [disabled]="enviando() !== null" (onClick)="enviar(e)" />
+          }
+        </td>
+      </tr>
+    </ng-template>
+    <ng-template #emptymessage>
+      <tr><td colspan="5" class="as-vacio">
+        @if (filtro() === 'TODOS') { Aún no se envió nada a SUNAT. } @else { No hay documentos en «{{ tituloTabla() }}». }
+      </td></tr>
+    </ng-template>
+  </p-table>
+</div>
+
+<!-- Detalle de un envío -->
+<p-dialog [visible]="!!detalle()" (visibleChange)="$event || detalle.set(null)" [modal]="true" [draggable]="false"
+          [header]="detalle()?.documento ?? 'Envío'" [style]="{ width: 'min(620px, 96vw)' }">
+  @if (detalle(); as d) {
+    <div class="detalle">
+      <div class="cabecera-detalle">
+        @if (etiquetaEstado(d.estado); as s) { <p-tag [value]="s.etiqueta" [severity]="s.severidad" /> }
+        @if (d.entorno === 'BETA') { <p-tag value="Pruebas (BETA)" severity="secondary" /> }
+        <span class="as-espacio"></span>
+        @if (d.comprobanteId) { <a [routerLink]="['/ventas', d.comprobanteId]" (click)="detalle.set(null)">Abrir comprobante</a> }
+        @if (d.guiaId) { <a [routerLink]="['/guias', d.guiaId]" (click)="detalle.set(null)">Abrir guía</a> }
+      </div>
+
+      @if (d.descripcionRespuesta) {
+        <p class="respuesta-sunat" [class.mala]="d.estado === 'RECHAZADO' || d.estado === 'ERROR'">
+          @if (d.codigoRespuesta) { <b>{{ d.codigoRespuesta }}</b> · } {{ d.descripcionRespuesta }}
+        </p>
+      }
+      @if (d.observaciones) { <p class="obs"><b>Observaciones:</b> {{ d.observaciones }}</p> }
+
+      <dl>
+        <dt>Enviado</dt><dd>{{ (d.fechaEnvio | fechaLima: 'fecha-hora') || 'Aún no' }}</dd>
+        <dt>Respuesta</dt><dd>{{ (d.fechaRespuesta | fechaLima: 'fecha-hora') || '—' }}</dd>
+        <dt>Intentos</dt><dd>{{ d.intentos ?? 0 }}</dd>
+        @if (d.proximoIntento) { <dt>Próximo intento</dt><dd>{{ d.proximoIntento | fechaLima: 'fecha-hora' }}</dd> }
+        @if (d.ticket) { <dt>Ticket</dt><dd class="as-codigo">{{ d.ticket }}</dd> }
+        @if (d.nombreArchivo) { <dt>Archivo</dt><dd class="as-codigo">{{ d.nombreArchivo }}</dd> }
+        @if (d.hash) { <dt>Hash</dt><dd class="as-codigo hash">{{ d.hash }}</dd> }
+      </dl>
+
+      @switch (d.estado) {
+        @case ('RECHAZADO') {
+          <p class="ayuda">
+            @if (d.comprobanteId) { Un comprobante rechazado no existe para SUNAT. Ábrelo y usa «Reemitir» para emitirlo con otro número. }
+            @else if (d.resumenId) { Las anulaciones de esta baja siguen vigentes para SUNAT. Abre cada comprobante anulado y usa «Reintentar baja». }
+            @else { Emite una guía nueva con los datos corregidos. }
+          </p>
+        }
+        @case ('EN_PROCESO') { <p class="ayuda">SUNAT lo recibió y lo está procesando. «Consultar» trae su respuesta.</p> }
+        @case ('ERROR') { <p class="ayuda">No se pudo enviar (SUNAT no respondió o hubo un problema de conexión). El sistema reintenta solo; puedes enviarlo ahora.</p> }
+      }
+
+      @if (puedeRegenerar()) {
+        <label class="regenerar">
+          <p-checkbox [(ngModel)]="regenerar" [binary]="true" inputId="s-regenerar" />
+          <span>Volver a generar el XML antes de enviar
+            <small class="as-sutil">Solo si SUNAT no pudo leer el anterior (errores 0100–0999). Cambia el código hash: hay que reimprimir el comprobante.</small></span>
+        </label>
+      }
+      @if (errorDetalle()) { <p class="as-error" role="alert"><i class="pi pi-exclamation-circle" aria-hidden="true"></i> {{ errorDetalle() }}</p> }
+    </div>
+    <ng-template #footer>
+      @if (d.tieneXml) { <p-button label="XML" icon="pi pi-download" severity="secondary" [text]="true" (onClick)="bajar(d, 'xml')" /> }
+      @if (d.tieneCdr) { <p-button label="Constancia (CDR)" icon="pi pi-download" severity="secondary" [text]="true" (onClick)="bajar(d, 'cdr')" /> }
+      <span class="as-espacio"></span>
+      @if (esReenviable(d)) {
+        <p-button [label]="d.ticket ? 'Consultar resultado' : 'Enviar ahora'" icon="pi pi-send" [loading]="enviando() === d.id"
+                  [disabled]="enviando() !== null" (onClick)="enviar(d, true)" />
+      } @else {
+        <p-button label="Cerrar" severity="secondary" [text]="true" (onClick)="detalle.set(null)" />
+      }
+    </ng-template>
+  }
+</p-dialog>

@@ -23,6 +23,13 @@
     @if (puedeConvertir()) {
       <p-button label="Convertir en boleta o factura" icon="pi pi-sync" (onClick)="abrir('convertir')" />
     }
+    @if (puedeGuia()) {
+      <p-button label="Guía de remisión" icon="pi pi-truck" severity="secondary" [outlined]="true"
+                [routerLink]="['/guias/nueva']" [queryParams]="{ venta: v.id }" />
+    }
+    @if (puedeReintentarBaja()) {
+      <p-button label="Reintentar baja" icon="pi pi-refresh" [loading]="ocupado() === 'baja'" (onClick)="reintentarBaja()" />
+    }
     @if (rechazado() && vigente()) {
       <p-button label="Reemitir" icon="pi pi-refresh" [loading]="ocupado() === 'reemitir'" (onClick)="reemitir()" />
     }
@@ -36,7 +43,9 @@
 
   @if (v.estado === 'ANULADO') {
     <p-message severity="error" styleClass="aviso">Anulado el {{ v.fechaAnulacion | fechaLima: 'fecha-hora' }}: {{ v.motivoAnulacion }}
-      @if (v.bajaSunat?.estado; as b) { · Baja en SUNAT: {{ b }} }</p-message>
+      @if (estadoBaja(); as b) { · Baja en SUNAT: {{ b.etiqueta }}
+        @if (v.bajaSunat?.estado === 'RECHAZADO') { ({{ v.bajaSunat?.codigoRespuesta }} {{ v.bajaSunat?.descripcionRespuesta }}). Para SUNAT sigue vigente: reintenta la baja. }
+      }</p-message>
   }
   @if (v.sunat?.estado === 'RECHAZADO' || v.sunat?.estado === 'OBSERVADO') {
     <p-message [severity]="v.sunat?.estado === 'RECHAZADO' ? 'error' : 'warn'" styleClass="aviso">

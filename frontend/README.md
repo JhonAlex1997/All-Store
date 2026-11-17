@@ -78,6 +78,16 @@ src/app/
   local o en todos; para todo el catálogo, categorías o modelos (conserva las prendas sueltas al editar).
   Ejemplo de precio en vivo con el mismo redondeo del backend (`campanas-reglas.ts`), pausar o reanudar,
   y duplicar con fechas nuevas. Estados: vigente, próxima, pausada y terminada.
+- **SUNAT** (`features/sunat`, solo ADMIN): contadores por estado (también filtran la tabla), avisos de SUNAT
+  (plazos, rechazos, bajas, guías por salir), lista de envíos con su respuesta y detalle con XML y constancia (CDR).
+  «Enviar ahora» reenvía lo pendiente o con error y consulta el ticket de las bajas; regenerar el XML solo se ofrece
+  en un error sin ticket ni constancia (`sunat-reglas.ts`). Avisa si se trabaja en el ambiente BETA.
+- **Guías de remisión** (`features/guias`, todos los roles): lista con filtros, detalle con PDF y emisión. Traslado
+  entre locales (elige prendas con `selector-prendas`; el stock se mueve al emitir) o entrega de una venta (boleta o
+  factura del mismo local, todo lo vendido o una parte, dirección y ubigeo de llegada). Transporte propio (conductor,
+  licencia y placa, o auto/moto M1-L sin ellos) o empresa de transporte (RUC). Validación en `guias-reglas.ts` con las
+  reglas del backend. El almacenero solo emite traslados (no ve ventas). Desde un comprobante: botón «Guía de
+  remisión» (`/guias/nueva?venta=ID`); un anulado cuya baja rechazó SUNAT tiene «Reintentar baja».
 - **Reportes** (`features/reportes`, solo ADMIN): periodo (hoy, 7 días, este mes, mes pasado o fechas) y local;
   resumen con venta neta por día, lo más vendido, tallas y colores con su stock, cajeros, horas y días de la
   semana, campañas, mercadería sin rotación y detalle línea por línea (este último solo se descarga). Todo se

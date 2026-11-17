@@ -1,0 +1,207 @@
+<div class="as-pagina-titulo">
+  <div>
+    <a routerLink="/guias" class="volver"><i class="pi pi-arrow-left" aria-hidden="true"></i> Guías</a>
+    <h1>Nueva guía de remisión</h1>
+    <div class="as-sub">{{ ayudaMotivo() }}</div>
+  </div>
+</div>
+
+@if (!series().length) {
+  <div class="as-tarjeta sin-serie" role="status">
+    <i class="pi pi-info-circle" aria-hidden="true"></i>
+    <div>No hay una serie de guía activa (empieza con T, ej. T001). El administrador la crea en <b>Empresa y series</b>, en el local de donde sale la mercadería.</div>
+  </div>
+}
+
+<div class="disposicion">
+  <div class="columna">
+    <!-- Qué y desde dónde -->
+    <section class="as-tarjeta bloque">
+      <h2>Traslado</h2>
+      @if (motivos.length > 1) {
+        <p-selectbutton [options]="motivos" [ngModel]="motivo()" (ngModelChange)="cambiarMotivo($event)" optionLabel="etiqueta"
+                        optionValue="valor" [allowEmpty]="false" ariaLabel="Motivo del traslado" />
+      }
+      <div class="as-rejilla dos">
+        <div class="as-campo">
+          <label for="g-serie">Serie <span class="as-sutil">(define de qué local sale)</span></label>
+          <p-select inputId="g-serie" [options]="series()" [ngModel]="serieId()" (ngModelChange)="serieId.set($event)" optionValue="id"
+                    placeholder="Elige la serie" [optionLabel]="'codigo'">
+            <ng-template #selectedItem let-s>{{ etiquetaSerie(s) }}</ng-template>
+            <ng-template #item let-s>{{ etiquetaSerie(s) }} <span class="as-sutil">· sigue {{ s.siguienteNumero }}</span></ng-template>
+          </p-select>
+        </div>
+        <div class="as-campo">
+          <label for="g-fecha">Inicio del traslado</label>
+          <input pInputText id="g-fecha" type="date" [(ngModel)]="fechaTraslado" [min]="hoy" />
+        </div>
+      </div>
+      @if (origen(); as o) {
+        <p class="punto"><i class="pi pi-map-marker" aria-hidden="true"></i> Sale de <b>{{ o.nombre }}</b> — {{ o.direccion }} <span class="as-sutil">· ubigeo {{ o.ubigeo }}</span></p>
+      }
+
+      @if (motivo() === 'TRASLADO_ESTABLECIMIENTOS') {
+        <div class="as-campo">
+          <label for="g-destino">Llega a</label>
+          <p-select inputId="g-destino" [options]="destinos()" [ngModel]="destinoId()" (ngModelChange)="destinoId.set($event)"
+                    optionLabel="nombre" optionValue="id" placeholder="Local de destino" />
+        </div>
+      } @else {
+        <!-- Venta -->
+        @if (ventaElegida(); as v) {
+          <div class="venta">
+            <div>
+              <b class="as-codigo">{{ v.numero }}</b> · {{ v.cliente?.nombre }}
+              <span class="as-sutil">· {{ v.cliente?.numeroDocumento }} · {{ v.total | soles }} · {{ v.establecimiento }}</span>
+            </div>
+            <p-button label="Cambiar" [text]="true" size="small" (onClick)="quitarVenta()" />
+          </div>
+          @if (serieDeOtroLocal()) {
+            <small class="as-error">La venta se hizo en {{ v.establecimiento }}: elige una serie de guía de ese local.</small>
+          }
+          <div class="as-rejilla llegada">
+            <div class="as-campo">
+              <label for="g-ubigeo">Ubigeo de llegada</label>
+              <input pInputText id="g-ubigeo" [(ngModel)]="ubigeoLlegada" maxlength="6" inputmode="numeric" placeholder="150101" autocomplete="off" />
+            </div>
+            <div class="as-campo">
+              <label for="g-dir">Dirección de entrega</label>
+              <input pInputText id="g-dir" [(ngModel)]="direccionLlegada" maxlength="250" placeholder="Av., calle, número, distrito" />
+            </div>
+          </div>
+        } @else {
+          <div class="as-campo">
+            <label for="g-venta">Boleta o factura que se entrega</label>
+            <div class="buscar-venta">
+              <input pInputText id="g-venta" [(ngModel)]="numeroVenta" (keydown.enter)="buscarVenta()" placeholder="Ej. B001-00000015" autocomplete="off" />
+              <p-button label="Buscar" icon="pi pi-search" [loading]="buscandoVenta()" (onClick)="buscarVenta()" />
+            </div>
+          </div>
+        }
+        @if (errorVenta()) { <small class="as-error" role="alert">{{ errorVenta() }}</small> }
+      }
+    </section>
+
+    <!-- Carga y transporte -->
+    <section class="as-tarjeta bloque">
+      <h2>Carga y transporte</h2>
+      <div class="as-rejilla dos">
+        <div class="as-campo">
+          <label for="g-peso">Peso bruto total</label>
+          <p-inputnumber inputId="g-peso" [(ngModel)]="pesoBrutoKg" [min]="0" [maxFractionDigits]="3" suffix=" kg" placeholder="Ej. 4.5 kg" locale="en-US" />
+          <small class="as-ayuda">Aproximado, con caja o bolsa. Un jean pesa ~0.6 kg.</small>
+        </div>
+        <div class="as-campo">
+          <label for="g-bultos">Bultos <span class="as-sutil">(opcional)</span></label>
+          <p-inputnumber inputId="g-bultos" [(ngModel)]="numeroBultos" [min]="1" [useGrouping]="false" placeholder="Ej. 2" />
+        </div>
+      </div>
+
+      <p-selectbutton [options]="modalidades" [ngModel]="modalidad()" (ngModelChange)="$event && modalidad.set($event)" optionLabel="etiqueta"
+                      optionValue="valor" [allowEmpty]="false" ariaLabel="Modalidad de transporte" />
+      <small class="as-ayuda">{{ ayudaModalidad() }}</small>
+
+      @if (modalidad() === 'PUBLICO') {
+        <div class="as-rejilla tres">
+          <div class="as-campo">
+            <label for="g-truc">RUC del transportista</label>
+            <input pInputText id="g-truc" [(ngModel)]="transportista.ruc" maxlength="11" inputmode="numeric" autocomplete="off" />
+          </div>
+          <div class="as-campo ancho">
+            <label for="g-trs">Razón social</label>
+            <input pInputText id="g-trs" [(ngModel)]="transportista.razonSocial" maxlength="200" />
+          </div>
+          <div class="as-campo">
+            <label for="g-mtc">Registro MTC <span class="as-sutil">(opcional)</span></label>
+            <input pInputText id="g-mtc" [(ngModel)]="transportista.registroMtc" maxlength="20" autocomplete="off" />
+          </div>
+        </div>
+      } @else {
+        <label class="interruptor">
+          <p-toggleswitch [ngModel]="vehiculoM1l()" (ngModelChange)="vehiculoM1l.set($event)" />
+          <span>Va en auto o moto <span class="as-sutil">(categoría M1 o L: no se registran conductor ni placa)</span></span>
+        </label>
+        @if (!vehiculoM1l()) {
+          <div class="as-rejilla tres">
+            <div class="as-campo">
+              <label for="g-ctipo">Documento del conductor</label>
+              <p-select inputId="g-ctipo" [options]="documentos" [(ngModel)]="conductor.tipoDocumento" optionLabel="etiqueta" optionValue="valor" />
+            </div>
+            <div class="as-campo">
+              <label for="g-cnum">Número</label>
+              <input pInputText id="g-cnum" [(ngModel)]="conductor.numeroDocumento" maxlength="12" autocomplete="off" />
+            </div>
+            <div class="as-campo">
+              <label for="g-clic">Licencia de conducir</label>
+              <input pInputText id="g-clic" [(ngModel)]="conductor.licencia" (blur)="normalizarLicencia()" maxlength="12" placeholder="Q45678912" autocomplete="off" />
+            </div>
+            <div class="as-campo">
+              <label for="g-cnom">Nombres</label>
+              <input pInputText id="g-cnom" [(ngModel)]="conductor.nombres" maxlength="100" />
+            </div>
+            <div class="as-campo">
+              <label for="g-cape">Apellidos</label>
+              <input pInputText id="g-cape" [(ngModel)]="conductor.apellidos" maxlength="100" />
+            </div>
+            <div class="as-campo">
+              <label for="g-placa">Placa</label>
+              <input pInputText id="g-placa" [(ngModel)]="placa" (blur)="normalizarPlaca()" maxlength="10" placeholder="ABC123" autocomplete="off" />
+            </div>
+          </div>
+        }
+      }
+
+      <div class="as-campo">
+        <label for="g-obs">Observación <span class="as-sutil">(opcional, sale impresa)</span></label>
+        <textarea pTextarea id="g-obs" [(ngModel)]="observacion" rows="2" maxlength="250" placeholder="Ej. Reposición de temporada"></textarea>
+      </div>
+    </section>
+  </div>
+
+  <!-- Prendas -->
+  <section class="as-tarjeta bloque prendas">
+    @if (motivo() === 'TRASLADO_ESTABLECIMIENTOS') {
+      <h2>Prendas que se trasladan <span class="as-sutil">({{ totalUnidades() }} unidades)</span></h2>
+      <as-selector-prendas [accion]="'Agregar a la guía'" (agregar)="agregar($event)" />
+      <ul class="lineas">
+        @for (l of lineas(); track l.varianteId) {
+          <li>
+            <span><b>{{ l.descripcion }}</b><br /><small class="as-codigo as-sutil">{{ l.sku }}</small></span>
+            <input type="number" min="1" step="1" [ngModel]="l.cantidad" (ngModelChange)="cambiarLinea(l.varianteId, $event)" aria-label="Cantidad" />
+            <p-button icon="pi pi-times" [text]="true" severity="secondary" size="small" (onClick)="quitarLinea(l.varianteId)" ariaLabel="Quitar" />
+          </li>
+        } @empty {
+          <li class="as-vacio">Busca el modelo, escribe las cantidades por talla y color, y agrégalas.</li>
+        }
+      </ul>
+    } @else {
+      <h2>Prendas que se entregan <span class="as-sutil">({{ unidadesVenta() }} unidades)</span></h2>
+      @if (ventaElegida(); as v) {
+        <label class="interruptor">
+          <p-toggleswitch [ngModel]="entregarTodo()" (ngModelChange)="entregarTodo.set($event)" />
+          <span>Todo lo vendido <span class="as-sutil">(lo que aún no tenga guía)</span></span>
+        </label>
+        <ul class="lineas">
+          @for (d of v.detalles ?? []; track d.item) {
+            <li>
+              <span><b>{{ d.descripcion }}</b><br /><small class="as-codigo as-sutil">{{ d.sku }}</small></span>
+              @if (entregarTodo()) {
+                <span class="cantidad-fija">{{ d.cantidad }}</span>
+              } @else {
+                <input type="number" min="0" [max]="d.cantidad ?? 0" step="1" [ngModel]="cantidadesVenta()[d.varianteId!] || 0"
+                       (ngModelChange)="cambiarCantidadVenta(d.varianteId!, $event, d.cantidad ?? 0)" [attr.aria-label]="'Cantidad de ' + d.descripcion" />
+                <small class="as-sutil">de {{ d.cantidad }}</small>
+              }
+            </li>
+          }
+        </ul>
+      } @else {
+        <p class="as-vacio">Busca primero la boleta o factura.</p>
+      }
+    }
+
+    @if (error()) { <p class="as-error error" role="alert"><i class="pi pi-exclamation-circle" aria-hidden="true"></i> {{ error() }}</p> }
+    <p-button label="Emitir guía" icon="pi pi-check" [loading]="emitiendo()" [disabled]="!series().length" (onClick)="emitir()" fluid />
+    <small class="as-ayuda pie">Al emitir se envía a SUNAT.@if (motivo() === 'TRASLADO_ESTABLECIMIENTOS') { El stock pasa al local de destino en ese momento. }</small>
+  </section>
+</div>
