@@ -16,6 +16,12 @@ h2 { font-size: .95rem; margin: 0; }
 .venta { display: flex; align-items: center; gap: .5rem; justify-content: space-between; padding: .55rem .7rem; border-radius: 8px;
   background: var(--as-rosa-claro); font-size: 13.5px; }
 .buscar-venta { display: flex; gap: .5rem; input { flex: 1; min-width: 0; } }
+.agencias { display: flex; flex-wrap: wrap; align-items: center; gap: .4rem; font-size: 12.5px; }
+.agencia { font: inherit; font-size: 12.5px; padding: .3rem .65rem; border-radius: 999px; border: 1px solid var(--as-borde);
+  background: #fff; color: var(--as-texto); cursor: pointer; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  &:hover { border-color: var(--as-rosa); }
+  &.elegida { background: var(--as-rosa-claro); border-color: var(--as-rosa-fuerte); font-weight: 600; }
+  &:focus-visible { outline: 2px solid var(--as-rosa-fuerte); outline-offset: 2px; } }
 .interruptor { display: flex; align-items: center; gap: .55rem; font-size: 13px; cursor: pointer; }
 
 .prendas { position: sticky; top: 1rem; }

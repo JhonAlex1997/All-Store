@@ -102,10 +102,22 @@
       <small class="as-ayuda">{{ ayudaModalidad() }}</small>
 
       @if (modalidad() === 'PUBLICO') {
+        @if (agencias().length) {
+          <div class="agencias" role="group" aria-label="Agencias usadas antes">
+            <span class="as-sutil">Usadas antes:</span>
+            @for (a of agencias(); track a.ruc) {
+              <button type="button" class="agencia" [class.elegida]="transportista.ruc === a.ruc" (click)="elegirAgencia(a)"
+                      [attr.aria-pressed]="transportista.ruc === a.ruc" [title]="'RUC ' + a.ruc">{{ a.razonSocial }}</button>
+            }
+          </div>
+        }
         <div class="as-rejilla tres">
           <div class="as-campo">
-            <label for="g-truc">RUC del transportista</label>
-            <input pInputText id="g-truc" [(ngModel)]="transportista.ruc" maxlength="11" inputmode="numeric" autocomplete="off" />
+            <label for="g-truc">RUC de la agencia</label>
+            <input pInputText id="g-truc" [(ngModel)]="transportista.ruc" (ngModelChange)="$event?.length === 11 && consultarRuc()"
+                   (blur)="consultarRuc()" maxlength="11" inputmode="numeric" autocomplete="off" placeholder="20…" />
+            @if (consultandoRuc()) { <small class="as-ayuda">Consultando en SUNAT…</small> }
+            @if (avisoRuc()) { <small class="as-error">{{ avisoRuc() }}</small> }
           </div>
           <div class="as-campo ancho">
             <label for="g-trs">Razón social</label>

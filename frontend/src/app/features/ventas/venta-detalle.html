@@ -54,6 +54,17 @@
     </p-message>
   }
 
+  @if (guias().length) {
+    <div class="as-tarjeta guias">
+      <i class="pi pi-truck" aria-hidden="true"></i>
+      <span>Guías de remisión:</span>
+      @for (g of guias(); track g.id) {
+        <a [routerLink]="['/guias', g.id]" class="as-codigo">{{ g.numero }}</a>
+        <small class="as-sutil">({{ g.fechaTraslado | fechaLima }}@if (g.llegada) {<span> · {{ g.llegada }}</span>})</small>
+      }
+    </div>
+  }
+
   <div class="disposicion">
     <!-- Prendas -->
     <div class="as-tarjeta">

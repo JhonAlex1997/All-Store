@@ -109,3 +109,7 @@ h2 { font-size: .95rem; margin: 0 0 .6rem; }
 }
 
 .hash { word-break: break-all; }
+
+.guias { display: flex; flex-wrap: wrap; align-items: center; gap: .35rem .6rem; margin-bottom: 1rem; font-size: 13px;
+  > i { color: var(--as-rosa-fuerte); }
+  a { font-weight: 600; color: var(--as-rosa-fuerte); } }

@@ -16,7 +16,9 @@ import { NotaCreditoRequest } from '../../core/api/models/nota-credito-request';
 import { SerieResponse } from '../../core/api/models/serie-response';
 import { VentaResponse } from '../../core/api/models/venta-response';
 import { ClienteControllerService } from '../../core/api/services/cliente-controller.service';
+import { GuiaRemisionResumenResponse } from '../../core/api/models/guia-remision-resumen-response';
 import { EntregaControllerService } from '../../core/api/services/entrega-controller.service';
+import { GuiaRemisionControllerService } from '../../core/api/services/guia-remision-controller.service';
 import { SerieControllerService } from '../../core/api/services/serie-controller.service';
 import { SunatControllerService } from '../../core/api/services/sunat-controller.service';
 import { VentaControllerService } from '../../core/api/services/venta-controller.service';
@@ -58,11 +60,14 @@ export class VentaDetalle {
   private readonly clientesApi = inject(ClienteControllerService);
   private readonly avisos = inject(MessageService);
   private readonly router = inject(Router);
+  private readonly guiasApi = inject(GuiaRemisionControllerService);
 
   readonly id = input.required<string>();
 
   protected readonly esAdmin = inject(SesionService).tieneRol('ADMIN');
   protected readonly venta = signal<VentaResponse | null>(null);
+  /** Guías de remisión que entregan esta venta (envíos por agencia o reparto). */
+  protected readonly guias = signal<GuiaRemisionResumenResponse[]>([]);
   protected readonly ocupado = signal<string | null>(null);
   protected readonly dialogo = signal<Dialogo>(null);
   protected readonly error = signal<string | null>(null);
@@ -121,7 +126,15 @@ export class VentaDetalle {
       this.dialogo.set(null);
       this.noDisponible.set(null);
       this.api.ventaObtener({ id }, sinAviso())
-        .then((v) => this.venta.set(v))
+        .then((v) => {
+          this.venta.set(v);
+          this.guias.set([]);
+          if (v.tipoComprobante === 'BOLETA' || v.tipoComprobante === 'FACTURA') {
+            this.guiasApi.guiaRemisionListar({ comprobanteId: id, size: 20 }, sinAviso())
+              .then((r) => { if (this.venta()?.id === id) this.guias.set(r.content ?? []); })
+              .catch(() => undefined);
+          }
+        })
         .catch((e) => this.noDisponible.set(mensajeDeError(e)));
     });
   }

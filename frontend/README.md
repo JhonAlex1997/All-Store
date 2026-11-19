@@ -86,7 +86,9 @@ src/app/
   entre locales (elige prendas con `selector-prendas`; el stock se mueve al emitir) o entrega de una venta (boleta o
   factura del mismo local, todo lo vendido o una parte, dirección y ubigeo de llegada). Transporte propio (conductor,
   licencia y placa, o auto/moto M1-L sin ellos) o empresa de transporte (RUC). Validación en `guias-reglas.ts` con las
-  reglas del backend. El almacenero solo emite traslados (no ve ventas). Desde un comprobante: botón «Guía de
+  reglas del backend. El almacenero solo emite traslados (no ve ventas). Envío por agencia: desde una venta propone «Empresa de
+  transporte», recuerda las últimas 8 agencias usadas en ese navegador (`agencias-frecuentes.ts`) y trae la razón social
+  por RUC. El comprobante muestra sus guías. Desde un comprobante: botón «Guía de
   remisión» (`/guias/nueva?venta=ID`); un anulado cuya baja rechazó SUNAT tiene «Reintentar baja».
 - **Reportes** (`features/reportes`, solo ADMIN): periodo (hoy, 7 días, este mes, mes pasado o fechas) y local;
   resumen con venta neta por día, lo más vendido, tallas y colores con su stock, cajeros, horas y días de la

@@ -26,6 +26,8 @@ import { SIN_AVISO } from '../../core/http/errores.interceptor';
 import { nuevaClave } from '../../core/http/idempotencia.interceptor';
 import { SolesPipe } from '../../shared/formato/soles.pipe';
 import { PrendaElegida, SelectorPrendas } from '../../shared/prendas/selector-prendas';
+import { esRucValido } from '../../shared/sunat/ruc';
+import { Agencia, leerAgencias, recordarAgencia } from './agencias-frecuentes';
 import { armarGuia, DOCUMENTOS_CONDUCTOR, Modalidad, MODALIDADES, Motivo, MOTIVOS, soloAlfanumerico, TipoDocConductor } from './guias-reglas';
 
 /** Hoy en Lima como AAAA-MM-DD. */
@@ -94,7 +96,11 @@ export class GuiaNueva {
   protected numeroBultos: number | null = null;
   protected conductor = { tipoDocumento: 'DNI' as TipoDocConductor, numeroDocumento: '', nombres: '', apellidos: '', licencia: '' };
   protected placa = '';
-  protected transportista = { ruc: '', razonSocial: '', registroMtc: '' };
+  protected transportista: Agencia = { ruc: '', razonSocial: '', registroMtc: '' };
+  protected readonly agencias = signal<Agencia[]>(leerAgencias());
+  protected readonly consultandoRuc = signal(false);
+  protected readonly avisoRuc = signal<string | null>(null);
+  private rucConsultado = '';
   protected observacion = '';
   /** Una clave por guía: un doble clic o un reintento no emite dos guías ni mueve el stock dos veces. */
   private clave = nuevaClave();
@@ -141,6 +147,39 @@ export class GuiaNueva {
     if (!m) return;
     this.motivo.set(m);
     this.error.set(null);
+  }
+
+  protected elegirAgencia(a: Agencia): void {
+    this.transportista = { ...a };
+    this.avisoRuc.set(null);
+  }
+
+  /** Con un RUC válido trae la razón social del padrón de SUNAT (la misma consulta que en Clientes). */
+  protected async consultarRuc(): Promise<void> {
+    const ruc = this.transportista.ruc.trim();
+    // Se llama al completar los 11 dígitos y al salir del campo: una sola consulta por RUC.
+    if (ruc === this.rucConsultado) return;
+    this.avisoRuc.set(null);
+    if (!esRucValido(ruc) || this.consultandoRuc()) {
+      if (ruc.length === 11 && !esRucValido(ruc)) this.avisoRuc.set('El RUC no es válido.');
+      return;
+    }
+    const guardada = this.agencias().find((a) => a.ruc === ruc);
+    if (guardada) {
+      this.elegirAgencia(guardada);
+      return;
+    }
+    this.consultandoRuc.set(true);
+    this.rucConsultado = ruc;
+    try {
+      const r = await this.clientesApi.clienteConsultar({ tipo: 'RUC', numero: ruc }, sinAviso());
+      if (r.nombre && this.transportista.ruc.trim() === ruc) this.transportista.razonSocial = r.nombre;
+      if (r.estado && r.estado !== 'ACTIVO') this.avisoRuc.set(`Ojo: SUNAT lo muestra como ${r.estado}.`);
+    } catch {
+      this.avisoRuc.set('No se pudo consultar el RUC; escribe la razón social.');
+    } finally {
+      this.consultandoRuc.set(false);
+    }
   }
 
   protected async buscarVenta(): Promise<void> {
@@ -247,6 +286,7 @@ export class GuiaNueva {
     this.emitiendo.set(true);
     try {
       const guia = await this.api.guiaRemisionEmitir({ 'Idempotency-Key': this.clave, body: resultado.request }, sinAviso());
+      if (resultado.request.transportista) this.agencias.set(recordarAgencia(this.transportista));
       this.avisos.add({
         severity: 'success',
         summary: `Guía ${guia.numero} emitida`,
@@ -287,6 +327,8 @@ export class GuiaNueva {
         return;
       }
       this.ventaElegida.set(v);
+      // Las ventas se despachan por agencia: se propone empresa de transporte (se puede cambiar).
+      this.modalidad.set('PUBLICO');
       this.numeroVenta = v.numero ?? '';
       this.entregarTodo.set(true);
       this.cantidadesVenta.set({});
