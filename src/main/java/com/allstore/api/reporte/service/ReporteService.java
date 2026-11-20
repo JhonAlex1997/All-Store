@@ -379,7 +379,20 @@ public class ReporteService {
                 + " and (cast(:est as bigint) is null or c.establecimiento_id = :est)";
     }
 
-    private static MapSqlParameterSource parametros(Periodo p) {
+    /**
+     * Parámetros del periodo. De paso ajusta la transacción (SET LOCAL, solo dura esta consulta):
+     * <ul>
+     *   <li>plan a la medida de las fechas: tras unas cuantas ejecuciones el driver reutiliza un plan
+     *       genérico que no sabe si el rango es un día o un año, y para un año elegía recorrer índice
+     *       por índice (un reporte anual pasaba de 0.2 s a más de 1 s);</li>
+     *   <li>más memoria para agrupar: el conteo de comprobantes de un año no cabía en los 4 MB por
+     *       defecto y se ordenaba en disco.</li>
+     * </ul>
+     * Requiere la transacción de la clase (readOnly): fuera de una transacción SET LOCAL no tendría efecto.
+     */
+    private MapSqlParameterSource parametros(Periodo p) {
+        jdbc.getJdbcTemplate().execute("set local plan_cache_mode = force_custom_plan");
+        jdbc.getJdbcTemplate().execute("set local work_mem = '24MB'");
         return new MapSqlParameterSource()
                 .addValue("desde", p.desde().atStartOfDay(JpaAuditingConfig.ZONA_LIMA).toOffsetDateTime())
                 .addValue("hasta", p.hasta().plusDays(1).atStartOfDay(JpaAuditingConfig.ZONA_LIMA).toOffsetDateTime())

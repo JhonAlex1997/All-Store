@@ -53,10 +53,37 @@ la misma máquina (en un servidor dedicado los números mejoran).
 venta fallaba (la mitad de las ventas con 5 cajas). Ver el commit «Corrige números de comprobante repetidos…»
 y la prueba `VentaSimultaneaIntegrationTest.variasCajasALaVezTomanNumerosDistintosYSeguidos`.
 
-**Lo que limita:** la búsqueda de prendas en la caja revisa el catálogo completo en cada búsqueda (~7 ms de
-CPU de la base con 5 400 prendas); con 300+ usuarios satura la base. Subir el pool de conexiones de 10 a
+**Lo que limitaba:** la búsqueda de prendas en la caja revisaba el catálogo completo en cada búsqueda (~7 ms de
+CPU de la base con 5 400 prendas); con 300+ usuarios saturaba la base. Subir el pool de conexiones de 10 a
 30 no mejora (el límite es la CPU de la base, no las conexiones).
 
-**Mejoras recomendadas si crece:** índices trigram (`pg_trgm`) para la búsqueda de prendas y el stock, un
-índice por fecha para el reporte por producto anual, y en producción ajustar PostgreSQL
-(`shared_buffers` ~25 % de la RAM).
+## Optimización del 20/11/2026
+
+- **Búsqueda en caja y stock:** índices trigram (`pg_trgm`, migración V28) y consultas reescritas para que
+  la base pueda usarlos (antes un solo `OR` entre modelo y prenda lo impedía).
+- **Reportes:** cada reporte pide a PostgreSQL un plan hecho para sus fechas (`plan_cache_mode`) y 24 MB para
+  agrupar (`work_mem`), solo dentro de su transacción. Tras varias ejecuciones el driver usaba un plan genérico
+  que para un año recorría índice por índice, y el conteo de comprobantes se ordenaba en disco.
+- Un índice por fecha para el reporte anual **no** sirve: ya existe (`ix_comprobante_fecha`) y un año lee casi
+  todas las ventas, así que la base hace bien en recorrer la tabla.
+
+Misma base y mismo equipo, `node perf/por-endpoint.mjs`, versión anterior contra la nueva:
+
+| Consulta | 1 usuario antes → después | 20 usuarios a la vez, respuestas por segundo |
+|---|---|---|
+| Caja: buscar un modelo («mom») | 31 → **4 ms** | 151 → **2 372** |
+| Caja: código exacto (escáner) | 24 → **4 ms** | 138 → **2 998** |
+| Stock del local (página) | 32 → **8 ms** | 84 → **368** |
+| Stock: buscar «mom» | 17 → **5 ms** | 207 → **615** |
+| Reporte por producto del mes | 191 → **77 ms** | sin cambio claro (CPU al límite) |
+| Reporte por producto de 12 meses | 1 485 → **695 ms** | 8.7 s → **4.7 s** cada uno |
+| Caja: buscar «jean» (coincide con todo el catálogo) | 54 → 34 ms | 52 → 42 (algo peor) |
+
+Una búsqueda que coincide con casi todo el catálogo no aprovecha el índice (igual hay que ordenar las 5 400
+prendas para mostrar las primeras 60); en la práctica la caja busca por modelo, código o escáner.
+
+La prueba de uso real (`mixto`) en esta laptop varía mucho de una corrida a otra (con 300 usuarios, el 95 %
+de las respuestas tardó entre 389 y 841 ms con el mismo código), así que para comparar sirve la tabla de
+arriba.
+
+**Siguiente paso si crece:** en producción ajustar PostgreSQL (`shared_buffers` ~25 % de la RAM; hoy 128 MB).

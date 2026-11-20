@@ -26,6 +26,7 @@ const rutas = {
   'ventas (lista del día)': `/api/ventas?size=25&desde=${hoy}&hasta=${hoy}`,
   'ventas/totales del mes': `/api/ventas/totales?desde=${mes}&hasta=${hoy}`,
   'stock del local (página)': `/api/inventario/stock?establecimientoId=${local}&size=50&page=5`,
+  'stock: buscar "mom"': `/api/inventario/stock?establecimientoId=${local}&size=50&busqueda=mom`,
   'reporte ventas por día': `/api/reportes/ventas-por-dia?formato=JSON&desde=${mes}&hasta=${hoy}`,
   'reporte por producto': `/api/reportes/ventas-por-producto?formato=JSON&desde=${mes}&hasta=${hoy}`,
   'ventas/totales de 12 meses': `/api/ventas/totales?desde=${anio}&hasta=${hoy}`,

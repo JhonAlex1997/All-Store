@@ -70,7 +70,7 @@ public class InventarioService {
     @Transactional(readOnly = true)
     public PageResponse<StockResponse> stock(Long establecimientoId, String busqueda, boolean soloConStock,
                                              Pageable pageable) {
-        String patron = "%" + (StringUtils.hasText(busqueda) ? busqueda.trim().toLowerCase() : "") + "%";
+        String patron = StringUtils.hasText(busqueda) ? "%" + busqueda.trim().toUpperCase(java.util.Locale.ROOT) + "%" : null;
         return PageResponse.of(stockRepository.buscar(establecimientoId, patron, soloConStock, pageable)
                 .map(StockResponse::from));
     }

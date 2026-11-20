@@ -39,18 +39,26 @@ public interface StockRepository extends JpaRepository<Stock, Long> {
             """)
     Optional<Stock> bloquear(@Param("varianteId") Long varianteId, @Param("establecimientoId") Long establecimientoId);
 
+    /**
+     * Stock por local; {@code patron} en mayúsculas ({@code %TEXTO%}) o null para no filtrar. Nombre y SKU
+     * se buscan en subconsultas aparte para que la base use los índices trigram (V28).
+     */
     @Query(value = """
             select s from Stock s
             join fetch s.variante v join fetch v.producto p join fetch v.talla join fetch v.color
             join fetch s.establecimiento e
             where (:establecimientoId is null or e.id = :establecimientoId)
-              and (lower(p.nombre) like :patron or lower(v.sku) like :patron)
+              and (:patron is null
+                   or p.id in (select p2.id from Producto p2 where upper(p2.nombre) like :patron)
+                   or v.id in (select v2.id from ProductoVariante v2 where upper(v2.sku) like :patron))
               and (:soloConStock = false or s.cantidad > 0)
             """,
             countQuery = """
             select count(s) from Stock s join s.variante v join v.producto p join s.establecimiento e
             where (:establecimientoId is null or e.id = :establecimientoId)
-              and (lower(p.nombre) like :patron or lower(v.sku) like :patron)
+              and (:patron is null
+                   or p.id in (select p2.id from Producto p2 where upper(p2.nombre) like :patron)
+                   or v.id in (select v2.id from ProductoVariante v2 where upper(v2.sku) like :patron))
               and (:soloConStock = false or s.cantidad > 0)
             """)
     Page<Stock> buscar(@Param("establecimientoId") Long establecimientoId, @Param("patron") String patron,
