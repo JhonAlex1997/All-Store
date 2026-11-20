@@ -187,6 +187,91 @@ class VentaSimultaneaIntegrationTest {
         anulacionService.anular(primero.id(), new AnularVentaRequest("Fin de la prueba de doble clic"));
     }
 
+    /**
+     * Varias cajas cobran a la vez con la misma serie y hay stock de sobra: todas las ventas deben
+     * pasar con números seguidos y sin repetir. (Lo encontró la prueba de carga: la serie ya leída
+     * en la transacción no se releía al bloquearla y dos cajas tomaban el mismo correlativo.)
+     */
+    @Test
+    void variasCajasALaVezTomanNumerosDistintosYSeguidos() throws Exception {
+        String sufijo = String.valueOf(ThreadLocalRandom.current().nextInt(100, 1000));
+        como("t_num_admin");
+        Long local = establecimientoService.crear(new EstablecimientoRequest("6" + sufijo, "Local numeracion " + sufijo,
+                TipoEstablecimiento.TIENDA, "Jr. Prueba 1", "150115", true)).id();
+        Long serie = serieService.crear(new SerieCreateRequest(TipoComprobante.NOTA_VENTA, "N" + sufijo, local, 0L)).id();
+        Long prenda = productoService.crear(new ProductoCreateRequest("NUM-" + sufijo, "Jean numeracion", null, 1L,
+                new BigDecimal("89.90"), null, List.of(3L), List.of(1L))).variantes().getFirst().id();
+        inventarioService.registrar(local, MotivoMovimiento.INVENTARIO_INICIAL, List.of(new InventarioService.Linea(prenda, 100)), null);
+
+        int cajas = 6;
+        int ventasPorCaja = 5;
+        List<String> cajeros = new ArrayList<>();
+        for (int i = 0; i < cajas; i++) {
+            String cajero = "t_num_" + i + "_" + sufijo;
+            cajeros.add(cajero);
+            como(cajero);
+            cajaService.abrir(new AbrirCajaRequest(local, BigDecimal.ZERO));
+        }
+
+        CountDownLatch salida = new CountDownLatch(1);
+        ExecutorService hilos = Executors.newFixedThreadPool(cajas);
+        List<VentaResponse> ventas = Collections.synchronizedList(new ArrayList<>());
+        List<String> errores = Collections.synchronizedList(new ArrayList<>());
+        List<Future<?>> tareas = new ArrayList<>();
+        for (String cajero : cajeros) {
+            tareas.add(hilos.submit(() -> {
+                como(cajero);
+                try {
+                    salida.await();
+                    for (int v = 0; v < ventasPorCaja; v++) {
+                        try {
+                            ventas.add(ventaService.crear(new VentaRequest(TipoComprobante.NOTA_VENTA, serie, null, null,
+                                    List.of(new VentaItemRequest(prenda, 1, null)),
+                                    List.of(new PagoRequest(MetodoPago.EFECTIVO, new BigDecimal("89.90"), null, null)),
+                                    null, null, null)));
+                        } catch (Exception e) {
+                            errores.add(e.getMessage());
+                        }
+                    }
+                } finally {
+                    SecurityContextHolder.clearContext();
+                }
+                return null;
+            }));
+        }
+        salida.countDown();
+        for (Future<?> t : tareas) {
+            t.get(60, TimeUnit.SECONDS);
+        }
+        hilos.shutdown();
+
+        int total = cajas * ventasPorCaja;
+        try {
+            assertThat(errores).as("ninguna venta debe fallar").isEmpty();
+            assertThat(ventas).hasSize(total);
+            assertThat(ventas).extracting(VentaResponse::numero).as("números sin repetir").doesNotHaveDuplicates();
+            assertThat(ventas.stream().map(v -> Long.parseLong(v.numero().substring(v.numero().indexOf('-') + 1))).sorted().toList())
+                    .as("números seguidos, sin huecos").isEqualTo(java.util.stream.LongStream.rangeClosed(1, total).boxed().toList());
+            int stock = inventarioService.stockPorVariante(prenda).stream()
+                    .filter(s -> s.establecimientoId().equals(local))
+                    .mapToInt(StockEstablecimientoResponse::cantidad).findFirst().orElseThrow();
+            assertThat(stock).isEqualTo(100 - total);
+        } finally {
+            // Se anulan aunque la prueba falle, para no alterar los conteos del mes de otras pruebas
+            // (cada una la anula su cajero).
+            for (String cajero : cajeros) {
+                como(cajero);
+                for (VentaResponse v : ventas) {
+                    try {
+                        anulacionService.anular(v.id(), new AnularVentaRequest("Fin de la prueba de numeración"));
+                    } catch (Exception yaAnuladaOCajaAjena) {
+                        // la anula el cajero que la cobró
+                    }
+                }
+            }
+        }
+    }
+
     private static void como(String usuario) {
         SecurityContextHolder.getContext().setAuthentication(new UsernamePasswordAuthenticationToken(
                 usuario, null, List.of(new SimpleGrantedAuthority("ROLE_ADMIN"))));

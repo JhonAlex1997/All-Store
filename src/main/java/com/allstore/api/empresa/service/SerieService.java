@@ -12,6 +12,8 @@ import com.allstore.api.empresa.entity.Establecimiento;
 import com.allstore.api.empresa.entity.Serie;
 import com.allstore.api.empresa.entity.TipoComprobante;
 import com.allstore.api.empresa.repository.SerieRepository;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
@@ -27,6 +29,9 @@ public class SerieService {
     private final SerieRepository serieRepository;
     private final Bitacora bitacora;
     private final EstablecimientoService establecimientoService;
+
+    @PersistenceContext
+    private EntityManager entityManager;
 
     @Transactional(readOnly = true)
     public List<SerieResponse> listar(TipoComprobante tipo, Long establecimientoId) {
@@ -88,6 +93,11 @@ public class SerieService {
     public NumeroComprobante asignarSiguienteNumero(Long serieId, TipoComprobante tipoEsperado) {
         Serie serie = serieRepository.findByIdParaEmitir(serieId)
                 .orElseThrow(() -> new ResourceNotFoundException("Serie", serieId));
+        // La venta ya leyó la serie sin bloqueo (EmisionComprobante.serieParaEmitir): en ese caso
+        // Hibernate devuelve esa misma instancia y NO relee la fila aunque el SELECT ... FOR UPDATE
+        // la bloquee. Sin refrescar, dos cajas a la vez tomaban el mismo correlativo (la segunda
+        // fallaba por ux_comprobante_numero). Con la fila ya bloqueada, refresh trae el último número.
+        entityManager.refresh(serie);
         if (serie.getTipoComprobante() != tipoEsperado) {
             throw new BusinessException("La serie " + serie.getCodigo() + " es de "
                     + serie.getTipoComprobante().getDescripcion().toLowerCase()
