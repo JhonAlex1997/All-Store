@@ -47,3 +47,6 @@ build/
 docs/*.pdf
 docs/mockup/
 docs/marca/
+
+# Resultados de las pruebas de rendimiento (estado con usuarios de prueba y mediciones locales)
+perf/resultados/
