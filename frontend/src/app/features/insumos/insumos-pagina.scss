@@ -1,0 +1,34 @@
+p-tab i { margin-right: .4rem; }
+:host ::ng-deep .p-tabpanels { padding: 1.25rem 0 0; background: transparent; }
+:host ::ng-deep .p-tablist-tab-list { background: transparent; }
+h2 { font-size: .95rem; margin: 0; }
+
+.barra { margin-bottom: .8rem; flex-wrap: wrap; gap: .6rem; }
+.buscar { position: relative; display: inline-flex; align-items: center;
+  i { position: absolute; left: .7rem; color: var(--as-texto-suave); font-size: 13px; }
+  input { padding-left: 2rem; width: min(280px, 100%); } }
+.interruptor { display: flex; align-items: center; gap: .5rem; font-size: 13px; cursor: pointer; }
+
+.num { text-align: right; white-space: nowrap; }
+.cifra { font: inherit; font-variant-numeric: tabular-nums; background: none; border: 0; padding: .1rem .3rem; border-radius: 6px; cursor: pointer; color: inherit;
+  &:hover { background: var(--as-rosa-claro); } &:focus-visible { outline: 2px solid var(--as-rosa-fuerte); }
+  small { color: var(--as-texto-suave); } }
+.acciones { text-align: right; white-space: nowrap; }
+.inactivo td { color: var(--as-texto-suave); }
+.entrada { color: #2e7d4f; font-weight: 600; }
+.salida { color: #b23a3a; font-weight: 600; }
+
+.disposicion { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 1rem; align-items: start; }
+.bloque { display: flex; flex-direction: column; gap: .85rem; min-width: 0; }
+.con-boton { display: flex; gap: .4rem; align-items: center; > :first-child { flex: 1; min-width: 0; } }
+.lineas { list-style: none; margin: 0; padding: 0; max-height: 50vh; overflow-y: auto; }
+.lineas li { display: flex; align-items: center; gap: .6rem; padding: .45rem 0; border-bottom: 1px dashed var(--as-borde); font-size: 13.5px;
+  > span { flex: 1; min-width: 0; } }
+
+.campos { display: flex; flex-direction: column; gap: .9rem; }
+.as-rejilla.dos { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.error { margin: 0; font-size: 13px; }
+:host ::ng-deep .campos p-inputnumber, :host ::ng-deep .campos p-inputnumber input { width: 100%; }
+
+@media (max-width: 900px) { .disposicion { grid-template-columns: minmax(0, 1fr); } }
+@media (max-width: 520px) { .as-rejilla.dos { grid-template-columns: minmax(0, 1fr); } }

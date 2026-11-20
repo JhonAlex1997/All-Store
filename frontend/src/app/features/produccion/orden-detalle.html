@@ -1,0 +1,255 @@
+@if (orden(); as o) {
+  <div class="as-pagina-titulo">
+    <div>
+      <a routerLink="/produccion" class="volver"><i class="pi pi-arrow-left" aria-hidden="true"></i> Producción</a>
+      <h1>Orden <span class="as-codigo">#{{ o.id }}</span> · {{ o.producto }}</h1>
+      <div class="as-sub">Insumos de {{ o.establecimientoInsumos }} → prendas a {{ o.establecimientoDestino }} · inició el {{ o.fechaInicio | fechaLima }}</div>
+    </div>
+    <span style="flex:1"></span>
+    <p-tag [value]="estadoDe(o.estado).etiqueta" [severity]="estadoDe(o.estado).severidad" />
+    @if (enProceso()) {
+      @switch (siguiente().accion) {
+        @case ('iniciar') { <p-button [label]="'Empezar ' + etiquetaEtapa($any(siguiente()).etapa).toLowerCase()" icon="pi pi-play" (onClick)="abrir('iniciar')" /> }
+        @case ('terminar-etapa') { <p-button [label]="'Terminar ' + etiquetaEtapa($any(siguiente()).etapa).toLowerCase()" icon="pi pi-flag" (onClick)="abrir('terminar-etapa')" /> }
+        @case ('cerrar') { <p-button label="Cerrar orden e ingresar al stock" icon="pi pi-box" (onClick)="abrir('cerrar')" /> }
+      }
+    }
+    @if (o.estado !== 'ANULADA') { <p-button label="Anular" icon="pi pi-ban" severity="danger" [text]="true" (onClick)="abrir('anular')" /> }
+  </div>
+
+  @if (o.estado === 'ANULADA') {
+    <p-message severity="error" styleClass="aviso">Anulada: {{ o.motivoAnulacion }}</p-message>
+  }
+  @if (o.observacion) { <p class="obs as-sutil">{{ o.observacion }}</p> }
+
+  <!-- Etapas -->
+  <ol class="etapas">
+    @for (e of etapas; track e.valor; let i = $index) {
+      @let info = estadoEtapa(e.valor);
+      <li class="as-tarjeta etapa" [class]="'etapa ' + (info?.estado ?? 'PENDIENTE')">
+        <div class="cabeza">
+          <span class="numero">{{ i + 1 }}</span>
+          <i [class]="e.icono" aria-hidden="true"></i>
+          <b>{{ e.etiqueta }}</b>
+          <span class="as-espacio"></span>
+          @switch (info?.estado) {
+            @case ('TERMINADA') { <i class="pi pi-check-circle ok" aria-label="Terminada"></i> }
+            @case ('EN_PROCESO') { <span class="chip">En proceso</span> }
+            @default { <span class="as-sutil">Pendiente</span> }
+          }
+        </div>
+        @if (info?.estado && info?.estado !== 'PENDIENTE') {
+          <dl>
+            <dt>Taller</dt><dd>{{ info?.taller ?? 'Propio' }}</dd>
+            <dt>Inicio</dt><dd>{{ info?.fechaInicio | fechaLima: 'fecha-hora' }}</dd>
+            @if (info?.estado === 'TERMINADA') {
+              <dt>Fin</dt><dd>{{ info?.fechaFin | fechaLima: 'fecha-hora' }}</dd>
+              <dt>Salieron</dt><dd><b>{{ info?.unidades }}</b> prendas</dd>
+              @if (info?.costoServicio != null) { <dt>Servicio</dt><dd>{{ info?.costoServicio | soles }}</dd> }
+              @if (info?.observacion) { <dt>Nota</dt><dd>{{ info?.observacion }}</dd> }
+            }
+          </dl>
+        } @else {
+          <p class="ayuda">{{ e.ayuda }}</p>
+        }
+      </li>
+    }
+  </ol>
+
+  <div class="disposicion">
+    <!-- Tallas -->
+    <section class="as-tarjeta">
+      <h2>Prendas</h2>
+      <table>
+        <thead><tr><th>Talla y color</th><th class="num">Planificadas</th><th class="num">Entraron al stock</th></tr></thead>
+        <tbody>
+          @for (t of o.tallas ?? []; track t.varianteId) {
+            <tr>
+              <td>{{ t.color }} · talla {{ t.talla }}<br /><small class="as-codigo as-sutil">{{ t.sku }}</small></td>
+              <td class="num">{{ t.planificada }}</td>
+              <td class="num">{{ o.estado === 'TERMINADA' ? t.terminada ?? 0 : '—' }}</td>
+            </tr>
+          }
+        </tbody>
+        <tfoot>
+          <tr><th>Total</th><th class="num">{{ o.planificadas }}</th><th class="num">{{ o.estado === 'TERMINADA' ? o.terminadas : '—' }}</th></tr>
+        </tfoot>
+      </table>
+      @if (merma() > 0) { <p class="merma"><i class="pi pi-info-circle" aria-hidden="true"></i> Merma: {{ merma() }} prenda{{ merma() === 1 ? '' : 's' }} menos de lo planificado.</p> }
+    </section>
+
+    <!-- Insumos y costo -->
+    <section class="as-tarjeta">
+      <div class="as-barra cabecera-insumos">
+        <h2>Insumos consumidos</h2>
+        <span class="as-espacio"></span>
+        @if (enProceso()) {
+          <p-button label="Consumir" icon="pi pi-minus-circle" size="small" [outlined]="true" (onClick)="abrir('consumir')" />
+          @if ((o.insumos ?? []).length) { <p-button label="Devolver sobrante" icon="pi pi-replay" size="small" [text]="true" (onClick)="abrir('devolver')" /> }
+        }
+      </div>
+      <table>
+        <thead><tr><th>Insumo</th><th class="num">Cantidad</th><th class="num">Costo</th></tr></thead>
+        <tbody>
+          @for (i of o.insumos ?? []; track i.insumoId) {
+            <tr>
+              <td>{{ i.nombre }}<br /><small class="as-codigo as-sutil">{{ i.codigo }}</small></td>
+              <td class="num">{{ i.cantidad }} <small class="as-sutil">{{ unidadCorta(i.unidadMedida) }}</small></td>
+              <td class="num">@if (i.costo != null) { {{ (i.cantidad ?? 0) * i.costo | soles }} } @else { <span class="as-sutil">sin costo</span> }</td>
+            </tr>
+          } @empty {
+            <tr><td colspan="3" class="as-vacio">{{ enProceso() ? 'Registra la tela y los avíos que se usan con «Consumir».' : 'No se registraron insumos.' }}</td></tr>
+          }
+        </tbody>
+      </table>
+
+      @if (costos(); as c) {
+        <dl class="costos">
+          <dt>Insumos (con costo)</dt><dd>{{ c.insumos | soles }}</dd>
+          <dt>Servicios de talleres</dt><dd>{{ c.servicios | soles }}</dd>
+          @if (o.estado === 'TERMINADA') {
+            <dt class="total">Costo por prenda</dt><dd class="total">{{ o.costoUnitario != null ? (o.costoUnitario | soles) : '—' }}</dd>
+          }
+        </dl>
+        <small class="as-ayuda">El costo es una guía: solo cuenta los insumos que tienen costo registrado y lo que cobraron los talleres.</small>
+      }
+    </section>
+  </div>
+
+  <!-- Iniciar etapa -->
+  <p-dialog [visible]="dialogo() === 'iniciar'" (visibleChange)="$event || dialogo.set(null)" [modal]="true" [draggable]="false"
+            [header]="'Empezar ' + etiquetaEtapa(etapaDialogo).toLowerCase()" [style]="{ width: 'min(460px, 96vw)' }">
+    <div class="campos">
+      <div class="as-campo">
+        <label for="d-taller">¿Quién lo hace?</label>
+        <p-select inputId="d-taller" [options]="proveedores()" [(ngModel)]="tallerExterno" optionLabel="razonSocial" optionValue="id"
+                  placeholder="Taller propio" [showClear]="true" [filter]="proveedores().length > 8" appendTo="body" />
+        <small class="as-ayuda">Vacío = taller propio. Para un taller externo, regístralo antes como proveedor en Compras.</small>
+      </div>
+      @if (error()) { <p class="as-error error" role="alert">{{ error() }}</p> }
+    </div>
+    <ng-template #footer>
+      <p-button label="Cancelar" [text]="true" severity="secondary" (onClick)="dialogo.set(null)" />
+      <p-button label="Empezar" icon="pi pi-play" [loading]="ocupado()" (onClick)="iniciarEtapa()" />
+    </ng-template>
+  </p-dialog>
+
+  <!-- Terminar etapa -->
+  <p-dialog [visible]="dialogo() === 'terminar-etapa'" (visibleChange)="$event || dialogo.set(null)" [modal]="true" [draggable]="false"
+            [header]="'Terminar ' + etiquetaEtapa(etapaDialogo).toLowerCase()" [style]="{ width: 'min(480px, 96vw)' }">
+    <div class="campos">
+      <div class="as-campo">
+        <label for="d-unid">Prendas que salieron buenas <span class="as-sutil">(entraron {{ entraronEtapa }})</span></label>
+        <p-inputnumber inputId="d-unid" [(ngModel)]="unidadesEtapa" [min]="0" [max]="entraronEtapa" [useGrouping]="false" />
+        @if (unidadesEtapa != null && unidadesEtapa < entraronEtapa) {
+          <small class="as-ayuda">Merma en esta etapa: {{ entraronEtapa - unidadesEtapa }} prenda{{ entraronEtapa - unidadesEtapa === 1 ? '' : 's' }}.</small>
+        }
+      </div>
+      <div class="as-campo">
+        <label for="d-costo">Lo que cobró el taller <span class="as-sutil">(opcional)</span></label>
+        <p-inputnumber inputId="d-costo" [(ngModel)]="costoServicio" [min]="0" [minFractionDigits]="2" [maxFractionDigits]="2" prefix="S/ " locale="en-US" />
+      </div>
+      <div class="as-campo">
+        <label for="d-obs">Nota <span class="as-sutil">(opcional)</span></label>
+        <input pInputText id="d-obs" [(ngModel)]="observacionEtapa" maxlength="250" placeholder="Ej. 2 prendas con falla de costura" />
+      </div>
+      @if (error()) { <p class="as-error error" role="alert">{{ error() }}</p> }
+    </div>
+    <ng-template #footer>
+      <p-button label="Cancelar" [text]="true" severity="secondary" (onClick)="dialogo.set(null)" />
+      <p-button label="Terminar etapa" icon="pi pi-flag" [loading]="ocupado()" (onClick)="terminarEtapa()" />
+    </ng-template>
+  </p-dialog>
+
+  <!-- Consumir o devolver insumos -->
+  <p-dialog [visible]="dialogo() === 'consumir' || dialogo() === 'devolver'" (visibleChange)="$event || dialogo.set(null)" [modal]="true"
+            [draggable]="false" [header]="dialogo() === 'devolver' ? 'Devolver sobrante' : 'Consumir insumos'" [style]="{ width: 'min(560px, 96vw)' }">
+    <div class="campos">
+      <small class="as-ayuda">
+        {{ dialogo() === 'devolver' ? 'Lo que no se usó vuelve al stock de ' : 'Se descuentan del stock de ' }}<b>{{ o.establecimientoInsumos }}</b>.
+      </small>
+      @if (dialogo() === 'consumir') {
+        <div class="con-boton">
+          <p-select [options]="insumosParaAgregar()" [(ngModel)]="insumoParaAgregar" optionLabel="nombre" optionValue="id" [filter]="true"
+                    filterBy="nombre,codigo" placeholder="Elige el insumo" appendTo="body" ariaLabel="Insumo" emptyMessage="No hay más insumos">
+            <ng-template #item let-i>{{ i.nombre }} <span class="as-sutil">· hay {{ stockInsumos()[i.id] || 0 }} {{ unidadCorta(i.unidadMedida) }}</span></ng-template>
+          </p-select>
+          <p-button label="Agregar" icon="pi pi-plus" [disabled]="!insumoParaAgregar" (onClick)="agregarInsumo()" />
+        </div>
+      }
+      <ul class="lineas">
+        @for (l of lineasInsumo(); track l.insumoId) {
+          <li>
+            <span>{{ l.nombre }}<br /><small class="as-sutil">{{ dialogo() === 'devolver' ? 'consumido' : 'hay' }} {{ l.maximo }} {{ unidadCorta(l.unidad) }}</small></span>
+            <p-inputnumber [ngModel]="l.cantidad" (ngModelChange)="cambiarInsumo(l.insumoId, $event)" [min]="0" [maxFractionDigits]="3"
+                           [suffix]="' ' + unidadCorta(l.unidad)" locale="en-US" [inputStyle]="{ width: '8rem', textAlign: 'right' }" [ariaLabel]="'Cantidad de ' + l.nombre" />
+            @if (dialogo() === 'consumir') {
+              <p-button icon="pi pi-times" [text]="true" severity="secondary" size="small" (onClick)="quitarInsumo(l.insumoId)" ariaLabel="Quitar" />
+            }
+          </li>
+        } @empty {
+          <li class="as-vacio">Elige los insumos que se usan (tela, hilos, botones…).</li>
+        }
+      </ul>
+      @if (error()) { <p class="as-error error" role="alert">{{ error() }}</p> }
+    </div>
+    <ng-template #footer>
+      <p-button label="Cancelar" [text]="true" severity="secondary" (onClick)="dialogo.set(null)" />
+      <p-button [label]="dialogo() === 'devolver' ? 'Devolver' : 'Consumir'" icon="pi pi-check" [loading]="ocupado()" (onClick)="moverInsumos()" />
+    </ng-template>
+  </p-dialog>
+
+  <!-- Cerrar orden -->
+  <p-dialog [visible]="dialogo() === 'cerrar'" (visibleChange)="$event || dialogo.set(null)" [modal]="true" [draggable]="false"
+            header="Cerrar orden e ingresar al stock" [style]="{ width: 'min(560px, 96vw)' }">
+    <div class="campos">
+      <small class="as-ayuda">Del acabado salieron <b>{{ salieronAcabado }}</b> prendas. Indica cuántas de cada talla y color entran a <b>{{ o.establecimientoDestino }}</b>.</small>
+      <ul class="lineas">
+        @for (t of o.tallas ?? []; track t.varianteId) {
+          <li>
+            <span>{{ t.color }} · talla {{ t.talla }}<br /><small class="as-sutil">planificadas {{ t.planificada }}</small></span>
+            <p-inputnumber [ngModel]="cierre()[t.varianteId!]" (ngModelChange)="cambiarCierre(t.varianteId!, $event)" [min]="0" [useGrouping]="false"
+                           [inputStyle]="{ width: '6rem', textAlign: 'right' }" [ariaLabel]="t.color + ' talla ' + t.talla" />
+          </li>
+        }
+      </ul>
+      <p class="resumen-cierre" [class.mal]="totalCierre() > salieronAcabado">
+        Entran <b>{{ totalCierre() }}</b> de {{ salieronAcabado }}
+        @if (costos()?.unitario != null) { · costo estimado <b>{{ costos()!.unitario | soles }}</b> por prenda }
+      </p>
+      <label class="interruptor">
+        <p-toggleswitch [(ngModel)]="actualizarCostos" />
+        <span>Usar este costo como costo de las prendas <span class="as-sutil">(si no, se mantiene el que tenían)</span></span>
+      </label>
+      @if (error()) { <p class="as-error error" role="alert">{{ error() }}</p> }
+    </div>
+    <ng-template #footer>
+      <p-button label="Cancelar" [text]="true" severity="secondary" (onClick)="dialogo.set(null)" />
+      <p-button label="Cerrar e ingresar" icon="pi pi-box" [loading]="ocupado()" (onClick)="cerrar()" />
+    </ng-template>
+  </p-dialog>
+
+  <!-- Anular -->
+  <p-dialog [visible]="dialogo() === 'anular'" (visibleChange)="$event || dialogo.set(null)" [modal]="true" [draggable]="false"
+            header="Anular orden" [style]="{ width: 'min(460px, 96vw)' }">
+    <div class="campos">
+      <small class="as-ayuda">
+        @if (o.estado === 'TERMINADA') { Las prendas que entraron saldrán del stock (si ya se vendieron, no se podrá). }
+        @else { Los insumos consumidos vuelven a {{ o.establecimientoInsumos }}. }
+      </small>
+      <div class="as-campo">
+        <label for="d-motivo">Motivo</label>
+        <input pInputText id="d-motivo" [(ngModel)]="motivoAnulacion" maxlength="250" placeholder="Ej. Se creó por error" />
+      </div>
+      @if (error()) { <p class="as-error error" role="alert">{{ error() }}</p> }
+    </div>
+    <ng-template #footer>
+      <p-button label="Cancelar" [text]="true" severity="secondary" (onClick)="dialogo.set(null)" />
+      <p-button label="Anular orden" icon="pi pi-ban" severity="danger" [loading]="ocupado()" [disabled]="!motivoAnulacion.trim()" (onClick)="anular()" />
+    </ng-template>
+  </p-dialog>
+} @else if (noDisponible()) {
+  <div class="as-tarjeta as-vacio">{{ noDisponible() }} <a routerLink="/produccion">Volver a producción</a></div>
+} @else {
+  <p class="as-sutil">Cargando…</p>
+}

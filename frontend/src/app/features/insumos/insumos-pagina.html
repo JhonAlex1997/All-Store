@@ -1,0 +1,198 @@
+<div class="as-pagina-titulo">
+  <div>
+    <h1>Insumos</h1>
+    <div class="as-sub">Tela, botones, cierres, hilos y etiquetas: cuánto hay en cada local y todo lo que entra y sale. Las compras y la producción los mueven solos.</div>
+  </div>
+  <span style="flex:1"></span>
+  <p-button label="Nuevo insumo" icon="pi pi-plus" (onClick)="nuevoInsumo()" />
+</div>
+
+<p-tabs [value]="pestana()" (valueChange)="pestana.set($any($event))">
+  <p-tablist>
+    <p-tab value="stock"><i class="pi pi-box"></i> Stock</p-tab>
+    <p-tab value="catalogo"><i class="pi pi-list"></i> Catálogo</p-tab>
+    <p-tab value="movimiento"><i class="pi pi-sliders-v"></i> Ingresos y salidas</p-tab>
+    <p-tab value="kardex"><i class="pi pi-history"></i> Kardex</p-tab>
+  </p-tablist>
+  <p-tabpanels>
+    <!-- Stock -->
+    <p-tabpanel value="stock">
+      <div class="as-tarjeta">
+        <div class="as-barra barra">
+          <span class="buscar"><i class="pi pi-search" aria-hidden="true"></i>
+            <input pInputText [(ngModel)]="busquedaStock" (ngModelChange)="textoStock.set($event)" placeholder="Nombre o código" aria-label="Buscar insumo" /></span>
+          <label class="interruptor"><p-toggleswitch [ngModel]="soloConStock()" (ngModelChange)="soloConStock.set($event)" /> Solo con stock</label>
+        </div>
+        <p-table [value]="filasStock()" [loading]="cargandoStock()" dataKey="insumoId" styleClass="p-datatable-sm" [scrollable]="true">
+          <ng-template #header>
+            <tr>
+              <th>Insumo</th>
+              @for (l of localesConStock(); track l.id) { <th class="num">{{ l.nombre }}</th> }
+              <th class="num">Total</th>
+            </tr>
+          </ng-template>
+          <ng-template #body let-f>
+            <tr>
+              <td><b>{{ f.nombre }}</b><br /><small class="as-codigo as-sutil">{{ f.codigo }}</small></td>
+              @for (l of localesConStock(); track l.id) {
+                <td class="num">
+                  @if (f.porLocal[l.id!]; as c) {
+                    <button type="button" class="cifra" (click)="verKardex(f.insumoId, l.id)" [attr.aria-label]="'Kardex de ' + f.nombre + ' en ' + l.nombre">
+                      {{ c }} <small>{{ unidadCorta(f.unidad) }}</small></button>
+                  } @else { <span class="as-sutil">—</span> }
+                </td>
+              }
+              <td class="num"><b>{{ f.total }}</b> <small class="as-sutil">{{ unidadCorta(f.unidad) }}</small></td>
+            </tr>
+          </ng-template>
+          <ng-template #emptymessage>
+            <tr><td [attr.colspan]="localesConStock().length + 2" class="as-vacio">
+              @if (insumos().length) { No hay insumos con ese filtro. } @else { Aún no hay insumos. Créalos con «Nuevo insumo» y carga su inventario inicial en «Ingresos y salidas». }
+            </td></tr>
+          </ng-template>
+        </p-table>
+      </div>
+    </p-tabpanel>
+
+    <!-- Catálogo -->
+    <p-tabpanel value="catalogo">
+      <div class="as-tarjeta">
+        <p-table [value]="insumos()" dataKey="id" styleClass="p-datatable-sm" [paginator]="insumos().length > 25" [rows]="25">
+          <ng-template #header>
+            <tr><th style="width: 160px">Código</th><th>Nombre</th><th>Unidad</th><th class="num">Costo</th><th style="width: 90px"></th></tr>
+          </ng-template>
+          <ng-template #body let-i>
+            <tr [class.inactivo]="i.activo === false">
+              <td class="as-codigo">{{ i.codigo }}</td>
+              <td>{{ i.nombre }}@if (i.activo === false) { <p-tag value="Inactivo" severity="secondary" /> }</td>
+              <td>{{ i.unidadMedida }} <span class="as-sutil">({{ unidadCorta(i.unidadMedida) }})</span></td>
+              <td class="num">@if (i.costo != null) { {{ i.costo | soles }} <small class="as-sutil">/ {{ unidadCorta(i.unidadMedida) }}</small> } @else { <span class="as-sutil">sin costo</span> }</td>
+              <td class="acciones">
+                <p-button icon="pi pi-history" [text]="true" severity="secondary" size="small" (onClick)="verKardex(i.id)" ariaLabel="Ver kardex" />
+                <p-button icon="pi pi-pencil" [text]="true" severity="secondary" size="small" (onClick)="editarInsumo(i)" ariaLabel="Editar insumo" />
+              </td>
+            </tr>
+          </ng-template>
+          <ng-template #emptymessage>
+            <tr><td colspan="5" class="as-vacio">Aún no hay insumos. Ej.: «Tela denim 12 oz» en metros, «Botón metálico» en unidades.</td></tr>
+          </ng-template>
+        </p-table>
+      </div>
+    </p-tabpanel>
+
+    <!-- Ingresos y salidas -->
+    <p-tabpanel value="movimiento">
+      <div class="disposicion">
+        <section class="as-tarjeta bloque">
+          <h2>Ingreso o salida a mano</h2>
+          <small class="as-ayuda">Para el inventario inicial o para cuadrar con un conteo. Las compras y la producción mueven el stock solas.</small>
+          <div class="as-campo">
+            <label for="m-motivo">Motivo</label>
+            <p-select inputId="m-motivo" [options]="motivosManuales" [(ngModel)]="motivo" optionLabel="etiqueta" optionValue="valor" />
+          </div>
+          <div class="as-campo">
+            <label for="m-local">Local</label>
+            <p-select inputId="m-local" [options]="locales()" [(ngModel)]="localAjuste" optionLabel="nombre" optionValue="id" placeholder="Local" />
+          </div>
+          <div class="as-campo">
+            <label for="m-ins">Insumo</label>
+            <div class="con-boton">
+              <p-select inputId="m-ins" [options]="insumosParaAjuste()" [(ngModel)]="insumoParaAgregar" optionLabel="nombre" optionValue="id"
+                        [filter]="true" filterBy="nombre,codigo" placeholder="Elige el insumo" emptyMessage="Crea primero el insumo" />
+              <p-button label="Agregar" icon="pi pi-plus" [disabled]="!insumoParaAgregar" (onClick)="agregarAjuste()" />
+            </div>
+          </div>
+          <div class="as-campo">
+            <label for="m-obs">Observación <span class="as-sutil">(opcional)</span></label>
+            <input pInputText id="m-obs" [(ngModel)]="observacionAjuste" maxlength="250" placeholder="Ej. Conteo de fin de mes" />
+          </div>
+        </section>
+
+        <section class="as-tarjeta bloque">
+          <h2>{{ motivos[motivo] }}</h2>
+          <ul class="lineas">
+            @for (l of lineasAjuste(); track l.insumoId) {
+              <li>
+                <span>{{ l.nombre }}</span>
+                <p-inputnumber [ngModel]="l.cantidad" (ngModelChange)="cambiarAjuste(l.insumoId, $event)" [min]="0" [maxFractionDigits]="3"
+                               [suffix]="' ' + unidadCorta(l.unidad)" locale="en-US" [inputStyle]="{ width: '8rem', textAlign: 'right' }"
+                               [ariaLabel]="'Cantidad de ' + l.nombre" />
+                <p-button icon="pi pi-times" [text]="true" severity="secondary" size="small" (onClick)="quitarAjuste(l.insumoId)" ariaLabel="Quitar" />
+              </li>
+            } @empty {
+              <li class="as-vacio">Elige insumos a la izquierda y escribe las cantidades.</li>
+            }
+          </ul>
+          @if (errorAjuste()) { <p class="as-error error" role="alert">{{ errorAjuste() }}</p> }
+          <p-button label="Registrar" icon="pi pi-check" [loading]="guardandoAjuste()" [disabled]="!lineasAjuste().length" (onClick)="registrarAjuste()" fluid />
+        </section>
+      </div>
+    </p-tabpanel>
+
+    <!-- Kardex -->
+    <p-tabpanel value="kardex">
+      <div class="as-tarjeta">
+        <div class="as-barra barra">
+          <p-select [options]="insumos()" [(ngModel)]="kardexInsumo" (ngModelChange)="cargarKardex()" optionLabel="nombre" optionValue="id"
+                    [filter]="true" filterBy="nombre,codigo" placeholder="Elige el insumo" ariaLabel="Insumo" />
+          <p-select [options]="locales()" [(ngModel)]="kardexLocal" (ngModelChange)="cargarKardex()" optionLabel="nombre" optionValue="id"
+                    placeholder="Todos los locales" [showClear]="true" ariaLabel="Local" />
+        </div>
+        <p-table [value]="movimientos()" [lazy]="true" (onLazyLoad)="cargarKardex($event)" [paginator]="totalKardex() > 25" [rows]="25"
+                 [totalRecords]="totalKardex()" [first]="primeroKardex()" [loading]="cargandoKardex()" dataKey="id" styleClass="p-datatable-sm">
+          <ng-template #header>
+            <tr><th style="width: 150px">Fecha</th><th>Motivo</th><th>Local</th><th class="num">Cantidad</th><th class="num">Saldo</th><th>Documento</th><th>Usuario</th></tr>
+          </ng-template>
+          <ng-template #body let-m>
+            <tr>
+              <td>{{ m.fecha | fechaLima: 'fecha-hora' }}</td>
+              <td>{{ etiquetaMotivo(m.motivo) }}@if (m.observacion) { <br /><small class="as-sutil">{{ m.observacion }}</small> }</td>
+              <td class="as-sutil">{{ nombreLocal(m.establecimientoId) }}</td>
+              <td class="num" [class.entrada]="esEntrada(m)" [class.salida]="!esEntrada(m)">{{ esEntrada(m) ? '+' : '−' }}{{ m.cantidad }}</td>
+              <td class="num"><b>{{ m.saldo }}</b> <small class="as-sutil">{{ unidadCorta(insumoKardex()?.unidadMedida) }}</small></td>
+              <td class="as-sutil">{{ m.documento }}</td>
+              <td class="as-sutil">{{ m.usuario }}</td>
+            </tr>
+          </ng-template>
+          <ng-template #emptymessage>
+            <tr><td colspan="7" class="as-vacio">{{ kardexInsumo ? 'Este insumo aún no tiene movimientos.' : 'Elige un insumo para ver sus movimientos.' }}</td></tr>
+          </ng-template>
+        </p-table>
+      </div>
+    </p-tabpanel>
+  </p-tabpanels>
+</p-tabs>
+
+<!-- Alta o edición de insumo -->
+<p-dialog [visible]="dialogoInsumo()" (visibleChange)="dialogoInsumo.set($event)" [modal]="true" [draggable]="false"
+          [header]="editando() ? 'Editar insumo' : 'Nuevo insumo'" [style]="{ width: 'min(520px, 96vw)' }">
+  <div class="campos">
+    <div class="as-campo">
+      <label for="i-nombre">Nombre</label>
+      <input pInputText id="i-nombre" [ngModel]="formInsumo.nombre" (ngModelChange)="alCambiarNombre($event)" maxlength="150" placeholder="Ej. Tela denim 12 oz índigo" />
+    </div>
+    <div class="as-rejilla dos">
+      <div class="as-campo">
+        <label for="i-codigo">Código</label>
+        <input pInputText id="i-codigo" class="as-codigo" [ngModel]="formInsumo.codigo" (ngModelChange)="alCambiarCodigo($event)" maxlength="30" autocomplete="off" />
+      </div>
+      <div class="as-campo">
+        <label for="i-unidad">Unidad</label>
+        <p-select inputId="i-unidad" [options]="unidades" [(ngModel)]="formInsumo.unidadMedida" optionLabel="etiqueta" optionValue="valor" appendTo="body" />
+      </div>
+    </div>
+    <div class="as-campo">
+      <label for="i-costo">Costo por {{ unidadCorta(formInsumo.unidadMedida) }} <span class="as-sutil">(opcional, sin IGV)</span></label>
+      <p-inputnumber inputId="i-costo" [(ngModel)]="formInsumo.costo" [min]="0" [minFractionDigits]="2" [maxFractionDigits]="4" prefix="S/ " locale="en-US" />
+      <small class="as-ayuda">Sirve para calcular el costo de lo que produces. Puedes dejarlo vacío.</small>
+    </div>
+    @if (editando()) {
+      <label class="interruptor"><p-toggleswitch [(ngModel)]="formInsumo.activo" /> Activo <span class="as-sutil">(inactivo no aparece al comprar ni al producir)</span></label>
+    }
+    @if (errorInsumo()) { <p class="as-error error" role="alert">{{ errorInsumo() }}</p> }
+  </div>
+  <ng-template #footer>
+    <p-button label="Cancelar" [text]="true" severity="secondary" (onClick)="dialogoInsumo.set(false)" />
+    <p-button [label]="editando() ? 'Guardar' : 'Crear insumo'" icon="pi pi-check" [loading]="guardandoInsumo()" (onClick)="guardarInsumo()" />
+  </ng-template>
+</p-dialog>

@@ -1,0 +1,33 @@
+.volver { font-size: 13px; color: var(--as-texto-suave); text-decoration: none; }
+h2 { font-size: .95rem; margin: 0; }
+.bloque { display: flex; flex-direction: column; gap: .85rem; min-width: 0; margin-bottom: 1rem; }
+
+.as-rejilla.cabecera { grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); }
+.as-rejilla.numero { grid-template-columns: 120px 160px 170px minmax(0, 1fr); }
+.con-boton { display: flex; gap: .4rem; align-items: center; > :first-child { flex: 1; min-width: 0; } }
+
+.disposicion { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.5fr); gap: 1rem; align-items: start; }
+
+.tabla-lineas { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th { text-align: left; font-size: 12px; font-weight: 600; color: var(--as-texto-suave); padding: .35rem .4rem; border-bottom: 1px solid var(--as-borde); white-space: nowrap; }
+td { padding: .45rem .4rem; border-bottom: 1px dashed var(--as-borde); vertical-align: middle; }
+.num { text-align: right; }
+.centro { text-align: center; }
+.desc { width: 100%; min-width: 10rem; margin-top: .25rem; }
+.tipo { display: inline-block; font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .03em; padding: .05rem .4rem;
+  border-radius: 4px; margin-bottom: .15rem; background: #eef1f6; color: #3d5a80;
+  &.insumo { background: #eef7f0; color: #2e7d4f; }
+  &.gasto { background: #f6f0e8; color: #8a5a17; } }
+
+.totales { display: grid; grid-template-columns: 1fr auto; gap: .25rem 1rem; margin: 0 0 0 auto; min-width: 240px; font-size: 13.5px;
+  dt { color: var(--as-texto-suave); text-align: right; } dd { margin: 0; text-align: right; font-variant-numeric: tabular-nums; }
+  .total { font-size: 1.05rem; font-weight: 700; color: var(--as-texto); padding-top: .3rem; border-top: 1px solid var(--as-borde); } }
+.interruptor { display: flex; align-items: center; gap: .55rem; font-size: 13px; cursor: pointer; }
+.error { margin: 0; font-size: 13px; }
+
+@media (max-width: 1100px) { .disposicion { grid-template-columns: minmax(0, 1fr); } }
+@media (max-width: 760px) {
+  .as-rejilla.cabecera { grid-template-columns: minmax(0, 1fr); }
+  .as-rejilla.numero { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}

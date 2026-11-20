@@ -1,0 +1,47 @@
+.volver { font-size: 13px; color: var(--as-texto-suave); text-decoration: none; }
+h2 { font-size: .95rem; margin: 0 0 .7rem; }
+:host ::ng-deep .aviso { margin-bottom: 1rem; }
+.obs { margin: 0 0 1rem; font-size: 13px; }
+
+.etapas { list-style: none; margin: 0 0 1rem; padding: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .75rem; }
+.etapa { padding: .85rem; border-top: 4px solid var(--as-borde); min-width: 0;
+  &.EN_PROCESO { border-top-color: var(--as-rosa-fuerte); background: #fffafb; }
+  &.TERMINADA { border-top-color: #3a9a5c; }
+  .cabeza { display: flex; align-items: center; gap: .45rem; font-size: 14px; margin-bottom: .5rem;
+    > i:not(.ok) { color: var(--as-texto-suave); } }
+  .numero { width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; font-size: 11px; font-weight: 700;
+    background: #f1eeee; color: var(--as-texto-suave); }
+  &.EN_PROCESO .numero { background: var(--as-rosa-fuerte); color: #fff; }
+  &.TERMINADA .numero { background: #3a9a5c; color: #fff; }
+  .ok { color: #3a9a5c; }
+  .chip { font-size: 11px; font-weight: 700; color: var(--as-rosa-fuerte); background: var(--as-rosa-claro); padding: .1rem .45rem; border-radius: 999px; }
+  dl { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: .2rem .7rem; margin: 0; font-size: 12.5px;
+    dt { color: var(--as-texto-suave); } dd { margin: 0; overflow-wrap: anywhere; } }
+  .ayuda { margin: 0; font-size: 12.5px; color: var(--as-texto-suave); } }
+
+.disposicion { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 1rem; align-items: start; }
+section { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 13px;
+  th { text-align: left; font-size: 12px; color: var(--as-texto-suave); font-weight: 600; padding: .4rem; border-bottom: 1px solid var(--as-borde); }
+  td { padding: .45rem .4rem; border-bottom: 1px dashed var(--as-borde); }
+  tfoot th { color: var(--as-texto); border-bottom: 0; border-top: 1px solid var(--as-borde); }
+  .num { text-align: right; white-space: nowrap; } }
+.merma { margin: .7rem 0 0; font-size: 13px; color: #8a5a17; }
+.cabecera-insumos { margin-bottom: .4rem; h2 { margin: 0; } }
+.costos { display: grid; grid-template-columns: 1fr auto; gap: .25rem 1rem; margin: .8rem 0 .3rem; font-size: 13px;
+  dt { color: var(--as-texto-suave); } dd { margin: 0; text-align: right; font-variant-numeric: tabular-nums; }
+  .total { font-weight: 700; color: var(--as-texto); border-top: 1px solid var(--as-borde); padding-top: .3rem; } }
+
+.campos { display: flex; flex-direction: column; gap: .9rem; }
+:host ::ng-deep .campos .as-campo p-inputnumber, :host ::ng-deep .campos .as-campo p-inputnumber input { width: 100%; }
+.con-boton { display: flex; gap: .4rem; align-items: center; > :first-child { flex: 1; min-width: 0; } }
+.lineas { list-style: none; margin: 0; padding: 0; max-height: 45vh; overflow-y: auto; }
+.lineas li { display: flex; align-items: center; gap: .6rem; padding: .45rem 0; border-bottom: 1px dashed var(--as-borde); font-size: 13.5px;
+  > span { flex: 1; min-width: 0; } }
+.resumen-cierre { margin: 0; font-size: 13.5px; &.mal { color: #c23131; } }
+.interruptor { display: flex; align-items: center; gap: .55rem; font-size: 13px; cursor: pointer; }
+.error { margin: 0; font-size: 13px; }
+
+@media (max-width: 1100px) { .etapas { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 800px) { .disposicion { grid-template-columns: minmax(0, 1fr); } }
+@media (max-width: 520px) { .etapas { grid-template-columns: minmax(0, 1fr); } }

@@ -1,0 +1,157 @@
+<div class="as-pagina-titulo">
+  <div>
+    <a routerLink="/compras" class="volver"><i class="pi pi-arrow-left" aria-hidden="true"></i> Compras</a>
+    <h1>Registrar compra</h1>
+    <div class="as-sub">Copia los datos del comprobante del proveedor. Lo que compres entra al stock del local elegido.</div>
+  </div>
+</div>
+
+<section class="as-tarjeta bloque">
+  <h2>Comprobante</h2>
+  <div class="as-rejilla cabecera">
+    <div class="as-campo ancho">
+      <label for="c-prov">Proveedor</label>
+      <div class="con-boton">
+        <p-select inputId="c-prov" [options]="proveedores()" [ngModel]="proveedorId()" (ngModelChange)="proveedorId.set($event)" optionValue="id"
+                  optionLabel="razonSocial" [filter]="true" filterBy="razonSocial,numeroDocumento" placeholder="Busca por nombre o RUC">
+          <ng-template #item let-p>{{ etiquetaProveedor(p) }}</ng-template>
+        </p-select>
+        <p-button icon="pi pi-plus" [outlined]="true" (onClick)="dialogoProveedor.set(true)" pTooltip="Nuevo proveedor" ariaLabel="Nuevo proveedor" />
+      </div>
+    </div>
+    <div class="as-campo">
+      <label for="c-local">Entra a</label>
+      <p-select inputId="c-local" [options]="locales()" [(ngModel)]="establecimientoId" optionLabel="nombre" optionValue="id" placeholder="Local" />
+    </div>
+  </div>
+
+  <p-selectbutton [options]="tipos" [ngModel]="tipoDocumento()" (ngModelChange)="$event && tipoDocumento.set($event)" optionLabel="etiqueta"
+                  optionValue="valor" [allowEmpty]="false" ariaLabel="Tipo de comprobante" />
+  <small class="as-ayuda">{{ ayudaTipo() }}</small>
+
+  <div class="as-rejilla numero">
+    <div class="as-campo">
+      <label for="c-serie">Serie</label>
+      <input pInputText id="c-serie" [(ngModel)]="serie" maxlength="20" placeholder="F001" autocomplete="off" class="as-codigo" />
+    </div>
+    <div class="as-campo">
+      <label for="c-num">Número</label>
+      <input pInputText id="c-num" [(ngModel)]="numero" maxlength="20" inputmode="numeric" placeholder="1234" autocomplete="off" class="as-codigo" />
+    </div>
+    <div class="as-campo">
+      <label for="c-fecha">Fecha de emisión</label>
+      <input pInputText id="c-fecha" type="date" [(ngModel)]="fechaEmision" [max]="hoy" />
+    </div>
+    <div class="as-campo">
+      <label for="c-periodo">Periodo del registro <span class="as-sutil">(opcional)</span></label>
+      <input pInputText id="c-periodo" type="month" [(ngModel)]="periodo" />
+      <small class="as-ayuda">Vacío = mes de emisión. Úsalo si la factura llegó tarde.</small>
+    </div>
+  </div>
+</section>
+
+<div class="disposicion">
+  <section class="as-tarjeta bloque">
+    <h2>Agregar</h2>
+    <p-selectbutton [options]="opcionesAgregar" [ngModel]="agregando()" (ngModelChange)="$event && agregando.set($event)" optionLabel="etiqueta"
+                    optionValue="valor" [allowEmpty]="false" ariaLabel="Qué agregar" />
+    @switch (agregando()) {
+      @case ('prenda') {
+        <small class="as-ayuda">Mercadería terminada que compras para vender (entra al inventario de prendas).</small>
+        <as-selector-prendas [accion]="'Agregar a la compra'" (agregar)="agregarPrendas($event)" />
+      }
+      @case ('insumo') {
+        <small class="as-ayuda">Tela, botones, cierres, hilos, etiquetas… (entran al stock de insumos).</small>
+        <div class="con-boton">
+          <p-select [options]="insumosDisponibles()" [(ngModel)]="insumoElegido" optionLabel="nombre" optionValue="id" [filter]="true"
+                    filterBy="nombre,codigo" placeholder="Elige el insumo" ariaLabel="Insumo" emptyMessage="No hay insumos: créalos en Insumos">
+            <ng-template #item let-i>{{ i.nombre }} <span class="as-sutil as-codigo">{{ i.codigo }} · {{ i.unidadMedida }}</span></ng-template>
+          </p-select>
+          <p-button label="Agregar" icon="pi pi-plus" [disabled]="!insumoElegido" (onClick)="agregarInsumo()" />
+        </div>
+      }
+      @case ('gasto') {
+        <small class="as-ayuda">Servicios o gastos sin stock: flete, servicio de lavado, confección por encargo…</small>
+        <div class="con-boton">
+          <input pInputText [(ngModel)]="descripcionGasto" maxlength="250" placeholder="Ej. Servicio de lavado lote 12" (keydown.enter)="agregarGasto()" aria-label="Descripción del gasto" />
+          <p-button label="Agregar" icon="pi pi-plus" [disabled]="!descripcionGasto.trim()" (onClick)="agregarGasto()" />
+        </div>
+      }
+    }
+  </section>
+
+  <section class="as-tarjeta bloque">
+    <h2>Detalle <span class="as-sutil">({{ lineas().length }} línea{{ lineas().length === 1 ? '' : 's' }})</span></h2>
+    <div class="tabla-lineas">
+      <table>
+        <thead>
+          <tr>
+            <th>Descripción</th>
+            <th class="num">Cantidad</th>
+            <th class="num">Costo unit. {{ conIgv() ? 'sin IGV' : '' }}</th>
+            @if (conIgv()) { <th class="centro">IGV</th> }
+            <th class="num">Valor</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (l of lineas(); track $index; let i = $index) {
+            <tr>
+              <td>
+                <span class="tipo" [class]="l.tipo">{{ l.tipo === 'prenda' ? 'Prenda' : l.tipo === 'insumo' ? 'Insumo' : 'Gasto' }}</span>
+                @if (l.tipo === 'gasto') {
+                  <input pInputText class="desc" [ngModel]="l.descripcion" (ngModelChange)="cambiar(i, { descripcion: $event })" maxlength="250" aria-label="Descripción" />
+                } @else {
+                  <b>{{ l.descripcion }}</b><br /><small class="as-codigo as-sutil">{{ l.codigo }}</small>
+                }
+              </td>
+              <td class="num">
+                <p-inputnumber [ngModel]="l.cantidad" (ngModelChange)="cambiar(i, { cantidad: $event })" [min]="0"
+                               [maxFractionDigits]="l.tipo === 'prenda' ? 0 : 3" [suffix]="l.unidad ? ' ' + l.unidad : ''" locale="en-US"
+                               [inputStyle]="{ width: '7rem', textAlign: 'right' }" ariaLabel="Cantidad" />
+              </td>
+              <td class="num">
+                <p-inputnumber [ngModel]="l.costoUnitario" (ngModelChange)="cambiar(i, { costoUnitario: $event })" [min]="0"
+                               [minFractionDigits]="2" [maxFractionDigits]="4" prefix="S/ " locale="en-US"
+                               [inputStyle]="{ width: '7.5rem', textAlign: 'right' }" ariaLabel="Costo unitario" />
+              </td>
+              @if (conIgv()) {
+                <td class="centro"><p-checkbox [ngModel]="l.gravado" (ngModelChange)="cambiar(i, { gravado: $event })" [binary]="true" ariaLabel="Lleva IGV" /></td>
+              }
+              <td class="num as-monto">{{ valorLinea(l) | soles }}</td>
+              <td><p-button icon="pi pi-times" [text]="true" severity="secondary" size="small" (onClick)="quitar(i)" ariaLabel="Quitar línea" /></td>
+            </tr>
+          } @empty {
+            <tr><td [attr.colspan]="conIgv() ? 6 : 5" class="as-vacio">Agrega prendas, insumos o gastos desde la izquierda.</td></tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <dl class="totales">
+      @if (conIgv()) {
+        <dt>Base gravada</dt><dd>{{ totales().baseGravada | soles }}</dd>
+        <dt>IGV 18 %</dt><dd>{{ totales().igv | soles }}</dd>
+      }
+      @if (totales().noGravado || !conIgv()) { <dt>{{ conIgv() ? 'No gravado' : 'Importe' }}</dt><dd>{{ totales().noGravado | soles }}</dd> }
+      <dt class="total">Total</dt><dd class="total">{{ totales().total | soles }}</dd>
+    </dl>
+    <small class="as-ayuda">Compara este total con el del comprobante antes de registrar.</small>
+
+    @if (hayPrendas()) {
+      <label class="interruptor">
+        <p-toggleswitch [(ngModel)]="actualizarCostos" />
+        <span>Usar estos costos como costo de las prendas e insumos <span class="as-sutil">(si no, se mantiene el costo que ya tenían)</span></span>
+      </label>
+    }
+    <div class="as-campo">
+      <label for="c-obs">Observación <span class="as-sutil">(opcional)</span></label>
+      <textarea pTextarea id="c-obs" [(ngModel)]="observacion" rows="2" maxlength="500"></textarea>
+    </div>
+
+    @if (error()) { <p class="as-error error" role="alert"><i class="pi pi-exclamation-circle" aria-hidden="true"></i> {{ error() }}</p> }
+    <p-button label="Registrar compra" icon="pi pi-check" [loading]="guardando()" (onClick)="registrar()" fluid />
+  </section>
+</div>
+
+<as-proveedor-dialogo [(visible)]="dialogoProveedor" (guardado)="cargarProveedores($event)" />

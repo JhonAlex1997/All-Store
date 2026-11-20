@@ -22,6 +22,9 @@ const MODULOS: Partial<Record<string, Route['loadChildren']>> = {
   empresa: () => import('./features/empresa/empresa.routes').then((m) => m.routes),
   sunat: () => import('./features/sunat/sunat.routes').then((m) => m.routes),
   guias: () => import('./features/guias/guias.routes').then((m) => m.routes),
+  compras: () => import('./features/compras/compras.routes').then((m) => m.routes),
+  insumos: () => import('./features/insumos/insumos.routes').then((m) => m.routes),
+  produccion: () => import('./features/produccion/produccion.routes').then((m) => m.routes),
 };
 
 function rutaDeModulo(op: OpcionMenu): Route {

@@ -90,6 +90,16 @@ src/app/
   transporte», recuerda las últimas 8 agencias usadas en ese navegador (`agencias-frecuentes.ts`) y trae la razón social
   por RUC. El comprobante muestra sus guías. Desde un comprobante: botón «Guía de
   remisión» (`/guias/nueva?venta=ID`); un anulado cuya baja rechazó SUNAT tiene «Reintentar baja».
+- **Compras** (`features/compras`, ADMIN y ALMACENERO): lista por periodo y proveedor, proveedores (alta con consulta
+  RUC/DNI para ADMIN) y registro: cabecera del comprobante, líneas de prendas (`selector-prendas`), insumos o gastos,
+  IGV y totales en vivo con el redondeo de `CompraService` (`compras-reglas.ts`), costo opcional que se aplica solo si
+  se pide. Detalle con anulación (la mercadería y los insumos vuelven a salir).
+- **Insumos** (`features/insumos`, ADMIN y ALMACENERO): stock por local (clic en una cifra abre su kardex), catálogo
+  con código sugerido y unidades SUNAT, ingresos y salidas a mano (inventario inicial y ajustes) y kardex con saldo.
+- **Producción** (`features/produccion`, ADMIN y ALMACENERO): órdenes por modelo con cuadrícula color × talla, avance
+  por etapa (corte, confección, lavado, acabado; taller propio o proveedor), consumo y devolución de insumos con el
+  stock del local, merma, cierre con reparto propuesto por talla (`produccion-reglas.ts`) y costo estimado por prenda,
+  y anulación.
 - **Reportes** (`features/reportes`, solo ADMIN): periodo (hoy, 7 días, este mes, mes pasado o fechas) y local;
   resumen con venta neta por día, lo más vendido, tallas y colores con su stock, cajeros, horas y días de la
   semana, campañas, mercadería sin rotación y detalle línea por línea (este último solo se descarga). Todo se
