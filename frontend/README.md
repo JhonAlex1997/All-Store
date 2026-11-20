@@ -32,7 +32,7 @@ src/app/
 │   ├── formato/             Pipes `soles` y `fechaLima`
 │   └── escaner/             Directiva `asEscaner` para la pistola de códigos de barras
 ├── paginas/                 Login, cambiar contraseña, inicio y avisos
-└── features/                (siguiente) un folder por módulo: caja, ventas, productos…
+└── features/                Un folder por módulo: caja, ventas, productos…
 ```
 
 ## Decisiones
@@ -100,6 +100,13 @@ src/app/
   por etapa (corte, confección, lavado, acabado; taller propio o proveedor), consumo y devolución de insumos con el
   stock del local, merma, cierre con reparto propuesto por talla (`produccion-reglas.ts`) y costo estimado por prenda,
   y anulación.
+- **Contabilidad** (`features/contabilidad`, solo ADMIN): por mes, Registro de Ventas (RVIE) y de Compras (RCE) con
+  resumen, advertencias y su archivo para el SIRE (validar con las reglas de SUNAT y descargar ZIP o TXT con el nombre
+  oficial), y el libro diario con asientos desplegables, mayor y descarga en Excel o CSV.
+- **Bitácora** (`features/bitacora`, solo ADMIN): auditoría por fechas, usuario y acción (agrupadas), filtro «solo lo
+  delicado», detalle con código de solicitud y enlace a la venta, compra, orden o modelo.
+- **Monitoreo** (`features/monitoreo`, solo ADMIN): estado general, base de datos, disco, memoria, errores, colas de
+  envío y procesos programados; se actualiza cada 30 s mientras la pestaña está a la vista.
 - **Reportes** (`features/reportes`, solo ADMIN): periodo (hoy, 7 días, este mes, mes pasado o fechas) y local;
   resumen con venta neta por día, lo más vendido, tallas y colores con su stock, cajeros, horas y días de la
   semana, campañas, mercadería sin rotación y detalle línea por línea (este último solo se descarga). Todo se

@@ -1,0 +1,208 @@
+<div class="as-pagina-titulo">
+  <div>
+    <h1>Contabilidad</h1>
+    <div class="as-sub">Registros de ventas y compras del mes con su archivo para el SIRE de SUNAT, y el libro diario para tu contador.</div>
+  </div>
+  <span style="flex:1"></span>
+  <div class="periodo" role="group" aria-label="Periodo">
+    <p-button icon="pi pi-chevron-left" [text]="true" severity="secondary" (onClick)="mover(-1)" ariaLabel="Mes anterior" />
+    <input pInputText type="month" [ngModel]="periodo" (ngModelChange)="cambiarPeriodo($event)" [max]="mesActual" aria-label="Periodo" />
+    <p-button icon="pi pi-chevron-right" [text]="true" severity="secondary" (onClick)="mover(1)" [disabled]="periodo >= mesActual" ariaLabel="Mes siguiente" />
+  </div>
+</div>
+
+<p-tabs [value]="pestana()" (valueChange)="cambiarPestana($any($event))">
+  <p-tablist>
+    <p-tab value="ventas"><i class="pi pi-receipt"></i> Registro de Ventas</p-tab>
+    <p-tab value="compras"><i class="pi pi-cart-arrow-down"></i> Registro de Compras</p-tab>
+    <p-tab value="diario"><i class="pi pi-book"></i> Libro diario</p-tab>
+  </p-tablist>
+</p-tabs>
+
+@if (error()) { <div class="as-tarjeta aviso-error" role="alert"><i class="pi pi-exclamation-circle" aria-hidden="true"></i> {{ error() }}</div> }
+@if (cargando()) { <p class="as-sutil cargando">Cargando…</p> }
+
+<!-- Validación del archivo SIRE -->
+@if (validacion(); as v) {
+  <div class="as-tarjeta validacion" [class.ok]="v.resultado.valido" role="status">
+    <div class="cabeza">
+      <i [class]="v.resultado.valido ? 'pi pi-check-circle' : 'pi pi-times-circle'" aria-hidden="true"></i>
+      <b>{{ v.resultado.valido ? 'El archivo cumple la estructura de SUNAT' : 'El archivo tiene inconsistencias' }}</b>
+      <span class="as-sutil">· {{ v.resultado.archivo }} · {{ v.resultado.filas }} fila{{ v.resultado.filas === 1 ? '' : 's' }}</span>
+      <span class="as-espacio"></span>
+      <p-button icon="pi pi-times" [text]="true" severity="secondary" size="small" (onClick)="validacion.set(null)" ariaLabel="Cerrar" />
+    </div>
+    @if (v.resultado.inconsistencias?.length) {
+      <ul>
+        @for (i of v.resultado.inconsistencias!.slice(0, 50); track $index) {
+          <li>Fila {{ i.fila }}, campo {{ i.campo }} ({{ i.nombreCampo }}): {{ i.mensaje }}@if (i.valor) { — valor «{{ i.valor }}» }</li>
+        }
+      </ul>
+      @if (v.resultado.inconsistencias!.length > 50) { <p class="as-sutil">y {{ v.resultado.inconsistencias!.length - 50 }} más.</p> }
+    }
+  </div>
+}
+
+@switch (pestana()) {
+  <!-- ===== Ventas ===== -->
+  @case ('ventas') {
+    @if (ventas(); as r) {
+      <div class="acciones">
+        <p-button label="Validar archivo SIRE" icon="pi pi-verified" severity="secondary" [outlined]="true" [loading]="ocupado() === 'validar'" (onClick)="validar('ventas')" />
+        <p-button label="Descargar para el SIRE (ZIP)" icon="pi pi-download" [loading]="ocupado() === 'sire-ZIP'" (onClick)="bajarSire('ventas', 'ZIP')" />
+        <p-button label="TXT" [text]="true" [loading]="ocupado() === 'sire-TXT'" (onClick)="bajarSire('ventas', 'TXT')" />
+      </div>
+      @if (r.advertencias?.length) {
+        <div class="as-tarjeta advertencias"><b>Revisa antes de declarar:</b><ul>@for (a of r.advertencias; track $index) { <li>{{ a }}</li> }</ul></div>
+      }
+      <div class="cifras">
+        <div class="as-tarjeta cifra"><span>Base imponible</span><strong>{{ r.totales?.baseGravada | soles }}</strong></div>
+        <div class="as-tarjeta cifra"><span>IGV</span><strong>{{ r.totales?.igv | soles }}</strong></div>
+        <div class="as-tarjeta cifra"><span>Exonerado + inafecto</span><strong>{{ (r.totales?.exonerado ?? 0) + (r.totales?.inafecto ?? 0) | soles }}</strong></div>
+        <div class="as-tarjeta cifra principal"><span>Total</span><strong>{{ r.totales?.total | soles }}</strong><small>{{ r.totales?.cantidad ?? 0 }} comprobantes</small></div>
+      </div>
+      @if (r.resumenPorTipo?.length) {
+        <div class="as-tarjeta">
+          <h2>Por tipo de comprobante</h2>
+          <table class="simple">
+            <thead><tr><th>Tipo</th><th class="num">Cant.</th><th class="num">Base</th><th class="num">IGV</th><th class="num">Total</th></tr></thead>
+            <tbody>
+              @for (t of r.resumenPorTipo; track t.tipoComprobante) {
+                <tr><td>{{ t.descripcion }}</td><td class="num">{{ t.cantidad }}</td><td class="num">{{ t.baseGravada | soles }}</td>
+                  <td class="num">{{ t.igv | soles }}</td><td class="num"><b>{{ t.total | soles }}</b></td></tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+      <div class="as-tarjeta">
+        <h2>Comprobantes del periodo</h2>
+        <p-table [value]="r.registros ?? []" [paginator]="(r.registros?.length ?? 0) > 50" [rows]="50" styleClass="p-datatable-sm" dataKey="comprobanteId">
+          <ng-template #header>
+            <tr><th>Fecha</th><th>Comprobante</th><th>Cliente</th><th class="num">Base</th><th class="num">IGV</th><th class="num">Total</th><th>Situación</th></tr>
+          </ng-template>
+          <ng-template #body let-x>
+            <tr>
+              <td>{{ x.fechaEmision | fechaLima }}</td>
+              <td><a [routerLink]="['/ventas', x.comprobanteId]" class="as-codigo">{{ x.serie }}-{{ x.numero }}</a><br /><small class="as-sutil">{{ tipo(x.tipoComprobante) }}</small>
+                @if (x.modifica) { <br /><small class="as-sutil">modifica {{ x.modifica.serie }}-{{ x.modifica.numero }}</small> }</td>
+              <td>{{ x.clienteNombre }}<br /><small class="as-sutil">{{ x.clienteNumeroDocumento }}</small></td>
+              <td class="num">{{ x.baseGravada | soles }}</td>
+              <td class="num">{{ x.igv | soles }}</td>
+              <td class="num"><b>{{ x.total | soles }}</b></td>
+              <td>@if (situacion(x.situacion); as s) { <p-tag [value]="s.etiqueta" [severity]="s.severidad" /> }</td>
+            </tr>
+          </ng-template>
+          <ng-template #emptymessage><tr><td colspan="7" class="as-vacio">No hay boletas ni facturas en {{ periodo }}.</td></tr></ng-template>
+        </p-table>
+      </div>
+    }
+  }
+
+  <!-- ===== Compras ===== -->
+  @case ('compras') {
+    @if (compras(); as r) {
+      <div class="acciones">
+        <p-button label="Validar archivo SIRE" icon="pi pi-verified" severity="secondary" [outlined]="true" [loading]="ocupado() === 'validar'" (onClick)="validar('compras')" />
+        <p-button label="Descargar para el SIRE (ZIP)" icon="pi pi-download" [loading]="ocupado() === 'sire-ZIP'" (onClick)="bajarSire('compras', 'ZIP')" />
+        <p-button label="TXT" [text]="true" [loading]="ocupado() === 'sire-TXT'" (onClick)="bajarSire('compras', 'TXT')" />
+      </div>
+      @if (r.advertencias?.length) {
+        <div class="as-tarjeta advertencias"><b>Revisa antes de declarar:</b><ul>@for (a of r.advertencias; track $index) { <li>{{ a }}</li> }</ul></div>
+      }
+      <div class="cifras">
+        <div class="as-tarjeta cifra"><span>Base gravada</span><strong>{{ r.baseGravada | soles }}</strong></div>
+        <div class="as-tarjeta cifra principal"><span>Crédito fiscal (IGV)</span><strong>{{ r.creditoFiscal | soles }}</strong></div>
+        <div class="as-tarjeta cifra"><span>No gravado</span><strong>{{ r.noGravado | soles }}</strong></div>
+        <div class="as-tarjeta cifra"><span>Total</span><strong>{{ r.total | soles }}</strong><small>{{ r.documentos ?? 0 }} documentos</small></div>
+      </div>
+      <div class="as-tarjeta">
+        <h2>Documentos del periodo</h2>
+        <p-table [value]="r.registros ?? []" [paginator]="(r.registros?.length ?? 0) > 50" [rows]="50" styleClass="p-datatable-sm">
+          <ng-template #header>
+            <tr><th>Fecha</th><th>Documento</th><th>Proveedor</th><th class="num">Base</th><th class="num">IGV</th><th class="num">No grav.</th><th class="num">Total</th></tr>
+          </ng-template>
+          <ng-template #body let-x>
+            <tr>
+              <td>{{ x.fechaEmision | fechaLima }}</td>
+              <td>
+                @if (x.compraId) { <a [routerLink]="['/compras', x.compraId]" class="as-codigo">{{ x.serie }}-{{ x.numero }}</a> }
+                @else { <span class="as-codigo">{{ x.serie }}-{{ x.numero }}</span> }
+                <br /><small class="as-sutil">{{ tipo(x.tipoComprobante) }}</small>
+                @if (!x.propuestoPorSunat) { <br /><small class="manual">SUNAT no lo trae en su propuesta: se agrega en el SIRE</small> }
+              </td>
+              <td>{{ x.proveedorNombre }}<br /><small class="as-sutil">{{ x.proveedorNumeroDocumento }}</small></td>
+              <td class="num">{{ x.baseGravada | soles }}</td>
+              <td class="num">{{ x.igv | soles }}</td>
+              <td class="num">{{ x.noGravado | soles }}</td>
+              <td class="num"><b>{{ x.total | soles }}</b></td>
+            </tr>
+          </ng-template>
+          <ng-template #emptymessage><tr><td colspan="7" class="as-vacio">No hay compras registradas en {{ periodo }}.</td></tr></ng-template>
+        </p-table>
+      </div>
+    }
+  }
+
+  <!-- ===== Libro diario ===== -->
+  @case ('diario') {
+    @if (diario(); as d) {
+      <div class="acciones">
+        <p-button label="Descargar Excel" icon="pi pi-file-excel" [loading]="ocupado() === 'diario-XLSX'" (onClick)="bajarDiario('XLSX')" />
+        <p-button label="CSV" [text]="true" [loading]="ocupado() === 'diario-CSV'" (onClick)="bajarDiario('CSV')" />
+      </div>
+      @if (d.advertencias.length) {
+        <div class="as-tarjeta advertencias"><b>No se pudo contabilizar todo:</b><ul>@for (a of d.advertencias; track $index) { <li>{{ a }}</li> }</ul></div>
+      }
+      <div class="cifras tres">
+        <div class="as-tarjeta cifra"><span>Asientos</span><strong>{{ d.asientos.length }}</strong></div>
+        <div class="as-tarjeta cifra"><span>Total debe</span><strong>{{ d.totalDebe | soles }}</strong></div>
+        <div class="as-tarjeta cifra" [class.descuadre]="d.totalDebe !== d.totalHaber"><span>Total haber</span><strong>{{ d.totalHaber | soles }}</strong>
+          <small>{{ d.totalDebe === d.totalHaber ? 'Cuadra con el debe' : 'No cuadra con el debe' }}</small></div>
+      </div>
+
+      <div class="disposicion">
+        <section class="as-tarjeta">
+          <h2>Asientos</h2>
+          @for (a of d.asientos; track a.numero) {
+            <div class="asiento">
+              <button type="button" class="cabeza-asiento" (click)="alternar(a.numero)" [attr.aria-expanded]="abiertos().has(a.numero)">
+                <i [class]="abiertos().has(a.numero) ? 'pi pi-chevron-down' : 'pi pi-chevron-right'" aria-hidden="true"></i>
+                <span class="as-codigo">N° {{ a.numero }}</span>
+                <span>{{ a.fecha | fechaLima }}</span>
+                <span class="origen">{{ origen(a.origen) }}</span>
+                <span class="glosa">{{ a.glosa }}</span>
+              </button>
+              @if (abiertos().has(a.numero)) {
+                <table class="simple lineas">
+                  <tbody>
+                    @for (l of a.lineas; track $index) {
+                      <tr [class.haber]="l.haber > 0">
+                        <td class="as-codigo">{{ l.cuenta }}</td><td>{{ l.denominacion }}</td>
+                        <td class="num">{{ l.debe ? (l.debe | soles) : '' }}</td><td class="num">{{ l.haber ? (l.haber | soles) : '' }}</td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+                <small class="as-sutil">{{ a.documento }}</small>
+              }
+            </div>
+          } @empty { <p class="as-vacio">No hay movimientos contables en {{ periodo }}.</p> }
+        </section>
+
+        <section class="as-tarjeta">
+          <h2>Mayor (saldo por cuenta)</h2>
+          <table class="simple">
+            <thead><tr><th>Cuenta</th><th class="num">Debe</th><th class="num">Haber</th><th class="num">Saldo</th></tr></thead>
+            <tbody>
+              @for (m of d.mayor; track m.cuenta) {
+                <tr><td><span class="as-codigo">{{ m.cuenta }}</span> {{ m.denominacion }}</td><td class="num">{{ m.debe | soles }}</td>
+                  <td class="num">{{ m.haber | soles }}</td><td class="num"><b>{{ m.saldo | soles }}</b></td></tr>
+              }
+            </tbody>
+          </table>
+        </section>
+      </div>
+    }
+  }
+}
