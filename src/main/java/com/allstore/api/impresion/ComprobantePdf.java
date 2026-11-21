@@ -100,7 +100,10 @@ public class ComprobantePdf {
         separador(t);
 
         dosColumnas(t, "Fecha:", FECHA_HORA.format(d.fechaEmision()), normal, normal);
-        dosColumnas(t, "Cajero:", d.cajero(), normal, normal);
+        dosColumnas(t, d.esProforma() ? "Atendido por:" : "Cajero:", d.cajero(), normal, normal);
+        if (d.esProforma()) {
+            dosColumnas(t, "Válida hasta:", FECHA.format(d.vigenteHasta()), normal, negrita);
+        }
         if (d.porMayor()) {
             dosColumnas(t, "Precio:", "Por mayor", normal, negrita);
         }
@@ -156,7 +159,9 @@ public class ComprobantePdf {
             centrado(t, "Hash: " + d.hash(), chica);
         }
         centrado(t, d.leyenda(), chica);
-        if (d.referencia() == null) {
+        if (d.esProforma()) {
+            centrado(t, "Precios válidos hasta el " + FECHA.format(d.vigenteHasta()), negrita);
+        } else if (d.referencia() == null) {
             centrado(t, "¡Gracias por su compra!", negrita);
         }
 
@@ -219,6 +224,10 @@ public class ComprobantePdf {
             etiquetaValor(datos, "Hora:", HORA.format(d.fechaEmision()), negrita, normal);
             etiquetaValor(datos, "Dirección:", c.direccion() != null ? c.direccion() : "-", negrita, normal);
             etiquetaValor(datos, "Moneda:", "SOLES", negrita, normal);
+            if (d.esProforma()) {
+                etiquetaValor(datos, "", "", negrita, normal);
+                etiquetaValor(datos, "Válida hasta:", FECHA.format(d.vigenteHasta()), negrita, negrita);
+            }
             if (d.porMayor()) {
                 etiquetaValor(datos, "Precio:", "Por mayor", negrita, normal);
                 etiquetaValor(datos, "", "", negrita, normal);
@@ -261,9 +270,14 @@ public class ComprobantePdf {
             PdfPCell izquierda = sinBorde();
             izquierda.addElement(new Paragraph("SON: " + d.montoEnLetras(), negrita));
             // En una nota de crédito el "pago" es el dinero que se le devuelve al cliente.
-            StringBuilder pagos = new StringBuilder(d.esDevolucion() ? "Devolución al cliente: " : "Forma de pago: Contado - ");
-            d.pagos().forEach(p -> pagos.append(p.metodo()).append(" ").append(dinero(p.monto())).append("  "));
-            izquierda.addElement(new Paragraph(pagos.toString().trim(), normal));
+            if (d.esProforma()) {
+                izquierda.addElement(new Paragraph("Precios válidos hasta el " + FECHA.format(d.vigenteHasta())
+                        + ". Pago al contado al momento de la compra.", negrita));
+            } else {
+                StringBuilder pagos = new StringBuilder(d.esDevolucion() ? "Devolución al cliente: " : "Forma de pago: Contado - ");
+                d.pagos().forEach(p -> pagos.append(p.metodo()).append(" ").append(dinero(p.monto())).append("  "));
+                izquierda.addElement(new Paragraph(pagos.toString().trim(), normal));
+            }
             if (d.observacion() != null) {
                 izquierda.addElement(new Paragraph("Observación: " + d.observacion(), normal));
             }

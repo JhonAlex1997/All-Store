@@ -9,6 +9,7 @@ import com.allstore.api.empresa.entity.TipoComprobante;
 import com.allstore.api.empresa.service.EmpresaService;
 import com.allstore.api.empresa.service.LogoService;
 import com.allstore.api.empresa.service.EstablecimientoService;
+import com.allstore.api.proforma.dto.ProformaResponse;
 import com.allstore.api.facturacion.config.EntornoSunat;
 import com.allstore.api.facturacion.config.SunatProperties;
 import com.allstore.api.facturacion.entity.EstadoSunat;
@@ -53,6 +54,53 @@ public class ImpresionService {
         Establecimiento local = establecimientoService.obtener(venta.establecimientoId());
         byte[] pdf = comprobantePdf.generar(datos(venta, empresa, local), formato);
         return new Pdf(venta.numero() + (formato == FormatoImpresion.TICKET ? "-ticket" : "") + ".pdf", pdf);
+    }
+
+    /** Proforma en A4 o ticket: mismo diseño que los comprobantes, con su vigencia y sin pagos ni QR. */
+    public Pdf generarProforma(ProformaResponse p, FormatoImpresion formato) {
+        Empresa empresa = empresaService.buscarEntidad()
+                .orElseThrow(() -> new BusinessException("Registra los datos de la empresa antes de imprimir proformas"));
+        Establecimiento local = establecimientoService.obtener(p.establecimientoId());
+        ProformaResponse.Cliente c = p.cliente();
+        DatosImpresion.Cliente cliente = c.tipoDocumento() == null
+                ? new DatosImpresion.Cliente(null, null, c.nombre(), null)
+                : new DatosImpresion.Cliente(TipoDocumentoIdentidad.valueOf(c.tipoDocumento()).getDescripcion(),
+                c.numeroDocumento(), c.nombre(), c.direccion());
+        String marca = switch (p.estado()) {
+            case ANULADA -> "ANULADA";
+            case VENDIDA -> null;
+            case PENDIENTE -> p.vencida() ? "VENCIDA" : null;
+        };
+        DatosImpresion datos = new DatosImpresion(
+                "PROFORMA / COTIZACIÓN",
+                p.numero(),
+                marca,
+                emisor(empresa),
+                local.getNombre(),
+                local.getDireccion(),
+                p.fechaEmision().atZoneSameInstant(JpaAuditingConfig.ZONA_LIMA).toOffsetDateTime(),
+                p.creadoPor(),
+                cliente,
+                null,
+                p.lineas().stream().map(l -> new DatosImpresion.Linea(l.cantidad(), "UND", l.sku(), l.descripcion(),
+                        l.precioUnitario(), l.descuento(), l.total())).toList(),
+                p.opGravadas(),
+                p.opExoneradas(),
+                p.opInafectas(),
+                p.totalDescuento(),
+                p.totalIgv(),
+                p.total(),
+                MontoEnLetras.convertir(p.total()),
+                List.of(),
+                java.math.BigDecimal.ZERO,
+                null,
+                null,
+                "Documento informativo: no es un comprobante de pago. Precios sujetos a disponibilidad de stock.",
+                p.observacion(),
+                p.porMayor(),
+                p.vigenteHasta());
+        byte[] pdf = comprobantePdf.generar(datos, formato);
+        return new Pdf(p.numero() + (formato == FormatoImpresion.TICKET ? "-ticket" : "") + ".pdf", pdf);
     }
 
     public Pdf generarGuia(Long guiaId) {
@@ -156,7 +204,8 @@ public class ImpresionService {
                 v.sunat() != null ? v.sunat().hash() : null,
                 leyenda(v, titulo, electronico),
                 v.observacion(),
-                v.porMayor()
+                v.porMayor(),
+                null
         );
     }
 

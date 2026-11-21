@@ -21,6 +21,8 @@ import com.allstore.api.inventario.service.InventarioService;
 import com.allstore.api.producto.entity.ProductoVariante;
 import com.allstore.api.config.JpaAuditingConfig;
 import com.allstore.api.promocion.service.CampanaService;
+import com.allstore.api.proforma.entity.EstadoProforma;
+import com.allstore.api.proforma.entity.Proforma;
 import com.allstore.api.producto.service.ProductoService;
 import com.allstore.api.venta.dto.ConvertirVentaRequest;
 import com.allstore.api.venta.dto.ReemitirRequest;
@@ -92,7 +94,37 @@ public class VentaService {
      */
     @Transactional
     public VentaResponse crear(VentaRequest request, String clave) {
-        SolicitudIdempotente solicitud = emision.solicitud(clave, "venta", request);
+        return emitirVenta(request, clave, null);
+    }
+
+    /**
+     * Cobra una proforma: la venta lleva exactamente sus prendas y los precios cotizados (aunque el
+     * precio de lista o las campañas hayan cambiado), siempre que siga vigente. El llamador bloquea
+     * la proforma y la marca como vendida.
+     */
+    @Transactional
+    public VentaResponse crearDesdeProforma(VentaRequest request, String clave, Proforma proforma) {
+        return emitirVenta(request, clave, proforma);
+    }
+
+    /**
+     * Calcula precios y totales de unas prendas igual que una venta (por mayor, campañas vigentes,
+     * descuentos), sin guardar nada: es la base de la proforma.
+     */
+    @Transactional(readOnly = true)
+    public Comprobante cotizar(List<VentaItemRequest> items, Boolean porMayor, Long establecimientoId) {
+        Comprobante calculo = new Comprobante();
+        aplicarPrecioPorMayor(calculo, items, porMayor);
+        agregarDetalles(calculo, items, establecimientoId);
+        calculo.recalcularTotales();
+        if (calculo.getTotal().signum() <= 0) {
+            throw new BusinessException("El total debe ser mayor a cero");
+        }
+        return calculo;
+    }
+
+    private VentaResponse emitirVenta(VentaRequest request, String clave, Proforma proforma) {
+        SolicitudIdempotente solicitud = emision.solicitud(clave, proforma == null ? "venta" : "venta-proforma-" + proforma.getId(), request);
         Optional<VentaResponse> atendida = emision.yaAtendida(solicitud);
         if (atendida.isPresent()) {
             return atendida.get();
@@ -118,8 +150,15 @@ public class VentaService {
         if (StringUtils.hasText(request.correo())) {
             comprobante.setCorreoEntrega(request.correo().trim().toLowerCase());
         }
-        aplicarPrecioPorMayor(comprobante, request);
-        agregarDetalles(comprobante, request.items(), serie.getEstablecimiento().getId());
+        if (proforma == null) {
+            aplicarPrecioPorMayor(comprobante, request.items(), request.porMayor());
+            agregarDetalles(comprobante, request.items(), serie.getEstablecimiento().getId());
+        } else {
+            validarProforma(proforma, request, serie);
+            comprobante.setPorMayor(proforma.isPorMayor());
+            comprobante.setPorMayorManual(proforma.isPorMayorManual());
+            proforma.getDetalles().forEach(d -> comprobante.agregarDetalle(d.aDetalleDeVenta()));
+        }
         comprobante.recalcularTotales();
         if (comprobante.getTotal().signum() <= 0) {
             throw new BusinessException("El total de la venta debe ser mayor a cero");
@@ -363,11 +402,11 @@ public class VentaService {
      * Precio por mayor: si la venta suma el mínimo de prendas de la empresa (de cualquier modelo,
      * talla o color), o si el cajero lo marca aunque sean menos (queda registrado como manual).
      */
-    private void aplicarPrecioPorMayor(Comprobante comprobante, VentaRequest request) {
-        int prendas = request.items().stream().mapToInt(VentaItemRequest::cantidad).sum();
+    private void aplicarPrecioPorMayor(Comprobante comprobante, List<VentaItemRequest> items, Boolean porMayor) {
+        int prendas = items.stream().mapToInt(VentaItemRequest::cantidad).sum();
         int minimo = empresaService.buscarEntidad().map(Empresa::getMinimoPrendasPorMayor).orElse(Empresa.MINIMO_PRENDAS_POR_MAYOR);
         boolean porCantidad = prendas >= minimo;
-        boolean marcado = Boolean.TRUE.equals(request.porMayor());
+        boolean marcado = Boolean.TRUE.equals(porMayor);
         comprobante.setPorMayor(porCantidad || marcado);
         comprobante.setPorMayorManual(marcado && !porCantidad);
     }
@@ -424,6 +463,40 @@ public class VentaService {
             detalle.setIgv(calculo.igv());
             detalle.setTotal(calculo.total());
             comprobante.agregarDetalle(detalle);
+        }
+    }
+
+    /**
+     * La proforma se cobra tal como se cotizó: pendiente, vigente, en su local y con las mismas
+     * prendas y cantidades (si el cliente cambia algo, se edita la proforma, que recalcula precios).
+     */
+    private static void validarProforma(Proforma proforma, VentaRequest request, Serie serie) {
+        String numero = proforma.getNumeroImpreso();
+        if (proforma.getEstado() == EstadoProforma.VENDIDA) {
+            throw new BusinessException("La proforma " + numero + " ya se cobró"
+                    + (proforma.getComprobante() != null ? " con " + proforma.getComprobante().getNumeroImpreso() : ""));
+        }
+        if (proforma.getEstado() == EstadoProforma.ANULADA) {
+            throw new BusinessException("La proforma " + numero + " está anulada");
+        }
+        if (proforma.estaVencida(LocalDate.now(JpaAuditingConfig.ZONA_LIMA))) {
+            throw new BusinessException("La proforma " + numero + " venció el " + proforma.getVigenteHasta()
+                    + "; renuévala para cobrarla con los precios de hoy");
+        }
+        if (!proforma.getEstablecimiento().getId().equals(serie.getEstablecimiento().getId())) {
+            throw new BusinessException("La proforma " + numero + " es de " + proforma.getEstablecimiento().getNombre()
+                    + "; se cobra con una serie de ese local");
+        }
+        Map<Long, Integer> cotizado = new java.util.HashMap<>();
+        proforma.getDetalles().forEach(d -> cotizado.merge(d.getVariante().getId(), d.getCantidad(), Integer::sum));
+        Map<Long, Integer> pedido = new java.util.HashMap<>();
+        request.items().forEach(i -> pedido.merge(i.varianteId(), i.cantidad(), Integer::sum));
+        if (!cotizado.equals(pedido)) {
+            throw new BusinessException("La venta debe llevar las mismas prendas y cantidades de la proforma " + numero
+                    + "; si el cliente cambió algo, edita la proforma primero");
+        }
+        if (request.items().stream().anyMatch(i -> i.descuento() != null && i.descuento().signum() > 0)) {
+            throw new BusinessException("Los descuentos de una proforma se dan al editarla, no al cobrarla");
         }
     }
 

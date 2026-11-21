@@ -96,6 +96,7 @@ public class SecurityConfig {
                         // Enlace de descarga que recibe el cliente: solo lectura, protegido por un
                         // código aleatorio imposible de adivinar
                         .requestMatchers(HttpMethod.GET, "/api/publico/comprobantes/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/publico/proformas/*/pdf").permitAll()
                         // Nombre y logo de la tienda para la pantalla de login
                         .requestMatchers(HttpMethod.GET, "/api/publico/marca", "/api/publico/marca/logo").permitAll()
                         // Swagger solo existe con el perfil dev (en producción está apagado).
@@ -144,6 +145,8 @@ public class SecurityConfig {
                         // Los totales son los ingresos del negocio; el cajero lista solo sus ventas (ConsultaVentasService)
                         .requestMatchers(HttpMethod.GET, "/api/ventas/totales").hasRole(ADMIN)
                         .requestMatchers("/api/ventas/**").hasAnyRole(ADMIN, CAJERO)
+                        // Proformas: las hace y las cobra la caja; también el administrador
+                        .requestMatchers("/api/proformas/**").hasAnyRole(ADMIN, CAJERO)
 
                         // Caja: cada cajero abre, mueve y cierra la suya; el historial solo administrador
                         .requestMatchers(HttpMethod.GET, "/api/caja/sesiones/**").hasRole(ADMIN)

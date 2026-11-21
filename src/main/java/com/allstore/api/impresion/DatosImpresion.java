@@ -1,6 +1,7 @@
 package com.allstore.api.impresion;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.util.List;
 
@@ -13,6 +14,7 @@ import java.util.List;
  * @param codigoQr    texto del QR de SUNAT; null si no aplica (nota de venta) o aún no se firmó
  * @param leyenda     pie obligatorio, ej. "Representación impresa de la Boleta de Venta Electrónica..."
  * @param porMayor    se cobró a precio por mayor (se indica para que el cliente vea por qué)
+ * @param vigenteHasta solo proformas: último día en que se respetan los precios (sin pagos ni QR)
  */
 public record DatosImpresion(
         String titulo,
@@ -39,7 +41,8 @@ public record DatosImpresion(
         String hash,
         String leyenda,
         String observacion,
-        boolean porMayor
+        boolean porMayor,
+        LocalDate vigenteHasta
 ) {
     /** @param logo PNG del logo de la tienda, o null si no tiene */
     public record Emisor(String ruc, String razonSocial, String nombreComercial, String direccionFiscal,
@@ -61,6 +64,11 @@ public record DatosImpresion(
      *                   cliente; en la nota de débito son un cobro
      */
     public record Referencia(String documento, String motivo, String sustento, boolean devolucion) {
+    }
+
+    /** Proforma o cotización: no es un comprobante de pago. */
+    public boolean esProforma() {
+        return vigenteHasta != null;
     }
 
     /** Si los pagos son una devolución al cliente (nota de crédito). */

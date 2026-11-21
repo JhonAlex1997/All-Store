@@ -81,6 +81,23 @@ class ComprobantePdfTest {
         return crudo.split("/Subtype\\s*/Image", -1).length - 1;
     }
 
+    @Test
+    void laProformaLlevaSuVigenciaYNoPagosNiQr() throws Exception {
+        DatosImpresion b = boleta(null);
+        DatosImpresion proforma = new DatosImpresion("PROFORMA / COTIZACIÓN", "PR01-00000012", null, b.emisor(),
+                b.establecimiento(), b.direccionEstablecimiento(), b.fechaEmision(), "cajero", b.cliente(), null,
+                b.lineas(), b.opGravadas(), b.opExoneradas(), b.opInafectas(), b.totalDescuento(), b.totalIgv(), b.total(),
+                b.montoEnLetras(), java.util.List.of(), BigDecimal.ZERO, null, null,
+                "Documento informativo: no es un comprobante de pago.", null, false, java.time.LocalDate.of(2026, 10, 17));
+
+        for (FormatoImpresion formato : FormatoImpresion.values()) {
+            String texto = texto(generador.generar(proforma, formato));
+            assertThat(texto).as(formato.name()).contains("PROFORMA / COTIZACIÓN", "PR01-00000012", "17/10/2026",
+                    "169.80", "no es un comprobante de pago");
+            assertThat(texto).as(formato.name()).doesNotContain("Forma de pago", "Hash:", "Gracias por su compra");
+        }
+    }
+
     private static DatosImpresion boleta(String marcaDeAgua) {
         return boleta(marcaDeAgua, null);
     }
@@ -102,7 +119,7 @@ class ComprobantePdfTest {
                 List.of(new DatosImpresion.Pago("Efectivo", new BigDecimal("169.80"), null)),
                 new BigDecimal("30.20"), QR, "abc123=",
                 "Representación impresa de la Boleta de Venta Electrónica. Consulte su validez en www.sunat.gob.pe.",
-                null, false);
+                null, false, null);
     }
 
     private static String texto(byte[] pdf) throws Exception {
