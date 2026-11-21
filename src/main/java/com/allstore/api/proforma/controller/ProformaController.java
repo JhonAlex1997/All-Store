@@ -102,7 +102,7 @@ public class ProformaController {
         return proformaService.vender(id, request, clave);
     }
 
-    @GetMapping(value = "/{id}/pdf", produces = MediaType.APPLICATION_PDF_VALUE)
+    @GetMapping("/{id}/pdf")
     public ResponseEntity<byte[]> pdf(@PathVariable Long id, @RequestParam(defaultValue = "A4") FormatoImpresion formato) {
         ImpresionService.Pdf pdf = proformaService.pdf(id, formato);
         return ResponseEntity.ok()

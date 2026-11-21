@@ -4,6 +4,8 @@ import { computed, effect, inject, Injectable, signal } from '@angular/core';
 import { CajaResponse } from '../../core/api/models/caja-response';
 import { ClienteResponse } from '../../core/api/models/cliente-response';
 import { ProductoCajaResponse } from '../../core/api/models/producto-caja-response';
+import { ProformaResponse } from '../../core/api/models/proforma-response';
+import { ProformaResponseLinea } from '../../core/api/models/proforma-response-linea';
 import { SerieResponse } from '../../core/api/models/serie-response';
 import { ProductoCajaResponseVariante as Variante } from '../../core/api/models/producto-caja-response-variante';
 import { CajaControllerService } from '../../core/api/services/caja-controller.service';
@@ -19,10 +21,24 @@ export type EstadoCaja = 'cargando' | 'cerrada' | 'abierta';
 const CLAVE_CARRITO = 'allstore.caja.carrito';
 const MINIMO_POR_DEFECTO = 3;
 
+/**
+ * Proforma cargada en la caja. Al cobrarla, el carrito queda fijo con sus precios cotizados (vigentes);
+ * al editarla, el carrito se puede cambiar y al guardar se recalculan los precios de hoy.
+ */
+export interface ProformaEnCaja {
+  id: number;
+  numero: string;
+  version: number;
+  vigenteHasta: string;
+  total: number;
+  modo: 'cobrar' | 'editar';
+}
+
 interface CarritoGuardado {
   lineas: LineaCarrito[];
   porMayorManual: boolean;
   tipo: TipoVenta;
+  proforma?: ProformaEnCaja | null;
 }
 
 /**
@@ -51,8 +67,16 @@ export class CajaStore {
   readonly tipo = signal<TipoVenta>(this.guardado?.lineas?.length ? this.guardado.tipo : 'BOLETA');
   /** null = "Clientes varios". */
   readonly cliente = signal<ClienteResponse | null>(null);
+  readonly proforma = signal<ProformaEnCaja | null>(this.guardado?.lineas?.length ? this.guardado.proforma ?? null : null);
+  /** Cobrando una proforma: sus prendas y precios no se cambian en la caja. */
+  readonly carritoFijo = computed(() => this.proforma()?.modo === 'cobrar');
 
-  readonly totales = computed(() => calcular(this.lineas(), this.minimoPorMayor(), this.porMayorManual()));
+  readonly totales = computed(() => {
+    const t = calcular(this.lineas(), this.minimoPorMayor(), this.porMayorManual());
+    // Se cobra el total cotizado (el servidor usa las líneas de la proforma, no las de la pantalla).
+    const p = this.proforma();
+    return p?.modo === 'cobrar' ? { ...t, total: p.total } : t;
+  });
   readonly vacio = computed(() => this.lineas().length === 0);
 
   /** Serie activa del local para el tipo elegido (la primera, si hay varias). */
@@ -62,6 +86,7 @@ export class CajaStore {
   readonly impedimento = computed<string | null>(() => {
     const t = this.totales();
     if (!t.lineas.length) return 'Agrega prendas a la venta.';
+    if (this.proforma()?.modo === 'editar') return 'Estás editando una proforma: guarda los cambios o cancela la edición para cobrar.';
     if (!this.serie()) return `No hay una serie activa de ${etiquetaTipo(this.tipo())} para este local.`;
     const cliente = this.cliente();
     if (this.tipo() === 'FACTURA' && cliente?.tipoDocumento !== 'RUC') return 'La factura necesita un cliente con RUC.';
@@ -75,7 +100,9 @@ export class CajaStore {
 
   constructor() {
     effect(() => {
-      const datos: CarritoGuardado = { lineas: this.lineas(), porMayorManual: this.porMayorManual(), tipo: this.tipo() };
+      const datos: CarritoGuardado = {
+        lineas: this.lineas(), porMayorManual: this.porMayorManual(), tipo: this.tipo(), proforma: this.proforma(),
+      };
       try {
         sessionStorage.setItem(CLAVE_CARRITO, JSON.stringify(datos));
       } catch {
@@ -119,7 +146,7 @@ export class CajaStore {
   }
 
   agregar(producto: ProductoCajaResponse, v: Variante, cantidad = 1): void {
-    if (v.varianteId == null) return;
+    if (v.varianteId == null || this.carritoFijo()) return;
     const existente = this.lineas().find((l) => l.varianteId === v.varianteId);
     if (existente) {
       this.cambiarCantidad(v.varianteId, existente.cantidad + cantidad);
@@ -143,6 +170,7 @@ export class CajaStore {
   }
 
   cambiarCantidad(varianteId: number, cantidad: number): void {
+    if (this.carritoFijo()) return;
     if (cantidad <= 0) {
       this.quitar(varianteId);
       return;
@@ -151,6 +179,7 @@ export class CajaStore {
   }
 
   quitar(varianteId: number): void {
+    if (this.carritoFijo()) return;
     this.lineas.update((ls) => ls.filter((l) => l.varianteId !== varianteId));
   }
 
@@ -163,13 +192,54 @@ export class CajaStore {
     }
   }
 
+  /**
+   * Carga una proforma: para cobrarla (sus precios cotizados, carrito fijo) o para editarla.
+   * @param cliente el de la proforma (null = "Clientes varios")
+   */
+  cargarProforma(p: ProformaResponse, modo: 'cobrar' | 'editar', cliente: ClienteResponse | null): void {
+    this.lineas.set((p.lineas ?? []).map((l) => lineaDeProforma(l)));
+    this.porMayorManual.set(!!p.porMayor);
+    this.cliente.set(cliente);
+    this.tipo.set(cliente?.tipoDocumento === 'RUC' ? 'FACTURA' : 'BOLETA');
+    this.proforma.set({
+      id: p.id!, numero: p.numero ?? '', version: p.version ?? 0, vigenteHasta: p.vigenteHasta ?? '',
+      total: p.total ?? 0, modo,
+    });
+  }
+
   /** Deja la caja lista para la siguiente venta. */
   nuevaVenta(): void {
+    this.proforma.set(null);
     this.lineas.set([]);
     this.porMayorManual.set(false);
     this.cliente.set(null);
     this.tipo.set('BOLETA');
   }
+}
+
+/**
+ * Línea del carrito con el precio cotizado: normal y por mayor iguales al precio de la proforma, y el
+ * descuento (de campaña) como precio de campaña por unidad, para que el carrito muestre lo cotizado.
+ */
+function lineaDeProforma(l: ProformaResponseLinea): LineaCarrito {
+  const precio = l.precioUnitario ?? 0;
+  const cantidad = l.cantidad ?? 1;
+  const conDescuento = (l.descuento ?? 0) > 0;
+  return {
+    varianteId: l.varianteId ?? 0,
+    productoId: l.productoId ?? 0,
+    modelo: l.modelo ?? '',
+    codigoModelo: l.codigoModelo ?? '',
+    sku: l.sku ?? '',
+    talla: l.talla ?? '',
+    color: l.color ?? '',
+    precio,
+    precioPorMayor: precio,
+    precioCampana: conDescuento ? Math.round(((l.total ?? 0) / cantidad) * 100) / 100 : null,
+    campana: conDescuento ? (l.campana ?? 'Descuento') : null,
+    stock: l.stock ?? 0,
+    cantidad,
+  };
 }
 
 export function etiquetaTipo(tipo: TipoVenta): string {

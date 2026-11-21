@@ -24,7 +24,7 @@ public class ProformaPublicaController {
 
     private final ProformaService proformaService;
 
-    @GetMapping(value = "/pdf", produces = MediaType.APPLICATION_PDF_VALUE)
+    @GetMapping("/pdf")
     public ResponseEntity<byte[]> pdf(@PathVariable UUID codigo, @RequestParam(defaultValue = "A4") FormatoImpresion formato) {
         ImpresionService.Pdf pdf = proformaService.pdfPublico(codigo, formato);
         return ResponseEntity.ok()

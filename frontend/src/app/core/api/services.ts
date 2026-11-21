@@ -5,6 +5,7 @@ export { UsuarioControllerService } from './services/usuario-controller.service'
 export { TallaControllerService } from './services/talla-controller.service';
 export { SerieControllerService } from './services/serie-controller.service';
 export { ProveedorControllerService } from './services/proveedor-controller.service';
+export { ProformaControllerService } from './services/proforma-controller.service';
 export { ProductoControllerService } from './services/producto-controller.service';
 export { InventarioControllerService } from './services/inventario-controller.service';
 export { ConteoControllerService } from './services/conteo-controller.service';
@@ -26,6 +27,7 @@ export { AuthControllerService } from './services/auth-controller.service';
 export { AlertaControllerService } from './services/alerta-controller.service';
 export { SistemaControllerService } from './services/sistema-controller.service';
 export { ReporteControllerService } from './services/reporte-controller.service';
+export { ProformaPublicaControllerService } from './services/proforma-publica-controller.service';
 export { MarcaControllerService } from './services/marca-controller.service';
 export { ConsultaPublicaControllerService } from './services/consulta-publica-controller.service';
 export { RegistroVentasControllerService } from './services/registro-ventas-controller.service';

@@ -70,6 +70,12 @@ src/app/
 - **Ventas** (`features/ventas`): lista con filtros (fechas, tipo, estado, SUNAT, búsqueda) y totales del periodo;
   detalle con reimpresión, envío por WhatsApp o correo, devolución con nota de crédito (total o por prenda),
   convertir nota de venta, reemitir lo rechazado, reenviar a SUNAT y anular (solo ADMIN).
+- **Proformas** (`features/proformas`, ADMIN y CAJERO): cotizaciones con precios válidos 7 días; no son comprobantes
+  ni descuentan stock. Se arman en la caja con «Guardar como proforma» (mismo cálculo: por mayor y campañas). En la
+  lista: buscar por número o cliente, filtrar vigentes/vencidas/vendidas/anuladas, imprimir A4 o ticket, enviar por
+  WhatsApp (abre el chat con el enlace del PDF) o correo, anular, renovar una vencida (precios de hoy), «Editar en
+  caja» (recalcula y renueva) y «Cobrar en caja»: el carrito queda fijo con los precios cotizados y se cobra por
+  `POST /api/proformas/{id}/venta`, que la marca vendida (`proforma-acciones.ts`, `proformas-reglas.ts`).
 - **Clientes** (`features/clientes`, ADMIN y CAJERO): búsqueda paginada en el servidor, alta con consulta a
   RENIEC (DNI) o SUNAT (RUC) y aviso si el documento ya existe, edición, desactivar, y ficha con sus compras.
   El administrador ve además lo que compró en total; el cajero solo busca (mínimo 3 caracteres, regla del

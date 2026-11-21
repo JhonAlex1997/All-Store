@@ -1,6 +1,7 @@
 package com.allstore.api.proforma.dto;
 
 import com.allstore.api.proforma.entity.EstadoProforma;
+import io.swagger.v3.oas.annotations.media.Schema;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -41,6 +42,7 @@ public record ProformaResponse(
         long version
 ) {
     /** @param id null si es "Clientes varios" */
+    @Schema(name = "ProformaResponseCliente")
     public record Cliente(Long id, String tipoDocumento, String numeroDocumento, String nombre, String direccion,
                           String email, String telefono) {
     }
@@ -51,6 +53,7 @@ public record ProformaResponse(
      * @param campana        campaña que dio el descuento, si hubo
      * @param stock          stock actual en el local (informativo: la proforma no lo reserva)
      */
+    @Schema(name = "ProformaResponseLinea")
     public record Linea(int item, Long varianteId, Long productoId, String codigoModelo, String modelo, String talla,
                         String color, String sku, String descripcion, int cantidad, BigDecimal precioUnitario,
                         BigDecimal descuento, BigDecimal descuentoCampana, String campana, BigDecimal total, int stock) {

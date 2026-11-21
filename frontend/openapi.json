@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "AllStore API",
-    "description": "Facturación y ERP para tienda de jeans. Inicia sesión en POST /api/auth/login y pega el accessToken en Authorize.",
+    "description": "FacturaciÃ³n y ERP para tienda de jeans. Inicia sesiÃ³n en POST /api/auth/login y pega el accessToken en Authorize.",
     "version": "v1"
   },
   "servers": [
@@ -198,6 +198,84 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProveedorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/proformas/{id}": {
+      "get": {
+        "tags": [
+          "proforma-controller"
+        ],
+        "operationId": "proformaObtener",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProformaResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "proforma-controller"
+        ],
+        "operationId": "proformaActualizar",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "name": "If-Match",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProformaRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProformaResponse"
                 }
               }
             }
@@ -2017,6 +2095,317 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProveedorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/proformas": {
+      "get": {
+        "tags": [
+          "proforma-controller"
+        ],
+        "operationId": "proformaListar",
+        "parameters": [
+          {
+            "name": "establecimientoId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "name": "estado",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "PENDIENTE",
+                "VENDIDA",
+                "ANULADA"
+              ]
+            }
+          },
+          {
+            "name": "vigencia",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "busqueda",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "Zero-based page index (0..N)",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 0,
+              "minimum": 0
+            }
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "description": "The size of the page to be returned",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 25,
+              "minimum": 1
+            }
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "description": "Sorting criteria in the format: property,(asc|desc). Default sort order is ascending. Multiple sort criteria are supported.",
+            "required": false,
+            "schema": {
+              "type": "array",
+              "default": [
+                "id,DESC"
+              ],
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PageResponseProformaResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "proforma-controller"
+        ],
+        "operationId": "proformaCrear",
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProformaRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProformaResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/proformas/{id}/venta": {
+      "post": {
+        "tags": [
+          "proforma-controller"
+        ],
+        "operationId": "proformaVender",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VentaRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VentaResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/proformas/{id}/renovar": {
+      "post": {
+        "tags": [
+          "proforma-controller"
+        ],
+        "operationId": "proformaRenovar",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "name": "If-Match",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProformaResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/proformas/{id}/enviar": {
+      "post": {
+        "tags": [
+          "proforma-controller"
+        ],
+        "operationId": "proformaEnviar",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "name": "correo",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EnviarProformaRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EnvioProformaResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/proformas/{id}/anular": {
+      "post": {
+        "tags": [
+          "proforma-controller"
+        ],
+        "operationId": "proformaAnular",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "name": "If-Match",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProformaResponse"
                 }
               }
             }
@@ -5271,6 +5660,51 @@
         }
       }
     },
+    "/api/publico/proformas/{codigo}/pdf": {
+      "get": {
+        "tags": [
+          "proforma-publica-controller"
+        ],
+        "operationId": "proformaPublicaPdf",
+        "parameters": [
+          {
+            "name": "codigo",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "formato",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "A4",
+              "enum": [
+                "A4",
+                "TICKET"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/octet-stream": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/publico/marca": {
       "get": {
         "tags": [
@@ -5423,6 +5857,51 @@
             "schema": {
               "type": "string",
               "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/octet-stream": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/proformas/{id}/pdf": {
+      "get": {
+        "tags": [
+          "proforma-controller"
+        ],
+        "operationId": "proformaPdf",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "name": "formato",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "A4",
+              "enum": [
+                "A4",
+                "TICKET"
+              ]
             }
           }
         ],
@@ -7087,6 +7566,243 @@
           }
         }
       },
+      "ProformaRequest": {
+        "type": "object",
+        "properties": {
+          "establecimientoId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "clienteId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "observacion": {
+            "type": "string",
+            "maxLength": 500,
+            "minLength": 0
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/VentaItemRequest"
+            },
+            "maxItems": 200,
+            "minItems": 0
+          },
+          "porMayor": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "establecimientoId",
+          "items"
+        ]
+      },
+      "VentaItemRequest": {
+        "type": "object",
+        "properties": {
+          "varianteId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "cantidad": {
+            "type": "integer",
+            "format": "int32",
+            "exclusiveMinimum": 0,
+            "maximum": 1000
+          },
+          "descuento": {
+            "type": "number",
+            "minimum": 0.0
+          }
+        },
+        "required": [
+          "cantidad",
+          "varianteId"
+        ]
+      },
+      "ProformaResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "numero": {
+            "type": "string"
+          },
+          "fechaEmision": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "vigenteHasta": {
+            "type": "string",
+            "format": "date"
+          },
+          "estado": {
+            "type": "string",
+            "enum": [
+              "PENDIENTE",
+              "VENDIDA",
+              "ANULADA"
+            ]
+          },
+          "vencida": {
+            "type": "boolean"
+          },
+          "diasVigencia": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "establecimientoId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "establecimiento": {
+            "type": "string"
+          },
+          "cliente": {
+            "$ref": "#/components/schemas/ProformaResponseCliente"
+          },
+          "porMayor": {
+            "type": "boolean"
+          },
+          "porMayorManual": {
+            "type": "boolean"
+          },
+          "lineas": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ProformaResponseLinea"
+            }
+          },
+          "prendas": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "opGravadas": {
+            "type": "number"
+          },
+          "opExoneradas": {
+            "type": "number"
+          },
+          "opInafectas": {
+            "type": "number"
+          },
+          "totalDescuento": {
+            "type": "number"
+          },
+          "totalIgv": {
+            "type": "number"
+          },
+          "total": {
+            "type": "number"
+          },
+          "observacion": {
+            "type": "string"
+          },
+          "comprobanteId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "comprobante": {
+            "type": "string"
+          },
+          "creadoPor": {
+            "type": "string"
+          },
+          "version": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
+      },
+      "ProformaResponseCliente": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "tipoDocumento": {
+            "type": "string"
+          },
+          "numeroDocumento": {
+            "type": "string"
+          },
+          "nombre": {
+            "type": "string"
+          },
+          "direccion": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "telefono": {
+            "type": "string"
+          }
+        }
+      },
+      "ProformaResponseLinea": {
+        "type": "object",
+        "properties": {
+          "item": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "varianteId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "productoId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "codigoModelo": {
+            "type": "string"
+          },
+          "modelo": {
+            "type": "string"
+          },
+          "talla": {
+            "type": "string"
+          },
+          "color": {
+            "type": "string"
+          },
+          "sku": {
+            "type": "string"
+          },
+          "descripcion": {
+            "type": "string"
+          },
+          "cantidad": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "precioUnitario": {
+            "type": "number"
+          },
+          "descuento": {
+            "type": "number"
+          },
+          "descuentoCampana": {
+            "type": "number"
+          },
+          "campana": {
+            "type": "string"
+          },
+          "total": {
+            "type": "number"
+          },
+          "stock": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
       "ProductoUpdateRequest": {
         "type": "object",
         "properties": {
@@ -8139,29 +8855,6 @@
           "monto"
         ]
       },
-      "VentaItemRequest": {
-        "type": "object",
-        "properties": {
-          "varianteId": {
-            "type": "integer",
-            "format": "int64"
-          },
-          "cantidad": {
-            "type": "integer",
-            "format": "int32",
-            "exclusiveMinimum": 0,
-            "maximum": 1000
-          },
-          "descuento": {
-            "type": "number",
-            "minimum": 0.0
-          }
-        },
-        "required": [
-          "cantidad",
-          "varianteId"
-        ]
-      },
       "VentaRequest": {
         "type": "object",
         "properties": {
@@ -9028,6 +9721,37 @@
           "establecimientoId",
           "tipoComprobante"
         ]
+      },
+      "EnviarProformaRequest": {
+        "type": "object",
+        "properties": {
+          "celular": {
+            "type": "string",
+            "maxLength": 20,
+            "minLength": 0,
+            "pattern": "[0-9+ ()-]*"
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "maxLength": 120,
+            "minLength": 0
+          }
+        }
+      },
+      "EnvioProformaResponse": {
+        "type": "object",
+        "properties": {
+          "enlaceWhatsapp": {
+            "type": "string"
+          },
+          "enlacePdf": {
+            "type": "string"
+          },
+          "correo": {
+            "type": "string"
+          }
+        }
       },
       "ProductoCreateRequest": {
         "type": "object",
@@ -11125,6 +11849,33 @@
           "maximaMb": {
             "type": "integer",
             "format": "int64"
+          }
+        }
+      },
+      "PageResponseProformaResponse": {
+        "type": "object",
+        "properties": {
+          "content": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ProformaResponse"
+            }
+          },
+          "page": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "size": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "totalElements": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "totalPages": {
+            "type": "integer",
+            "format": "int32"
           }
         }
       },

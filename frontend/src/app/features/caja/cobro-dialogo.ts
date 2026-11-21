@@ -8,6 +8,7 @@ import { MessageModule } from 'primeng/message';
 
 import { PagoRequest } from '../../core/api/models/pago-request';
 import { VentaResponse } from '../../core/api/models/venta-response';
+import { ProformaControllerService } from '../../core/api/services/proforma-controller.service';
 import { VentaControllerService } from '../../core/api/services/venta-controller.service';
 import { mensajeDeError } from '../../core/http/error-api';
 import { nuevaClave } from '../../core/http/idempotencia.interceptor';
@@ -34,6 +35,7 @@ interface LineaPago {
 export class CobroDialogo {
   protected readonly store = inject(CajaStore);
   private readonly ventas = inject(VentaControllerService);
+  private readonly proformas = inject(ProformaControllerService);
 
   readonly visible = model(false);
   readonly emitida = output<VentaResponse>();
@@ -117,19 +119,21 @@ export class CobroDialogo {
     this.enviando.set(true);
     this.error.set(null);
     try {
-      const venta = await this.ventas.ventaCrear({
-        'Idempotency-Key': this.clave,
-        body: {
-          tipoComprobante: this.store.tipo(),
-          serieId: serie.id,
-          clienteId: this.store.cliente()?.id,
-          items: this.store.lineas().map((l) => ({ varianteId: l.varianteId, cantidad: l.cantidad })),
-          pagos,
-          porMayor: this.store.porMayorManual() || undefined,
-          whatsapp: this.whatsapp.trim() || undefined,
-          correo: this.correo.trim() || undefined,
-        },
-      });
+      const body = {
+        tipoComprobante: this.store.tipo(),
+        serieId: serie.id,
+        clienteId: this.store.cliente()?.id,
+        items: this.store.lineas().map((l) => ({ varianteId: l.varianteId, cantidad: l.cantidad })),
+        pagos,
+        porMayor: this.store.porMayorManual() || undefined,
+        whatsapp: this.whatsapp.trim() || undefined,
+        correo: this.correo.trim() || undefined,
+      };
+      // Una proforma se cobra por su propio endpoint: el servidor usa sus precios cotizados y la marca vendida.
+      const proforma = this.store.proforma();
+      const venta = proforma?.modo === 'cobrar'
+        ? await this.proformas.proformaVender({ id: proforma.id, 'Idempotency-Key': this.clave, body })
+        : await this.ventas.ventaCrear({ 'Idempotency-Key': this.clave, body });
       this.visible.set(false);
       this.emitida.emit(venta);
     } catch (e) {

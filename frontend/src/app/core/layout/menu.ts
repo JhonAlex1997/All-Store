@@ -22,6 +22,7 @@ export const MENU: GrupoMenu[] = [
     opciones: [
       { etiqueta: 'Caja', icono: 'pi pi-shopping-cart', ruta: 'caja', roles: ['ADMIN', 'CAJERO'] },
       { etiqueta: 'Ventas', icono: 'pi pi-receipt', ruta: 'ventas', roles: ['ADMIN', 'CAJERO'] },
+      { etiqueta: 'Proformas', icono: 'pi pi-file-edit', ruta: 'proformas', roles: ['ADMIN', 'CAJERO'] },
       { etiqueta: 'Clientes', icono: 'pi pi-users', ruta: 'clientes', roles: ['ADMIN', 'CAJERO'] },
       { etiqueta: 'Guías de remisión', icono: 'pi pi-truck', ruta: 'guias', roles: TODOS },
     ],
