@@ -10,4 +10,5 @@ export interface EmpresaResponse {
   ruc?: string;
   telefono?: string;
   ubigeo?: string;
+  version?: number;
 }

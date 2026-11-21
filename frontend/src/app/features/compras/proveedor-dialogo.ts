@@ -16,6 +16,7 @@ import { SesionService } from '../../core/auth/sesion.service';
 import { mensajeDeError } from '../../core/http/error-api';
 import { SIN_AVISO } from '../../core/http/errores.interceptor';
 import { nuevaClave } from '../../core/http/idempotencia.interceptor';
+import { ifMatch } from '../../core/http/version';
 import { validarDocumentoProveedor } from './compras-reglas';
 
 type TipoDoc = ProveedorRequest['tipoDocumento'];
@@ -183,7 +184,7 @@ export class ProveedorDialogo {
       const id = this.proveedor()?.id;
       const ctx = new HttpContext().set(SIN_AVISO, true);
       const r = id
-        ? await this.api.proveedorActualizar({ id, body }, ctx)
+        ? await this.api.proveedorActualizar({ id, 'If-Match': ifMatch(this.proveedor()?.version), body }, ctx)
         : await this.api.proveedorCrear({ 'Idempotency-Key': this.clave, body }, ctx);
       this.avisos.add({ severity: 'success', summary: id ? 'Proveedor actualizado' : 'Proveedor creado', detail: r.razonSocial });
       this.guardado.emit(r);

@@ -16,5 +16,6 @@ export interface CampanaResponse {
   todoElCatalogo?: boolean;
   valor?: number;
   varianteIds?: Array<number>;
+  version?: number;
   vigenteHoy?: boolean;
 }

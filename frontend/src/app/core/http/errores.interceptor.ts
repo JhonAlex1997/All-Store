@@ -38,6 +38,7 @@ export const erroresInterceptor: HttpInterceptorFn = (req, next) => {
 function aviso(status: number, detalle: ErrorApi) {
   const titulo = status === 0 ? 'Sin conexión'
     : status === 403 ? 'Sin permiso'
+      : status === 412 ? 'Otra persona lo modificó'
       : status === 409 ? 'No se pudo completar'
         : status >= 500 ? 'Error del servidor' : 'Revisa los datos';
   const texto = status === 0 ? 'No se pudo conectar con el servidor. Revisa la red e inténtalo otra vez.'

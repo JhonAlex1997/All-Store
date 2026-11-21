@@ -12,6 +12,7 @@ import { EstablecimientoResponse } from '../../models/establecimiento-response';
 
 export interface EstablecimientoActualizar$Params {
   id: number;
+  'If-Match'?: string;
       body: EstablecimientoRequest
 }
 
@@ -19,6 +20,7 @@ export function establecimientoActualizar(http: HttpClient, rootUrl: string, par
   const rb = new RequestBuilder(rootUrl, establecimientoActualizar.PATH, 'put');
   if (params) {
     rb.path('id', params.id, {});
+    rb.header('If-Match', params['If-Match'], {});
     rb.body(params.body, 'application/json');
   }
 

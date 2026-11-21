@@ -28,6 +28,7 @@ import { SesionService } from '../../core/auth/sesion.service';
 import { mensajeDeError } from '../../core/http/error-api';
 import { SolesPipe } from '../../shared/formato/soles.pipe';
 import { abrirPdf } from '../../shared/impresion/imprimir-pdf';
+import { ifMatch } from '../../core/http/version';
 
 /** Ficha del modelo: datos y precios, sus prendas (talla × color) con stock por local, y etiquetas. */
 @Component({
@@ -124,6 +125,7 @@ export class ProductoDetalle implements OnInit {
     try {
       this.producto.set(await this.api.productoActualizar({
         id: p.id,
+        'If-Match': ifMatch(p.version),
         body: {
           nombre: v.nombre.trim(), categoriaId: v.categoriaId, precioVenta: v.precioVenta,
           precioPorMayor: v.precioPorMayor ?? undefined, descripcion: v.descripcion.trim() || undefined, activo: v.activo,

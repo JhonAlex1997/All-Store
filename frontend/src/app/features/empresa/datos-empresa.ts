@@ -12,6 +12,7 @@ import { EmpresaControllerService } from '../../core/api/services/empresa-contro
 import { SIN_AVISO } from '../../core/http/errores.interceptor';
 import { MarcaService } from '../../core/marca/marca.service';
 import { rucValidator } from '../../shared/sunat/ruc';
+import { ifMatch } from '../../core/http/version';
 
 /** Datos del emisor: deben coincidir con la ficha RUC de SUNAT (salvo el nombre comercial, que es libre). */
 @Component({
@@ -45,11 +46,14 @@ export class DatosEmpresa implements OnInit {
   protected readonly guardando = signal(false);
   /** Aún no se registró la empresa (404): el formulario sirve para el primer registro. */
   protected readonly nueva = signal(false);
+  /** Versión de los datos que se cargaron: si otra persona guarda en medio, el backend rechaza este guardado. */
+  private version: number | undefined;
 
   async ngOnInit(): Promise<void> {
     try {
       // Sin aviso: un 404 solo significa que la empresa aún no se registró.
       const e = await this.api.empresaObtener(undefined, new HttpContext().set(SIN_AVISO, true));
+      this.version = e.version;
       this.form.reset({
         ruc: e.ruc ?? '', razonSocial: e.razonSocial ?? '', nombreComercial: e.nombreComercial ?? '',
         direccionFiscal: e.direccionFiscal ?? '', ubigeo: e.ubigeo ?? '', telefono: e.telefono ?? '',
@@ -75,7 +79,8 @@ export class DatosEmpresa implements OnInit {
     const v = this.form.getRawValue();
     this.guardando.set(true);
     try {
-      await this.api.empresaGuardar({
+      const guardada = await this.api.empresaGuardar({
+        'If-Match': ifMatch(this.version),
         body: {
           ...v,
           ruc: v.ruc.trim(),
@@ -84,6 +89,7 @@ export class DatosEmpresa implements OnInit {
           email: v.email.trim() || undefined,
         },
       });
+      this.version = guardada.version;
       this.form.markAsPristine();
       this.nueva.set(false);
       this.avisos.add({ severity: 'success', summary: 'Datos guardados', detail: 'Se usarán en los próximos comprobantes.' });

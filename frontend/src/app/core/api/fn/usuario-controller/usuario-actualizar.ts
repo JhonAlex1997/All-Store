@@ -12,6 +12,7 @@ import { UsuarioUpdateRequest } from '../../models/usuario-update-request';
 
 export interface UsuarioActualizar$Params {
   id: number;
+  'If-Match'?: string;
       body: UsuarioUpdateRequest
 }
 
@@ -19,6 +20,7 @@ export function usuarioActualizar(http: HttpClient, rootUrl: string, params: Usu
   const rb = new RequestBuilder(rootUrl, usuarioActualizar.PATH, 'put');
   if (params) {
     rb.path('id', params.id, {});
+    rb.header('If-Match', params['If-Match'], {});
     rb.body(params.body, 'application/json');
   }
 

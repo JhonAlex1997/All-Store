@@ -14,4 +14,5 @@ export interface ClienteResponse {
   telefono?: string;
   tipoDocumento?: 'SIN_DOCUMENTO' | 'DNI' | 'CARNET_EXTRANJERIA' | 'RUC' | 'PASAPORTE' | 'CEDULA_DIPLOMATICA';
   ubigeo?: string;
+  version?: number;
 }

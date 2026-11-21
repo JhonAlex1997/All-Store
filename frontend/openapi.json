@@ -32,6 +32,14 @@
               "type": "integer",
               "format": "int64"
             }
+          },
+          {
+            "name": "If-Match",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "requestBody": {
@@ -72,6 +80,14 @@
             "schema": {
               "type": "integer",
               "format": "int64"
+            }
+          },
+          {
+            "name": "If-Match",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string"
             }
           }
         ],
@@ -155,6 +171,14 @@
               "type": "integer",
               "format": "int64"
             }
+          },
+          {
+            "name": "If-Match",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "requestBody": {
@@ -224,6 +248,14 @@
             "schema": {
               "type": "integer",
               "format": "int64"
+            }
+          },
+          {
+            "name": "If-Match",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string"
             }
           }
         ],
@@ -471,6 +503,14 @@
               "type": "integer",
               "format": "int64"
             }
+          },
+          {
+            "name": "If-Match",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "requestBody": {
@@ -511,6 +551,14 @@
             "schema": {
               "type": "integer",
               "format": "int64"
+            }
+          },
+          {
+            "name": "If-Match",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string"
             }
           }
         ],
@@ -562,6 +610,16 @@
           "empresa-controller"
         ],
         "operationId": "empresaGuardar",
+        "parameters": [
+          {
+            "name": "If-Match",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "requestBody": {
           "content": {
             "application/json": {
@@ -650,6 +708,14 @@
               "type": "integer",
               "format": "int64"
             }
+          },
+          {
+            "name": "If-Match",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "requestBody": {
@@ -720,6 +786,14 @@
               "type": "integer",
               "format": "int64"
             }
+          },
+          {
+            "name": "If-Match",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "requestBody": {
@@ -760,6 +834,14 @@
             "schema": {
               "type": "integer",
               "format": "int64"
+            }
+          },
+          {
+            "name": "If-Match",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string"
             }
           }
         ],
@@ -830,6 +912,14 @@
             "schema": {
               "type": "integer",
               "format": "int64"
+            }
+          },
+          {
+            "name": "If-Match",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string"
             }
           }
         ],
@@ -6783,6 +6873,10 @@
           },
           "activo": {
             "type": "boolean"
+          },
+          "version": {
+            "type": "integer",
+            "format": "int64"
           }
         }
       },
@@ -6825,6 +6919,10 @@
           },
           "activo": {
             "type": "boolean"
+          },
+          "version": {
+            "type": "integer",
+            "format": "int64"
           }
         }
       },
@@ -6982,6 +7080,10 @@
           },
           "activo": {
             "type": "boolean"
+          },
+          "version": {
+            "type": "integer",
+            "format": "int64"
           }
         }
       },
@@ -7068,6 +7170,10 @@
             "items": {
               "$ref": "#/components/schemas/VarianteResponse"
             }
+          },
+          "version": {
+            "type": "integer",
+            "format": "int64"
           }
         }
       },
@@ -7471,6 +7577,10 @@
           },
           "activo": {
             "type": "boolean"
+          },
+          "version": {
+            "type": "integer",
+            "format": "int64"
           }
         }
       },
@@ -7548,6 +7658,10 @@
           },
           "activo": {
             "type": "boolean"
+          },
+          "version": {
+            "type": "integer",
+            "format": "int64"
           }
         }
       },
@@ -7631,6 +7745,10 @@
           "minimoPrendasPorMayor": {
             "type": "integer",
             "format": "int32"
+          },
+          "version": {
+            "type": "integer",
+            "format": "int64"
           }
         }
       },
@@ -7687,6 +7805,10 @@
           },
           "activo": {
             "type": "boolean"
+          },
+          "version": {
+            "type": "integer",
+            "format": "int64"
           }
         }
       },
@@ -7792,6 +7914,10 @@
           },
           "activo": {
             "type": "boolean"
+          },
+          "version": {
+            "type": "integer",
+            "format": "int64"
           }
         }
       },
@@ -7823,6 +7949,10 @@
           },
           "activo": {
             "type": "boolean"
+          },
+          "version": {
+            "type": "integer",
+            "format": "int64"
           }
         }
       },
@@ -7970,6 +8100,10 @@
               "type": "integer",
               "format": "int64"
             }
+          },
+          "version": {
+            "type": "integer",
+            "format": "int64"
           }
         }
       },

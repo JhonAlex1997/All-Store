@@ -26,6 +26,7 @@ import { ProductoControllerService } from '../../core/api/services/producto-cont
 import { mensajeDeError } from '../../core/http/error-api';
 import { SIN_AVISO } from '../../core/http/errores.interceptor';
 import { nuevaClave } from '../../core/http/idempotencia.interceptor';
+import { esEdicionConcurrente, ifMatch } from '../../core/http/version';
 import { FechaLimaPipe } from '../../shared/formato/fecha-lima.pipe';
 import { SolesPipe } from '../../shared/formato/soles.pipe';
 import { fechaLima } from '../../shared/reportes/reportes.service';
@@ -259,12 +260,13 @@ export class CampanasPagina implements OnInit {
     try {
       const guardada = e === 'nueva'
         ? await this.api.campanaCrear({ 'Idempotency-Key': this.claveOperacion, body }, sinAviso())
-        : await this.api.campanaActualizar({ id: e.id!, body }, sinAviso());
+        : await this.api.campanaActualizar({ id: e.id!, 'If-Match': ifMatch(e.version), body }, sinAviso());
       this.reemplazar(guardada);
       this.avisos.add({ severity: 'success', summary: e === 'nueva' ? 'Campaña creada' : 'Campaña guardada', detail: guardada.nombre });
       this.editando.set(null);
     } catch (err) {
       this.error.set(mensajeDeError(err));
+      if (esEdicionConcurrente(err)) await this.recargarCampanas();
     } finally {
       this.guardando.set(false);
     }
@@ -280,12 +282,19 @@ export class CampanasPagina implements OnInit {
         fechaFin: c.fechaFin!, establecimientoId: c.establecimientoId, categoriaIds: c.categoriaIds ?? [],
         productoIds: c.productoIds ?? [], varianteIds: c.varianteIds ?? [], activo: c.activo === false,
       };
-      const r = await this.api.campanaActualizar({ id: c.id, body });
+      const r = await this.api.campanaActualizar({ id: c.id, 'If-Match': ifMatch(c.version), body });
       this.reemplazar(r);
       this.avisos.add({ severity: 'success', summary: r.activo ? 'Campaña reanudada' : 'Campaña pausada', detail: r.nombre });
+    } catch (err) {
+      // El aviso ya lo mostró el interceptor; si otra persona la cambió, se trae la versión actual.
+      if (esEdicionConcurrente(err)) await this.recargarCampanas();
     } finally {
       this.cambiando.set(null);
     }
+  }
+
+  private async recargarCampanas(): Promise<void> {
+    this.campanas.set(await this.api.campanaListar());
   }
 
   private reemplazar(c: CampanaResponse): void {

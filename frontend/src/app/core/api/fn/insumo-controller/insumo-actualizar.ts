@@ -12,6 +12,7 @@ import { InsumoResponse } from '../../models/insumo-response';
 
 export interface InsumoActualizar$Params {
   id: number;
+  'If-Match'?: string;
       body: InsumoRequest
 }
 
@@ -19,6 +20,7 @@ export function insumoActualizar(http: HttpClient, rootUrl: string, params: Insu
   const rb = new RequestBuilder(rootUrl, insumoActualizar.PATH, 'put');
   if (params) {
     rb.path('id', params.id, {});
+    rb.header('If-Match', params['If-Match'], {});
     rb.body(params.body, 'application/json');
   }
 

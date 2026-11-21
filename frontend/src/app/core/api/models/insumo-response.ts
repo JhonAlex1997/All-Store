@@ -8,4 +8,5 @@ export interface InsumoResponse {
   id?: number;
   nombre?: string;
   unidadMedida?: string;
+  version?: number;
 }

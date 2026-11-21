@@ -9,4 +9,5 @@ export interface EstablecimientoResponse {
   nombre?: string;
   tipo?: 'TIENDA' | 'ALMACEN' | 'TALLER' | 'OFICINA';
   ubigeo?: string;
+  version?: number;
 }

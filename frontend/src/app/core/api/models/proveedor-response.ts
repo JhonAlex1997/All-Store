@@ -10,4 +10,5 @@ export interface ProveedorResponse {
   razonSocial?: string;
   telefono?: string;
   tipoDocumento?: 'SIN_DOCUMENTO' | 'DNI' | 'CARNET_EXTRANJERIA' | 'RUC' | 'PASAPORTE' | 'CEDULA_DIPLOMATICA';
+  version?: number;
 }

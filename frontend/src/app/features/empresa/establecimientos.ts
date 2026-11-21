@@ -12,6 +12,7 @@ import { ToggleSwitchModule } from 'primeng/toggleswitch';
 import { EstablecimientoResponse } from '../../core/api/models/establecimiento-response';
 import { EstablecimientoControllerService } from '../../core/api/services/establecimiento-controller.service';
 import { OPCIONES_TIPO_ESTABLECIMIENTO, TipoEstablecimiento, TIPOS_ESTABLECIMIENTO } from '../../shared/sunat/tipos';
+import { esEdicionConcurrente, ifMatch } from '../../core/http/version';
 
 /** Locales (establecimientos anexos de SUNAT): tienda, almacén, taller. Cada serie pertenece a uno. */
 @Component({
@@ -89,13 +90,16 @@ export class Establecimientos implements OnInit {
     this.guardando.set(true);
     try {
       if (actual?.id) {
-        await this.api.establecimientoActualizar({ id: actual.id, body });
+        await this.api.establecimientoActualizar({ id: actual.id, 'If-Match': ifMatch(actual.version), body });
       } else {
         await this.api.establecimientoCrear({ body });
       }
       this.dialogo.set(false);
       this.avisos.add({ severity: 'success', summary: actual ? 'Local actualizado' : 'Local creado' });
       await this.cargar();
+    } catch (err) {
+      // El aviso lo muestra el interceptor; si otra persona lo cambió, se trae la lista actual.
+      if (esEdicionConcurrente(err)) await this.cargar();
     } finally {
       this.guardando.set(false);
     }

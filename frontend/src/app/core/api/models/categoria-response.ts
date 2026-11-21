@@ -5,4 +5,5 @@ export interface CategoriaResponse {
   activo?: boolean;
   id?: number;
   nombre?: string;
+  version?: number;
 }

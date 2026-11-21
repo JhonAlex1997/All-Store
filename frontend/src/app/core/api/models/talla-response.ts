@@ -6,4 +6,5 @@ export interface TallaResponse {
   codigo?: string;
   id?: number;
   orden?: number;
+  version?: number;
 }

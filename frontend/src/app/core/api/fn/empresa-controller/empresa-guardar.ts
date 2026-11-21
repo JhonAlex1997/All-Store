@@ -11,12 +11,14 @@ import { EmpresaRequest } from '../../models/empresa-request';
 import { EmpresaResponse } from '../../models/empresa-response';
 
 export interface EmpresaGuardar$Params {
+  'If-Match'?: string;
       body: EmpresaRequest
 }
 
 export function empresaGuardar(http: HttpClient, rootUrl: string, params: EmpresaGuardar$Params, context?: HttpContext): Observable<StrictHttpResponse<EmpresaResponse>> {
   const rb = new RequestBuilder(rootUrl, empresaGuardar.PATH, 'put');
   if (params) {
+    rb.header('If-Match', params['If-Match'], {});
     rb.body(params.body, 'application/json');
   }
 

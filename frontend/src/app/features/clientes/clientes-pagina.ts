@@ -21,6 +21,7 @@ import { SesionService } from '../../core/auth/sesion.service';
 import { mensajeDeError } from '../../core/http/error-api';
 import { SIN_AVISO } from '../../core/http/errores.interceptor';
 import { nuevaClave } from '../../core/http/idempotencia.interceptor';
+import { esEdicionConcurrente, ifMatch } from '../../core/http/version';
 import { FechaLimaPipe } from '../../shared/formato/fecha-lima.pipe';
 import { SolesPipe } from '../../shared/formato/soles.pipe';
 import { esRucValido } from '../../shared/sunat/ruc';
@@ -259,13 +260,15 @@ export class ClientesPagina {
     try {
       const guardado = e === 'nuevo'
         ? await this.api.clienteCrear({ 'Idempotency-Key': this.claveOperacion, body }, sinAviso())
-        : await this.api.clienteActualizar({ id: e.id!, body }, sinAviso());
+        : await this.api.clienteActualizar({ id: e.id!, 'If-Match': ifMatch(e.version), body }, sinAviso());
       this.avisos.add({ severity: 'success', summary: e === 'nuevo' ? 'Cliente registrado' : 'Cliente actualizado', detail: guardado.nombre });
       this.editando.set(null);
       if (e === 'nuevo') this.busqueda = guardado.numeroDocumento ?? '';
       this.filtrar();
     } catch (err) {
       this.error.set(mensajeDeError(err));
+      // Otra persona lo cambió: se refresca la lista para que, al volver a abrirlo, se vean sus datos.
+      if (esEdicionConcurrente(err)) this.filtrar();
     } finally {
       this.guardando.set(false);
     }

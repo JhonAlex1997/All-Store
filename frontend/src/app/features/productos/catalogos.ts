@@ -12,11 +12,13 @@ import { ToggleSwitchModule } from 'primeng/toggleswitch';
 import { CategoriaControllerService } from '../../core/api/services/categoria-controller.service';
 import { ColorControllerService } from '../../core/api/services/color-controller.service';
 import { TallaControllerService } from '../../core/api/services/talla-controller.service';
+import { esEdicionConcurrente, ifMatch } from '../../core/http/version';
 
 type Tipo = 'categoria' | 'talla' | 'color';
 
 interface Elemento {
   id?: number;
+  version?: number;
   nombre?: string;
   codigo?: string;
   orden?: number;
@@ -159,17 +161,19 @@ export class Catalogos implements OnInit {
     try {
       if (tipo === 'categoria') {
         const body = { nombre: (e.nombre ?? '').trim(), activo: e.activo };
-        await (e.id ? this.categoriasApi.categoriaActualizar({ id: e.id, body }) : this.categoriasApi.categoriaCrear({ body }));
+        await (e.id ? this.categoriasApi.categoriaActualizar({ id: e.id, 'If-Match': ifMatch(e.version), body }) : this.categoriasApi.categoriaCrear({ body }));
       } else if (tipo === 'talla') {
         const body = { codigo: (e.codigo ?? '').trim().toUpperCase(), orden: e.orden ?? 0, activo: e.activo };
-        await (e.id ? this.tallasApi.tallaActualizar({ id: e.id, body }) : this.tallasApi.tallaCrear({ body }));
+        await (e.id ? this.tallasApi.tallaActualizar({ id: e.id, 'If-Match': ifMatch(e.version), body }) : this.tallasApi.tallaCrear({ body }));
       } else {
         const body = { nombre: (e.nombre ?? '').trim(), codigo: (e.codigo ?? '').trim().toUpperCase(), activo: e.activo };
-        await (e.id ? this.coloresApi.colorActualizar({ id: e.id, body }) : this.coloresApi.colorCrear({ body }));
+        await (e.id ? this.coloresApi.colorActualizar({ id: e.id, 'If-Match': ifMatch(e.version), body }) : this.coloresApi.colorCrear({ body }));
       }
       this.avisos.add({ severity: 'success', summary: 'Guardado' });
       this.tipo.set(null);
       await this.cargar();
+    } catch (err) {
+      if (esEdicionConcurrente(err)) await this.cargar();
     } finally {
       this.guardando.set(false);
     }

@@ -16,4 +16,5 @@ export interface ProductoDetalleResponse {
   tipoAfectacionIgv?: string;
   unidadMedida?: string;
   variantes?: Array<VarianteResponse>;
+  version?: number;
 }

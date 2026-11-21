@@ -6,4 +6,5 @@ export interface ColorResponse {
   codigo?: string;
   id?: number;
   nombre?: string;
+  version?: number;
 }

@@ -16,6 +16,7 @@ import { Rol, SesionService } from '../../core/auth/sesion.service';
 import { nuevaClave } from '../../core/http/idempotencia.interceptor';
 import { FechaLimaPipe } from '../../shared/formato/fecha-lima.pipe';
 import { mensajePolitica, passwordTemporal, politicaPassword } from '../../shared/seguridad/politica-password';
+import { esEdicionConcurrente, ifMatch } from '../../core/http/version';
 
 const USUARIO_VALIDO = /^[A-Za-z0-9._-]{3,50}$/;
 
@@ -130,11 +131,13 @@ export class UsuariosPagina implements OnInit {
         });
         this.credencial.set({ nombre: creado.nombre ?? '', username: creado.username ?? '', clave: this.clave });
       } else if (e.id) {
-        await this.api.usuarioActualizar({ id: e.id, body: { nombre: this.nombre.trim(), rol: this.rol, activo: this.activo } });
+        await this.api.usuarioActualizar({ id: e.id, 'If-Match': ifMatch(e.version), body: { nombre: this.nombre.trim(), rol: this.rol, activo: this.activo } });
         this.avisos.add({ severity: 'success', summary: 'Usuario actualizado', detail: this.username });
       }
       this.editando.set(null);
       await this.cargar();
+    } catch (err) {
+      if (esEdicionConcurrente(err)) await this.cargar();
     } finally {
       this.guardando.set(false);
     }

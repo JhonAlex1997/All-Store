@@ -21,6 +21,7 @@ import { InsumoControllerService } from '../../core/api/services/insumo-controll
 import { mensajeDeError } from '../../core/http/error-api';
 import { SIN_AVISO } from '../../core/http/errores.interceptor';
 import { nuevaClave } from '../../core/http/idempotencia.interceptor';
+import { esEdicionConcurrente, ifMatch } from '../../core/http/version';
 import { FechaLimaPipe } from '../../shared/formato/fecha-lima.pipe';
 import { SolesPipe } from '../../shared/formato/soles.pipe';
 import { tieneDecimales } from '../compras/compras-reglas';
@@ -205,12 +206,13 @@ export class InsumosPagina {
     try {
       const id = this.editando()?.id;
       const ctx = new HttpContext().set(SIN_AVISO, true);
-      const r = id ? await this.api.insumoActualizar({ id, body }, ctx) : await this.api.insumoCrear({ 'Idempotency-Key': this.claveInsumo, body }, ctx);
+      const r = id ? await this.api.insumoActualizar({ id, 'If-Match': ifMatch(this.editando()?.version), body }, ctx) : await this.api.insumoCrear({ 'Idempotency-Key': this.claveInsumo, body }, ctx);
       this.avisos.add({ severity: 'success', summary: id ? 'Insumo actualizado' : 'Insumo creado', detail: r.nombre });
       this.dialogoInsumo.set(false);
       await this.recargar();
     } catch (e) {
       this.errorInsumo.set(mensajeDeError(e));
+      if (esEdicionConcurrente(e)) await this.recargar();
     } finally {
       this.guardandoInsumo.set(false);
     }

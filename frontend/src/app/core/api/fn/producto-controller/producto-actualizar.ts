@@ -12,6 +12,7 @@ import { ProductoUpdateRequest } from '../../models/producto-update-request';
 
 export interface ProductoActualizar$Params {
   id: number;
+  'If-Match'?: string;
       body: ProductoUpdateRequest
 }
 
@@ -19,6 +20,7 @@ export function productoActualizar(http: HttpClient, rootUrl: string, params: Pr
   const rb = new RequestBuilder(rootUrl, productoActualizar.PATH, 'put');
   if (params) {
     rb.path('id', params.id, {});
+    rb.header('If-Match', params['If-Match'], {});
     rb.body(params.body, 'application/json');
   }
 

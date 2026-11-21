@@ -10,4 +10,5 @@ export interface UsuarioResponse {
   rol?: 'ADMIN' | 'CAJERO' | 'ALMACENERO';
   ultimoAcceso?: string;
   username?: string;
+  version?: number;
 }

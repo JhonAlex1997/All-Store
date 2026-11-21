@@ -12,6 +12,7 @@ import { CampanaResponse } from '../../models/campana-response';
 
 export interface CampanaActualizar$Params {
   id: number;
+  'If-Match'?: string;
       body: CampanaRequest
 }
 
@@ -19,6 +20,7 @@ export function campanaActualizar(http: HttpClient, rootUrl: string, params: Cam
   const rb = new RequestBuilder(rootUrl, campanaActualizar.PATH, 'put');
   if (params) {
     rb.path('id', params.id, {});
+    rb.header('If-Match', params['If-Match'], {});
     rb.body(params.body, 'application/json');
   }
 

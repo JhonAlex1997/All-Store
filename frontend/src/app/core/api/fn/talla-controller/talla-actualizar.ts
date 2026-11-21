@@ -12,6 +12,7 @@ import { TallaResponse } from '../../models/talla-response';
 
 export interface TallaActualizar$Params {
   id: number;
+  'If-Match'?: string;
       body: TallaRequest
 }
 
@@ -19,6 +20,7 @@ export function tallaActualizar(http: HttpClient, rootUrl: string, params: Talla
   const rb = new RequestBuilder(rootUrl, tallaActualizar.PATH, 'put');
   if (params) {
     rb.path('id', params.id, {});
+    rb.header('If-Match', params['If-Match'], {});
     rb.body(params.body, 'application/json');
   }
 
