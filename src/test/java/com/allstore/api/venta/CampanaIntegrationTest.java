@@ -79,7 +79,7 @@ class CampanaIntegrationTest extends TiendaDePrueba {
 
         // Con por mayor a 70.00, el por mayor es mejor que la campaña: no se aplica la campaña.
         productoService.actualizar(modelo, new ProductoUpdateRequest("Jean prueba", null, 1L, new BigDecimal("89.90"),
-                new BigDecimal("70.00"), true));
+                new BigDecimal("70.00"), true), null);
         VentaResponse mayor = ventaService.crear(new VentaRequest(TipoComprobante.NOTA_VENTA, serieNotaVenta, null, null,
                 List.of(item(jeanA, 3, null)), List.of(efectivo("210.00", null)), null, null, null));
         assertThat(mayor.detalles().getFirst().campanaId()).isNull();

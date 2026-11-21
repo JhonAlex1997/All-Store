@@ -5,7 +5,9 @@ import com.allstore.api.monitoreo.RegistroSolicitudes;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import com.allstore.api.common.version.EdicionConcurrenteException;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.data.core.PropertyReferenceException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -104,6 +106,24 @@ public class GlobalExceptionHandler {
                 ex.getMostSpecificCause().getMessage());
         return build(HttpStatus.CONFLICT, "No se pudo guardar porque choca con otro registro (ya existe o se registró al mismo "
                 + "tiempo). Revisa y vuelve a intentar", request, null);
+    }
+
+    /** Otra persona guardó el registro mientras este usuario lo editaba (If-Match con versión vieja). */
+    @ExceptionHandler(EdicionConcurrenteException.class)
+    public ResponseEntity<ErrorResponse> handleEdicionConcurrente(EdicionConcurrenteException ex, HttpServletRequest request) {
+        return build(HttpStatus.PRECONDITION_FAILED, ex.getMessage(), request, null);
+    }
+
+    /**
+     * Dos guardados del mismo registro en el mismo instante (después de pasar la verificación de versión):
+     * el segundo pierde en lugar de pisar al primero.
+     */
+    @ExceptionHandler(ObjectOptimisticLockingFailureException.class)
+    public ResponseEntity<ErrorResponse> handleBloqueoOptimista(ObjectOptimisticLockingFailureException ex,
+                                                               HttpServletRequest request) {
+        log.warn("Edición simultánea en {} {}: {}", request.getMethod(), request.getRequestURI(), ex.getMessage());
+        return build(HttpStatus.CONFLICT, "Otra persona guardó este registro al mismo tiempo. Recarga para ver sus cambios "
+                + "y vuelve a intentar", request, null);
     }
 
     /** Archivo más grande que spring.servlet.multipart.max-file-size (1 MB por defecto). */

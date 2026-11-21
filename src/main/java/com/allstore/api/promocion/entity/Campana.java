@@ -1,6 +1,6 @@
 package com.allstore.api.promocion.entity;
 
-import com.allstore.api.common.entity.BaseEntity;
+import com.allstore.api.common.entity.EntidadVersionada;
 import com.allstore.api.empresa.entity.Establecimiento;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -25,7 +25,7 @@ import java.util.List;
 @Setter
 @Entity
 @Table(name = "campana")
-public class Campana extends BaseEntity {
+public class Campana extends EntidadVersionada {
 
     @Column(nullable = false, length = 100)
     private String nombre;

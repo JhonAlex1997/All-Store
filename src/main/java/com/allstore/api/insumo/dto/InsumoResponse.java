@@ -4,9 +4,9 @@ import com.allstore.api.insumo.entity.Insumo;
 
 import java.math.BigDecimal;
 
-public record InsumoResponse(Long id, String codigo, String nombre, String unidadMedida, BigDecimal costo, boolean activo) {
+public record InsumoResponse(Long id, String codigo, String nombre, String unidadMedida, BigDecimal costo, boolean activo, /** Para editar: mandarla en If-Match al guardar. */ long version) {
 
     public static InsumoResponse from(Insumo i) {
-        return new InsumoResponse(i.getId(), i.getCodigo(), i.getNombre(), i.getUnidadMedida(), i.getCosto(), i.isActivo());
+        return new InsumoResponse(i.getId(), i.getCodigo(), i.getNombre(), i.getUnidadMedida(), i.getCosto(), i.isActivo(), i.getVersion());
     }
 }

@@ -1,5 +1,6 @@
 package com.allstore.api.producto.controller;
 
+import com.allstore.api.common.version.Versiones;
 import com.allstore.api.common.dto.PageResponse;
 import com.allstore.api.common.idempotencia.SolicitudIdempotente;
 import com.allstore.api.common.idempotencia.UnaVez;
@@ -72,8 +73,9 @@ public class ProductoController {
     }
 
     @PutMapping("/{id}")
-    public ProductoDetalleResponse actualizar(@PathVariable Long id, @Valid @RequestBody ProductoUpdateRequest request) {
-        return productoService.actualizar(id, request);
+    public ProductoDetalleResponse actualizar(@PathVariable Long id, @Valid @RequestBody ProductoUpdateRequest request,
+                              @RequestHeader(name = HttpHeaders.IF_MATCH, required = false) String ifMatch) {
+        return productoService.actualizar(id, request, Versiones.deIfMatch(ifMatch));
     }
 
     /** Costo SIN IGV del modelo (opcional): para márgenes y el costo de ventas. */

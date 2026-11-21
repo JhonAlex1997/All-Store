@@ -1,5 +1,7 @@
 package com.allstore.api.producto.controller;
 
+import com.allstore.api.common.version.Versiones;
+import org.springframework.http.HttpHeaders;
 import com.allstore.api.common.idempotencia.SolicitudIdempotente;
 import com.allstore.api.common.idempotencia.UnaVez;
 import com.allstore.api.producto.dto.ColorRequest;
@@ -43,7 +45,8 @@ public class ColorController {
     }
 
     @PutMapping("/{id}")
-    public ColorResponse actualizar(@PathVariable Long id, @Valid @RequestBody ColorRequest request) {
-        return colorService.actualizar(id, request);
+    public ColorResponse actualizar(@PathVariable Long id, @Valid @RequestBody ColorRequest request,
+                              @RequestHeader(name = HttpHeaders.IF_MATCH, required = false) String ifMatch) {
+        return colorService.actualizar(id, request, Versiones.deIfMatch(ifMatch));
     }
 }

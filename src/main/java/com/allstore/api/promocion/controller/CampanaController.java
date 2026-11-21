@@ -1,5 +1,7 @@
 package com.allstore.api.promocion.controller;
 
+import com.allstore.api.common.version.Versiones;
+import org.springframework.http.HttpHeaders;
 import com.allstore.api.common.exception.BusinessException;
 import com.allstore.api.common.idempotencia.SolicitudIdempotente;
 import com.allstore.api.common.idempotencia.UnaVez;
@@ -64,7 +66,8 @@ public class CampanaController {
 
     /** También para desactivarla ("activo": false) o cambiar sus fechas o alcance. */
     @PutMapping("/{id}")
-    public CampanaResponse actualizar(@PathVariable Long id, @Valid @RequestBody CampanaRequest request) {
-        return campanaService.actualizar(id, request);
+    public CampanaResponse actualizar(@PathVariable Long id, @Valid @RequestBody CampanaRequest request,
+                              @RequestHeader(name = HttpHeaders.IF_MATCH, required = false) String ifMatch) {
+        return campanaService.actualizar(id, request, Versiones.deIfMatch(ifMatch));
     }
 }

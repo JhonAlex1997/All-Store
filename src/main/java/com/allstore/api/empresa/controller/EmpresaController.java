@@ -1,5 +1,8 @@
 package com.allstore.api.empresa.controller;
 
+import com.allstore.api.common.version.Versiones;
+import org.springframework.http.HttpHeaders;
+import org.springframework.web.bind.annotation.RequestHeader;
 import com.allstore.api.empresa.dto.EmpresaRequest;
 import com.allstore.api.empresa.dto.EmpresaResponse;
 import com.allstore.api.empresa.dto.MarcaResponse;
@@ -33,8 +36,9 @@ public class EmpresaController {
 
     /** Registra o actualiza los datos del emisor (hay una sola empresa). */
     @PutMapping
-    public EmpresaResponse guardar(@Valid @RequestBody EmpresaRequest request) {
-        return empresaService.guardar(request);
+    public EmpresaResponse guardar(@Valid @RequestBody EmpresaRequest request,
+                                  @RequestHeader(name = HttpHeaders.IF_MATCH, required = false) String ifMatch) {
+        return empresaService.guardar(request, Versiones.deIfMatch(ifMatch));
     }
 
     /**

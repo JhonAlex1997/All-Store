@@ -1,5 +1,6 @@
 package com.allstore.api.seguridad.service;
 
+import com.allstore.api.common.version.Versiones;
 import com.allstore.api.bitacora.entity.AccionBitacora;
 import com.allstore.api.bitacora.service.Bitacora;
 import com.allstore.api.common.exception.BusinessException;
@@ -67,8 +68,9 @@ public class UsuarioService {
      * aplique de inmediato y no recién cuando venza su token.
      */
     @Transactional
-    public UsuarioResponse actualizar(Long id, UsuarioUpdateRequest request, String usernameActual) {
+    public UsuarioResponse actualizar(Long id, UsuarioUpdateRequest request, Long version, String usernameActual) {
         Usuario usuario = obtener(id);
+        Versiones.verificar(version, usuario, "este usuario");
         boolean pierdeAdmin = usuario.getRol() == Rol.ADMIN && usuario.isActivo()
                 && (request.rol() != Rol.ADMIN || !request.activo());
         if (pierdeAdmin) {
@@ -97,6 +99,7 @@ public class UsuarioService {
         if (cambiaAcceso) {
             usuario.cerrarSesiones(OffsetDateTime.now());
         }
+        usuarioRepository.flush(); // la versión nueva va en la respuesta (la pantalla la usa en el siguiente guardado)
         return UsuarioResponse.from(usuario);
     }
 

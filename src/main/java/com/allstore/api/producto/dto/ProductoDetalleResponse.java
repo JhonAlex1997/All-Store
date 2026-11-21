@@ -19,7 +19,8 @@ public record ProductoDetalleResponse(
         boolean activo,
         Integer stockMinimo,
         List<VarianteResponse> variantes
-) {
+,
+        /** Para editar: mandarla en If-Match al guardar. */ long version) {
     public static ProductoDetalleResponse from(Producto p) {
         return new ProductoDetalleResponse(
                 p.getId(),
@@ -34,7 +35,8 @@ public record ProductoDetalleResponse(
                 p.getTipoAfectacionIgv(),
                 p.isActivo(),
                 p.getStockMinimo(),
-                p.getVariantes().stream().map(VarianteResponse::from).toList()
+                p.getVariantes().stream().map(VarianteResponse::from).toList(),
+                p.getVersion()
         );
     }
 }

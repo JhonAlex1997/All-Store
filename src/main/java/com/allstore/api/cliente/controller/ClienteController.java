@@ -1,5 +1,7 @@
 package com.allstore.api.cliente.controller;
 
+import com.allstore.api.common.version.Versiones;
+import org.springframework.http.HttpHeaders;
 import com.allstore.api.cliente.dto.ClienteRequest;
 import com.allstore.api.cliente.dto.ClienteResponse;
 import com.allstore.api.cliente.dto.ConsultaDocumentoResponse;
@@ -81,7 +83,8 @@ public class ClienteController {
     }
 
     @PutMapping("/{id}")
-    public ClienteResponse actualizar(@PathVariable Long id, @Valid @RequestBody ClienteRequest request) {
-        return clienteService.actualizar(id, request);
+    public ClienteResponse actualizar(@PathVariable Long id, @Valid @RequestBody ClienteRequest request,
+                              @RequestHeader(name = HttpHeaders.IF_MATCH, required = false) String ifMatch) {
+        return clienteService.actualizar(id, request, Versiones.deIfMatch(ifMatch));
     }
 }

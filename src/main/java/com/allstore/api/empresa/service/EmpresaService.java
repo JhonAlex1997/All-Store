@@ -1,5 +1,6 @@
 package com.allstore.api.empresa.service;
 
+import com.allstore.api.common.version.Versiones;
 import com.allstore.api.bitacora.entity.AccionBitacora;
 import com.allstore.api.bitacora.service.Bitacora;
 import com.allstore.api.cliente.entity.TipoDocumentoIdentidad;
@@ -34,13 +35,23 @@ public class EmpresaService {
     }
 
     /** Registra la empresa la primera vez y la actualiza después (siempre es la misma fila). */
+    /** Sin verificar versión: datos de demostración y pruebas. */
     @Transactional
     public EmpresaResponse guardar(EmpresaRequest request) {
+        return guardar(request, null);
+    }
+
+    @Transactional
+    public EmpresaResponse guardar(EmpresaRequest request, Long version) {
         String ruc = request.ruc().trim();
         TipoDocumentoIdentidad.RUC.validar(ruc).ifPresent(motivo -> {
             throw new BusinessException(motivo);
         });
         Empresa empresa = empresaRepository.findById(Empresa.ID_UNICO).orElseGet(Empresa::new);
+        if (empresa.getVersion() != null) {
+            Versiones.verificar(version, empresa.getVersion(), "los datos de la empresa", empresa.getUpdatedBy(),
+                    empresa.getUpdatedAt());
+        }
         String antes = empresa.getRuc() == null ? null : resumen(empresa);
         empresa.setRuc(ruc);
         empresa.setRazonSocial(request.razonSocial().trim());
@@ -65,6 +76,7 @@ public class EmpresaService {
                     antes == null ? "Registró la empresa " + guardada.getRazonSocial() : "Cambió los datos de la empresa",
                     antes == null ? despues : "Antes: " + antes + ". Después: " + despues);
         }
+        empresaRepository.flush(); // la versión nueva va en la respuesta
         return EmpresaResponse.from(guardada);
     }
 

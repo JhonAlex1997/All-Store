@@ -1,5 +1,6 @@
 package com.allstore.api.producto.service;
 
+import com.allstore.api.common.version.Versiones;
 import com.allstore.api.common.exception.BusinessException;
 import com.allstore.api.common.exception.ResourceNotFoundException;
 import com.allstore.api.producto.dto.TallaRequest;
@@ -44,9 +45,10 @@ public class TallaService {
      * no las renombra (el SKU queda como se etiquetó), solo afecta a variantes nuevas.
      */
     @Transactional
-    public TallaResponse actualizar(Long id, TallaRequest request) {
+    public TallaResponse actualizar(Long id, TallaRequest request, Long version) {
         Talla talla = tallaRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Talla", id));
+        Versiones.verificar(version, talla, "esta talla");
         String codigo = request.codigo().trim().toUpperCase();
         if (tallaRepository.existsByCodigoIgnoreCaseAndIdNot(codigo, id)) {
             throw new BusinessException("Ya existe la talla " + codigo);
@@ -56,6 +58,7 @@ public class TallaService {
         if (request.activo() != null) {
             talla.setActivo(request.activo());
         }
+        tallaRepository.flush(); // la versión nueva va en la respuesta (la pantalla la usa en el siguiente guardado)
         return TallaResponse.from(talla);
     }
 }

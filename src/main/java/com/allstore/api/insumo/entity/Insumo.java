@@ -1,6 +1,6 @@
 package com.allstore.api.insumo.entity;
 
-import com.allstore.api.common.entity.BaseEntity;
+import com.allstore.api.common.entity.EntidadVersionada;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
@@ -14,7 +14,7 @@ import java.math.BigDecimal;
 @Setter
 @Entity
 @Table(name = "insumo")
-public class Insumo extends BaseEntity {
+public class Insumo extends EntidadVersionada {
 
     @Column(nullable = false, unique = true, length = 30)
     private String codigo;

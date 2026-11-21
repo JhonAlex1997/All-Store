@@ -1,6 +1,6 @@
 package com.allstore.api.empresa.entity;
 
-import com.allstore.api.common.entity.BaseEntity;
+import com.allstore.api.common.entity.EntidadVersionada;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -14,7 +14,7 @@ import lombok.Setter;
 @Setter
 @Entity
 @Table(name = "establecimiento")
-public class Establecimiento extends BaseEntity {
+public class Establecimiento extends EntidadVersionada {
 
     public static final String CODIGO_DOMICILIO_FISCAL = "0000";
 

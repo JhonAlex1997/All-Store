@@ -1,5 +1,7 @@
 package com.allstore.api.empresa.controller;
 
+import com.allstore.api.common.version.Versiones;
+import org.springframework.http.HttpHeaders;
 import com.allstore.api.common.idempotencia.SolicitudIdempotente;
 import com.allstore.api.common.idempotencia.UnaVez;
 import com.allstore.api.empresa.dto.EstablecimientoRequest;
@@ -43,7 +45,8 @@ public class EstablecimientoController {
     }
 
     @PutMapping("/{id}")
-    public EstablecimientoResponse actualizar(@PathVariable Long id, @Valid @RequestBody EstablecimientoRequest request) {
-        return establecimientoService.actualizar(id, request);
+    public EstablecimientoResponse actualizar(@PathVariable Long id, @Valid @RequestBody EstablecimientoRequest request,
+                              @RequestHeader(name = HttpHeaders.IF_MATCH, required = false) String ifMatch) {
+        return establecimientoService.actualizar(id, request, Versiones.deIfMatch(ifMatch));
     }
 }

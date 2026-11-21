@@ -20,7 +20,8 @@ public record ClienteResponse(
         boolean generico,
         boolean puedeRecibirFactura,
         boolean activo
-) {
+,
+        /** Para editar: mandarla en If-Match al guardar. */ long version) {
     public static ClienteResponse from(Cliente c) {
         return new ClienteResponse(
                 c.getId(),
@@ -34,7 +35,8 @@ public record ClienteResponse(
                 c.getEmail(),
                 c.isGenerico(),
                 c.getTipoDocumento() == TipoDocumentoIdentidad.RUC,
-                c.isActivo()
+                c.isActivo(),
+                c.getVersion()
         );
     }
 }

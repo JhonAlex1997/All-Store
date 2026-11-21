@@ -5,6 +5,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.EntityListeners;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import jakarta.persistence.Version;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.data.annotation.CreatedBy;
@@ -58,6 +59,10 @@ public class Empresa {
     /** Desde cuántas prendas (de cualquier modelo, sumando toda la venta) se cobra el precio por mayor. */
     @Column(name = "minimo_prendas_por_mayor", nullable = false)
     private int minimoPrendasPorMayor = MINIMO_PRENDAS_POR_MAYOR;
+
+    /** Bloqueo optimista del formulario de la empresa (ver EntidadVersionada). Null hasta registrarla. */
+    @Version
+    private Long version;
 
     @CreatedDate
     @Column(name = "created_at", nullable = false, updatable = false)

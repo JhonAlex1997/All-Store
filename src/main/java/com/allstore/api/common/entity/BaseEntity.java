@@ -7,6 +7,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.MappedSuperclass;
 import lombok.Getter;
+import org.hibernate.annotations.OptimisticLock;
 import lombok.Setter;
 import org.springframework.data.annotation.CreatedBy;
 import org.springframework.data.annotation.CreatedDate;
@@ -36,6 +37,10 @@ public abstract class BaseEntity {
     @Column(name = "created_at", nullable = false, updatable = false)
     private OffsetDateTime createdAt;
 
+    // Cambian junto con cualquier otro campo, así que no necesitan subir la versión por sí solos
+    // (EntidadVersionada). Excluirlos permite que un cambio que no cuenta como edición (el último
+    // acceso del usuario) no la suba por arrastre.
+    @OptimisticLock(excluded = true)
     @LastModifiedDate
     @Column(name = "updated_at", nullable = false)
     private OffsetDateTime updatedAt;
@@ -46,6 +51,7 @@ public abstract class BaseEntity {
     private String createdBy;
 
     /** Último usuario que lo modificó. */
+    @OptimisticLock(excluded = true)
     @LastModifiedBy
     @Column(name = "updated_by", length = 50)
     private String updatedBy;

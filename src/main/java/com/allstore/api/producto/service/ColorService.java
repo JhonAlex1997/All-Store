@@ -1,5 +1,6 @@
 package com.allstore.api.producto.service;
 
+import com.allstore.api.common.version.Versiones;
 import com.allstore.api.common.exception.BusinessException;
 import com.allstore.api.common.exception.ResourceNotFoundException;
 import com.allstore.api.producto.dto.ColorRequest;
@@ -45,9 +46,10 @@ public class ColorService {
 
     /** Igual que en tallas: cambiar la abreviatura no renombra los SKU ya generados. */
     @Transactional
-    public ColorResponse actualizar(Long id, ColorRequest request) {
+    public ColorResponse actualizar(Long id, ColorRequest request, Long version) {
         Color color = colorRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Color", id));
+        Versiones.verificar(version, color, "este color");
         String nombre = request.nombre().trim();
         String codigo = request.codigo().trim().toUpperCase();
         if (colorRepository.existsByNombreIgnoreCaseAndIdNot(nombre, id)) {
@@ -61,6 +63,7 @@ public class ColorService {
         if (request.activo() != null) {
             color.setActivo(request.activo());
         }
+        colorRepository.flush(); // la versión nueva va en la respuesta (la pantalla la usa en el siguiente guardado)
         return ColorResponse.from(color);
     }
 }

@@ -1,5 +1,6 @@
 package com.allstore.api.cliente.service;
 
+import com.allstore.api.common.version.Versiones;
 import com.allstore.api.cliente.dto.ClienteRequest;
 import com.allstore.api.cliente.dto.ClienteResponse;
 import com.allstore.api.cliente.entity.Cliente;
@@ -98,8 +99,9 @@ public class ClienteService {
     }
 
     @Transactional
-    public ClienteResponse actualizar(Long id, ClienteRequest request) {
+    public ClienteResponse actualizar(Long id, ClienteRequest request, Long version) {
         Cliente cliente = obtener(id);
+        Versiones.verificar(version, cliente, "este cliente");
         if (cliente.isGenerico()) {
             throw new BusinessException("El cliente genérico \"Clientes varios\" no se puede modificar");
         }
@@ -115,6 +117,7 @@ public class ClienteService {
         if (request.activo() != null) {
             cliente.setActivo(request.activo());
         }
+        clienteRepository.flush(); // la versión nueva va en la respuesta (la pantalla la usa en el siguiente guardado)
         return ClienteResponse.from(cliente);
     }
 

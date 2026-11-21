@@ -1,5 +1,6 @@
 package com.allstore.api.insumo.service;
 
+import com.allstore.api.common.version.Versiones;
 import com.allstore.api.bitacora.entity.AccionBitacora;
 import com.allstore.api.bitacora.service.Bitacora;
 import com.allstore.api.common.dto.PageResponse;
@@ -69,9 +70,11 @@ public class InsumoService {
     }
 
     @Transactional
-    public InsumoResponse actualizar(Long id, InsumoRequest request) {
+    public InsumoResponse actualizar(Long id, InsumoRequest request, Long version) {
         Insumo insumo = obtener(id);
+        Versiones.verificar(version, insumo, "este insumo");
         aplicar(insumo, request);
+        insumoRepository.flush(); // la versión nueva va en la respuesta (la pantalla la usa en el siguiente guardado)
         return InsumoResponse.from(insumo);
     }
 

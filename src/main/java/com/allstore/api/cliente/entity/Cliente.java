@@ -1,6 +1,6 @@
 package com.allstore.api.cliente.entity;
 
-import com.allstore.api.common.entity.BaseEntity;
+import com.allstore.api.common.entity.EntidadVersionada;
 import jakarta.persistence.Column;
 import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
@@ -12,7 +12,7 @@ import lombok.Setter;
 @Setter
 @Entity
 @Table(name = "cliente")
-public class Cliente extends BaseEntity {
+public class Cliente extends EntidadVersionada {
 
     @Convert(converter = TipoDocumentoIdentidadConverter.class)
     @Column(name = "tipo_documento", nullable = false, length = 1)

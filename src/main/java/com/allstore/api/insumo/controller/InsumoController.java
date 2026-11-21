@@ -1,5 +1,7 @@
 package com.allstore.api.insumo.controller;
 
+import com.allstore.api.common.version.Versiones;
+import org.springframework.http.HttpHeaders;
 import com.allstore.api.common.dto.PageResponse;
 import com.allstore.api.common.idempotencia.SolicitudIdempotente;
 import com.allstore.api.common.idempotencia.UnaVez;
@@ -52,8 +54,9 @@ public class InsumoController {
     }
 
     @PutMapping("/{id}")
-    public InsumoResponse actualizar(@PathVariable Long id, @Valid @RequestBody InsumoRequest request) {
-        return insumoService.actualizar(id, request);
+    public InsumoResponse actualizar(@PathVariable Long id, @Valid @RequestBody InsumoRequest request,
+                              @RequestHeader(name = HttpHeaders.IF_MATCH, required = false) String ifMatch) {
+        return insumoService.actualizar(id, request, Versiones.deIfMatch(ifMatch));
     }
 
     /** Saldo de cada insumo en cada local (o en uno). */

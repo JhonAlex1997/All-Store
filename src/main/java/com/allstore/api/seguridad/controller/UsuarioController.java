@@ -1,5 +1,7 @@
 package com.allstore.api.seguridad.controller;
 
+import com.allstore.api.common.version.Versiones;
+import org.springframework.http.HttpHeaders;
 import com.allstore.api.common.idempotencia.SolicitudIdempotente;
 import com.allstore.api.common.idempotencia.UnaVez;
 import com.allstore.api.seguridad.dto.ReiniciarPasswordRequest;
@@ -47,8 +49,9 @@ public class UsuarioController {
 
     @PutMapping("/{id}")
     public UsuarioResponse actualizar(@PathVariable Long id, @Valid @RequestBody UsuarioUpdateRequest request,
+                              @RequestHeader(name = HttpHeaders.IF_MATCH, required = false) String ifMatch,
                                       Authentication auth) {
-        return usuarioService.actualizar(id, request, auth.getName());
+        return usuarioService.actualizar(id, request, Versiones.deIfMatch(ifMatch), auth.getName());
     }
 
     @PostMapping("/{id}/reiniciar-password")

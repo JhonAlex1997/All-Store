@@ -1,6 +1,6 @@
 package com.allstore.api.producto.entity;
 
-import com.allstore.api.common.entity.BaseEntity;
+import com.allstore.api.common.entity.EntidadVersionada;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -25,7 +25,7 @@ import java.util.List;
 @Setter
 @Entity
 @Table(name = "producto")
-public class Producto extends BaseEntity {
+public class Producto extends EntidadVersionada {
 
     public static final String UNIDAD_MEDIDA_UNIDAD = "NIU";
     public static final String AFECTACION_GRAVADO = "10";

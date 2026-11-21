@@ -1,5 +1,7 @@
 package com.allstore.api.producto.controller;
 
+import com.allstore.api.common.version.Versiones;
+import org.springframework.http.HttpHeaders;
 import com.allstore.api.common.idempotencia.SolicitudIdempotente;
 import com.allstore.api.common.idempotencia.UnaVez;
 import com.allstore.api.producto.dto.CategoriaRequest;
@@ -43,7 +45,8 @@ public class CategoriaController {
     }
 
     @PutMapping("/{id}")
-    public CategoriaResponse actualizar(@PathVariable Long id, @Valid @RequestBody CategoriaRequest request) {
-        return categoriaService.actualizar(id, request);
+    public CategoriaResponse actualizar(@PathVariable Long id, @Valid @RequestBody CategoriaRequest request,
+                              @RequestHeader(name = HttpHeaders.IF_MATCH, required = false) String ifMatch) {
+        return categoriaService.actualizar(id, request, Versiones.deIfMatch(ifMatch));
     }
 }

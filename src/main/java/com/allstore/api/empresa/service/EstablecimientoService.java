@@ -1,5 +1,6 @@
 package com.allstore.api.empresa.service;
 
+import com.allstore.api.common.version.Versiones;
 import com.allstore.api.common.exception.BusinessException;
 import com.allstore.api.common.exception.ResourceNotFoundException;
 import com.allstore.api.empresa.dto.EstablecimientoRequest;
@@ -41,8 +42,9 @@ public class EstablecimientoService {
     }
 
     @Transactional
-    public EstablecimientoResponse actualizar(Long id, EstablecimientoRequest request) {
+    public EstablecimientoResponse actualizar(Long id, EstablecimientoRequest request, Long version) {
         Establecimiento establecimiento = obtener(id);
+        Versiones.verificar(version, establecimiento, "este local");
         if (establecimientoRepository.existsByCodigoAndIdNot(request.codigo(), id)) {
             throw new BusinessException("Ya existe el establecimiento con código " + request.codigo());
         }
@@ -50,6 +52,7 @@ public class EstablecimientoService {
         if (request.activo() != null) {
             establecimiento.setActivo(request.activo());
         }
+        establecimientoRepository.flush(); // la versión nueva va en la respuesta (la pantalla la usa en el siguiente guardado)
         return EstablecimientoResponse.from(establecimiento);
     }
 

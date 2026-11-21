@@ -11,10 +11,11 @@ public record EmpresaResponse(
         String telefono,
         String email,
         int minimoPrendasPorMayor
-) {
+,
+        /** Para editar: mandarla en If-Match al guardar. */ Long version) {
     public static EmpresaResponse from(Empresa e) {
         return new EmpresaResponse(e.getRuc(), e.getRazonSocial(), e.getNombreComercial(),
                 e.getDireccionFiscal(), e.getUbigeo(), e.getTelefono(), e.getEmail(),
-                e.getMinimoPrendasPorMayor());
+                e.getMinimoPrendasPorMayor(), e.getVersion());
     }
 }

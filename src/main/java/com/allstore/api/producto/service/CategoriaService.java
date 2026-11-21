@@ -1,5 +1,6 @@
 package com.allstore.api.producto.service;
 
+import com.allstore.api.common.version.Versiones;
 import com.allstore.api.common.exception.BusinessException;
 import com.allstore.api.common.exception.ResourceNotFoundException;
 import com.allstore.api.producto.dto.CategoriaRequest;
@@ -39,8 +40,9 @@ public class CategoriaService {
     }
 
     @Transactional
-    public CategoriaResponse actualizar(Long id, CategoriaRequest request) {
+    public CategoriaResponse actualizar(Long id, CategoriaRequest request, Long version) {
         Categoria categoria = obtener(id);
+        Versiones.verificar(version, categoria, "esta categoría");
         String nombre = request.nombre().trim();
         if (categoriaRepository.existsByNombreIgnoreCaseAndIdNot(nombre, id)) {
             throw new BusinessException("Ya existe la categoría " + nombre);
@@ -49,6 +51,7 @@ public class CategoriaService {
         if (request.activo() != null) {
             categoria.setActivo(request.activo());
         }
+        categoriaRepository.flush(); // la versión nueva va en la respuesta (la pantalla la usa en el siguiente guardado)
         return CategoriaResponse.from(categoria);
     }
 

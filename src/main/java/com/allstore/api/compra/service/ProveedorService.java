@@ -1,5 +1,6 @@
 package com.allstore.api.compra.service;
 
+import com.allstore.api.common.version.Versiones;
 import com.allstore.api.common.exception.BusinessException;
 import com.allstore.api.common.exception.ResourceNotFoundException;
 import com.allstore.api.compra.dto.ProveedorRequest;
@@ -42,9 +43,11 @@ public class ProveedorService {
 
     /** El documento no cambia (identifica al proveedor en sus compras). */
     @Transactional
-    public ProveedorResponse actualizar(Long id, ProveedorRequest request) {
+    public ProveedorResponse actualizar(Long id, ProveedorRequest request, Long version) {
         Proveedor proveedor = obtener(id);
+        Versiones.verificar(version, proveedor, "este proveedor");
         aplicar(proveedor, request);
+        proveedorRepository.flush(); // la versión nueva va en la respuesta (la pantalla la usa en el siguiente guardado)
         return ProveedorResponse.from(proveedor);
     }
 

@@ -1,5 +1,6 @@
 package com.allstore.api.producto.service;
 
+import com.allstore.api.common.version.Versiones;
 import com.allstore.api.bitacora.entity.AccionBitacora;
 import com.allstore.api.bitacora.service.Bitacora;
 import com.allstore.api.common.dto.PageResponse;
@@ -106,8 +107,9 @@ public class ProductoService {
     }
 
     @Transactional
-    public ProductoDetalleResponse actualizar(Long id, ProductoUpdateRequest request) {
+    public ProductoDetalleResponse actualizar(Long id, ProductoUpdateRequest request, Long version) {
         Producto producto = obtener(id);
+        Versiones.verificar(version, producto, "este modelo");
         producto.setNombre(request.nombre().trim());
         producto.setDescripcion(limpiar(request.descripcion()));
         if (!producto.getCategoria().getId().equals(request.categoriaId())) {
@@ -120,6 +122,7 @@ public class ProductoService {
         producto.setPrecioVenta(request.precioVenta());
         producto.setPrecioPorMayor(porMayor);
         producto.setActivo(request.activo());
+        productoRepository.flush(); // la versión nueva va en la respuesta (la pantalla la usa en el siguiente guardado)
         return ProductoDetalleResponse.from(producto);
     }
 

@@ -1,5 +1,7 @@
 package com.allstore.api.compra.controller;
 
+import com.allstore.api.common.version.Versiones;
+import org.springframework.http.HttpHeaders;
 import com.allstore.api.common.idempotencia.SolicitudIdempotente;
 import com.allstore.api.common.idempotencia.UnaVez;
 import com.allstore.api.compra.dto.ProveedorRequest;
@@ -43,7 +45,8 @@ public class ProveedorController {
     }
 
     @PutMapping("/{id}")
-    public ProveedorResponse actualizar(@PathVariable Long id, @Valid @RequestBody ProveedorRequest request) {
-        return proveedorService.actualizar(id, request);
+    public ProveedorResponse actualizar(@PathVariable Long id, @Valid @RequestBody ProveedorRequest request,
+                              @RequestHeader(name = HttpHeaders.IF_MATCH, required = false) String ifMatch) {
+        return proveedorService.actualizar(id, request, Versiones.deIfMatch(ifMatch));
     }
 }

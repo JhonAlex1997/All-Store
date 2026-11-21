@@ -58,7 +58,7 @@ class BitacoraIntegrationTest extends TiendaDePrueba {
     void unaVentaConDescuentoOPorMayorManualQuedaRegistradaYUnaNormalNo() {
         Long modelo = productoDe(jeanA);
         productoService.actualizar(modelo, new ProductoUpdateRequest("Jean prueba", null, 1L, new BigDecimal("89.90"),
-                new BigDecimal("80.00"), true));
+                new BigDecimal("80.00"), true), null);
         VentaResponse normal = vender(TipoComprobante.NOTA_VENTA, serieNotaVenta, null, List.of(item(jeanA, 1, null)),
                 List.of(efectivo("89.90", null)));
         VentaResponse conDescuento = vender(TipoComprobante.NOTA_VENTA, serieNotaVenta, null,
@@ -79,11 +79,11 @@ class BitacoraIntegrationTest extends TiendaDePrueba {
     @Test
     void cambiarElPrecioGuardaElAntesYElDespuesYEditarSinCambiarloNo() {
         ProductoDetalleResponse jean = productoService.obtenerDetalle(productoDe(jeanA));
-        productoService.actualizar(jean.id(), new ProductoUpdateRequest(jean.nombre(), null, 1L, jean.precioVenta(), null, true));
+        productoService.actualizar(jean.id(), new ProductoUpdateRequest(jean.nombre(), null, 1L, jean.precioVenta(), null, true), null);
         assertThat(registros(AccionBitacora.PRECIO_CAMBIADO, jean.id())).isEmpty();
 
         productoService.actualizar(jean.id(), new ProductoUpdateRequest(jean.nombre(), null, 1L, new BigDecimal("79.90"),
-                new BigDecimal("70.00"), true));
+                new BigDecimal("70.00"), true), null);
         assertThat(registros(AccionBitacora.PRECIO_CAMBIADO, jean.id())).singleElement().satisfies(r -> {
             assertThat(r.entidad()).isEqualTo("PRODUCTO");
             assertThat(r.detalle()).isEqualTo("Precio: S/ 89.90 → S/ 79.90; Por mayor: sin precio → S/ 70.00");
@@ -111,7 +111,7 @@ class BitacoraIntegrationTest extends TiendaDePrueba {
     @Test
     void cambiosDeAccesoDeUsuariosYElBloqueoPorIntentos() {
         var usuario = usuarioService.crear(new UsuarioCreateRequest("b_cajero", "Cajero Bitácora", Rol.CAJERO, "Temporal2026x"));
-        usuarioService.actualizar(usuario.id(), new UsuarioUpdateRequest("Cajero Bitácora", Rol.ALMACENERO, false), "admin");
+        usuarioService.actualizar(usuario.id(), new UsuarioUpdateRequest("Cajero Bitácora", Rol.ALMACENERO, false), null, "admin");
         for (int i = 0; i < 5; i++) {
             assertThatThrownBy(() -> authService.login(new LoginRequest("b_cajero", "Incorrecta123")))
                     .isInstanceOf(AutenticacionException.class);

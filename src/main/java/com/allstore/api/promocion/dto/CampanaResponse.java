@@ -13,7 +13,8 @@ import java.util.Objects;
 public record CampanaResponse(Long id, String nombre, String descripcion, TipoCampana tipo, BigDecimal valor,
                               LocalDate fechaInicio, LocalDate fechaFin, Long establecimientoId, String establecimiento,
                               boolean activo, boolean vigenteHoy, boolean todoElCatalogo, List<Long> categoriaIds,
-                              List<Long> productoIds, List<Long> varianteIds) {
+                              List<Long> productoIds, List<Long> varianteIds,
+        /** Para editar: mandarla en If-Match al guardar. */ long version) {
 
     public static CampanaResponse from(Campana c, LocalDate hoy) {
         List<CampanaAlcance> a = c.getAlcance();
@@ -23,6 +24,6 @@ public record CampanaResponse(Long id, String nombre, String descripcion, TipoCa
                 c.isActivo() && !hoy.isBefore(c.getFechaInicio()) && !hoy.isAfter(c.getFechaFin()), a.isEmpty(),
                 a.stream().map(CampanaAlcance::getCategoriaId).filter(Objects::nonNull).toList(),
                 a.stream().map(CampanaAlcance::getProductoId).filter(Objects::nonNull).toList(),
-                a.stream().map(CampanaAlcance::getVarianteId).filter(Objects::nonNull).toList());
+                a.stream().map(CampanaAlcance::getVarianteId).filter(Objects::nonNull).toList(), c.getVersion());
     }
 }

@@ -1,6 +1,6 @@
 package com.allstore.api.producto.entity;
 
-import com.allstore.api.common.entity.BaseEntity;
+import com.allstore.api.common.entity.EntidadVersionada;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
@@ -11,7 +11,7 @@ import lombok.Setter;
 @Setter
 @Entity
 @Table(name = "categoria")
-public class Categoria extends BaseEntity {
+public class Categoria extends EntidadVersionada {
 
     @Column(nullable = false, length = 80)
     private String nombre;

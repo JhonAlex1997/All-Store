@@ -1,5 +1,6 @@
 package com.allstore.api.promocion.service;
 
+import com.allstore.api.common.version.Versiones;
 import com.allstore.api.bitacora.entity.AccionBitacora;
 import com.allstore.api.bitacora.service.Bitacora;
 import com.allstore.api.common.exception.BusinessException;
@@ -56,10 +57,12 @@ public class CampanaService {
     }
 
     @Transactional
-    public CampanaResponse actualizar(Long id, CampanaRequest request) {
+    public CampanaResponse actualizar(Long id, CampanaRequest request, Long version) {
         Campana campana = obtenerEntidad(id);
+        Versiones.verificar(version, campana, "esta campaña");
         aplicar(campana, request);
         registrar(campana, "Cambió");
+        campanaRepository.flush(); // la versión nueva va en la respuesta (la pantalla la usa en el siguiente guardado)
         return CampanaResponse.from(campana, hoy());
     }
 

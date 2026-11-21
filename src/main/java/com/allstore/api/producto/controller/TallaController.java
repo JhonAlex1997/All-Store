@@ -1,5 +1,7 @@
 package com.allstore.api.producto.controller;
 
+import com.allstore.api.common.version.Versiones;
+import org.springframework.http.HttpHeaders;
 import com.allstore.api.common.idempotencia.SolicitudIdempotente;
 import com.allstore.api.common.idempotencia.UnaVez;
 import com.allstore.api.producto.dto.TallaRequest;
@@ -43,7 +45,8 @@ public class TallaController {
     }
 
     @PutMapping("/{id}")
-    public TallaResponse actualizar(@PathVariable Long id, @Valid @RequestBody TallaRequest request) {
-        return tallaService.actualizar(id, request);
+    public TallaResponse actualizar(@PathVariable Long id, @Valid @RequestBody TallaRequest request,
+                              @RequestHeader(name = HttpHeaders.IF_MATCH, required = false) String ifMatch) {
+        return tallaService.actualizar(id, request, Versiones.deIfMatch(ifMatch));
     }
 }

@@ -1,6 +1,7 @@
 package com.allstore.api.seguridad.entity;
 
-import com.allstore.api.common.entity.BaseEntity;
+import org.hibernate.annotations.OptimisticLock;
+import com.allstore.api.common.entity.EntidadVersionada;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -17,7 +18,11 @@ import java.time.temporal.ChronoUnit;
 @Setter
 @Entity
 @Table(name = "usuario")
-public class Usuario extends BaseEntity {
+/*
+ * Los datos de inicio de sesión (intentos, bloqueo, último acceso, tokens) no suben la versión:
+ * entrar al sistema no es "editar al usuario" y no debe hacer fallar al administrador que lo edita.
+ */
+public class Usuario extends EntidadVersionada {
 
     public static final int MAX_INTENTOS_FALLIDOS = 5;
     public static final Duration DURACION_BLOQUEO = Duration.ofMinutes(15);
@@ -40,16 +45,20 @@ public class Usuario extends BaseEntity {
     private boolean debeCambiarPassword = true;
 
     @Column(name = "intentos_fallidos", nullable = false)
+    @OptimisticLock(excluded = true)
     private int intentosFallidos;
 
     @Column(name = "bloqueado_hasta")
+    @OptimisticLock(excluded = true)
     private OffsetDateTime bloqueadoHasta;
 
     /** Los tokens emitidos antes de este instante ya no valen. */
     @Column(name = "tokens_validos_desde", nullable = false)
+    @OptimisticLock(excluded = true)
     private OffsetDateTime tokensValidosDesde;
 
     @Column(name = "ultimo_acceso")
+    @OptimisticLock(excluded = true)
     private OffsetDateTime ultimoAcceso;
 
     @Column(nullable = false)

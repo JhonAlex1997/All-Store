@@ -49,7 +49,7 @@ class DomicilioFiscalIntegrationTest {
         Long id = domicilioFiscal("Jr. Gamarra 499 Tienda 218", "150115");
 
         establecimientoService.actualizar(id, new EstablecimientoRequest(Establecimiento.CODIGO_DOMICILIO_FISCAL,
-                "Tienda principal", TipoEstablecimiento.TIENDA, "Otra dirección", "150101", true));
+                "Tienda principal", TipoEstablecimiento.TIENDA, "Otra dirección", "150101", true), null);
 
         Establecimiento local = establecimientoRepository.findById(id).orElseThrow();
         assertThat(local.getDireccion()).isEqualTo("Jr. Gamarra 499 Tienda 218");
