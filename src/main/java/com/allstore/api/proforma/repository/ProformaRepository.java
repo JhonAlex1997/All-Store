@@ -17,7 +17,7 @@ import java.util.UUID;
 public interface ProformaRepository extends JpaRepository<Proforma, Long> {
 
     /**
-     * @param soloPendientes con {@code vencidas}: null = todas; true = pendientes vencidas; false = pendientes vigentes
+     * @param vencidas null = todas; true = pendientes vencidas; false = pendientes vigentes
      * @param patron         nombre o documento del cliente en mayúsculas con %, o null
      * @param numero         número de la proforma (12 o PR01-12), o null
      */

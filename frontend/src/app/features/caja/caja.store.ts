@@ -39,6 +39,7 @@ interface CarritoGuardado {
   porMayorManual: boolean;
   tipo: TipoVenta;
   proforma?: ProformaEnCaja | null;
+  cliente?: ClienteResponse | null;
 }
 
 /**
@@ -65,8 +66,8 @@ export class CajaStore {
   readonly porMayorManual = signal(this.guardado?.porMayorManual ?? false);
   /** Boleta por defecto; el tipo guardado solo se recupera si había una venta a medias. */
   readonly tipo = signal<TipoVenta>(this.guardado?.lineas?.length ? this.guardado.tipo : 'BOLETA');
-  /** null = "Clientes varios". */
-  readonly cliente = signal<ClienteResponse | null>(null);
+  /** null = "Clientes varios". Se recupera con la venta a medias: una proforma se cobra a su cliente. */
+  readonly cliente = signal<ClienteResponse | null>(this.guardado?.lineas?.length ? this.guardado.cliente ?? null : null);
   readonly proforma = signal<ProformaEnCaja | null>(this.guardado?.lineas?.length ? this.guardado.proforma ?? null : null);
   /** Cobrando una proforma: sus prendas y precios no se cambian en la caja. */
   readonly carritoFijo = computed(() => this.proforma()?.modo === 'cobrar');
@@ -102,6 +103,7 @@ export class CajaStore {
     effect(() => {
       const datos: CarritoGuardado = {
         lineas: this.lineas(), porMayorManual: this.porMayorManual(), tipo: this.tipo(), proforma: this.proforma(),
+        cliente: this.cliente(),
       };
       try {
         sessionStorage.setItem(CLAVE_CARRITO, JSON.stringify(datos));
