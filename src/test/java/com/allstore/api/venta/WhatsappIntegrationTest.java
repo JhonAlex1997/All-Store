@@ -52,7 +52,7 @@ class WhatsappIntegrationTest extends TiendaDePrueba {
     void ventaConCelular() {
         if (empresaService.buscarEntidad().isEmpty()) {
             empresaService.guardar(new EmpresaRequest("20000000001", "EMPRESA PRUEBA SAC", "Jeans Prueba",
-                    "Jr. Prueba 1", "150115", null, "ventas@prueba.pe", null));
+                    "Jr. Prueba 1", "150115", null, "ventas@prueba.pe", null, null, null));
         }
         Long cliente = clienteService.crear(new ClienteRequest(TipoDocumentoIdentidad.DNI, "45678912", "Rosa Prueba",
                 null, null, "987 654 321", null, true)).id();

@@ -14,9 +14,10 @@ public record UsuarioResponse(
         boolean debeCambiarPassword,
         boolean bloqueado,
         OffsetDateTime ultimoAcceso,
-        boolean activo
-,
-        /** Para editar: mandarla en If-Match al guardar. */ long version) {
+        boolean activo,
+        /** Para editar: mandarla en If-Match al guardar. */
+        long version
+) {
     public static UsuarioResponse from(Usuario u) {
         return new UsuarioResponse(u.getId(), u.getUsername(), u.getNombre(), u.getRol(),
                 u.isDebeCambiarPassword(), u.estaBloqueado(OffsetDateTime.now()), u.getUltimoAcceso(), u.isActivo(), u.getVersion());

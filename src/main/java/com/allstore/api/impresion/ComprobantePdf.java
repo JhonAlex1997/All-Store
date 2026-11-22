@@ -47,8 +47,6 @@ public class ComprobantePdf {
     private static final Color MARCA = new Color(215, 215, 215);
 
     /** 80 mm en puntos PDF (1 pulgada = 72 puntos = 25.4 mm). */
-    private static final float ANCHO_TICKET = 80 * 72 / 25.4f;
-    private static final float MARGEN_TICKET = 8;
     private static final DateTimeFormatter FECHA_HORA = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss");
     private static final DateTimeFormatter FECHA = DateTimeFormatter.ofPattern("dd/MM/yyyy");
     private static final DateTimeFormatter HORA = DateTimeFormatter.ofPattern("HH:mm:ss");
@@ -62,21 +60,35 @@ public class ComprobantePdf {
     }
 
     // =====================================================================
-    // Ticket 80 mm
+    // Ticket (80 o 58 mm, impresora térmica)
     // =====================================================================
 
-    private byte[] ticket(DatosImpresion d) throws DocumentException, IOException {
-        Font normal = fuente(7.5f, Font.NORMAL);
-        Font negrita = fuente(7.5f, Font.BOLD);
-        Font chica = fuente(6.5f, Font.NORMAL, GRIS);
-        Font titulo = fuente(9, Font.BOLD);
+    /**
+     * Medidas del ticket según el ancho del papel. Todo en negro puro: la impresora térmica convierte
+     * los grises en un punteado tenue que en 58 mm casi no se lee.
+     */
+    private record Ticket(float ancho, float margen, Font normal, Font negrita, Font chica, Font titulo, Font tienda,
+                          Font total, float qr, float logoAncho) {
 
+        static Ticket de(int anchoMm) {
+            boolean angosto = anchoMm == 58;
+            float escala = angosto ? 0.86f : 1f;
+            return new Ticket((angosto ? 58 : 80) * 72 / 25.4f, angosto ? 5 : 8,
+                    fuente(8.6f * escala, Font.NORMAL), fuente(8.6f * escala, Font.BOLD), fuente(7.4f * escala, Font.NORMAL),
+                    fuente(10.5f * escala, Font.BOLD), fuente(12f * escala, Font.BOLD), fuente(13f * escala, Font.BOLD),
+                    angosto ? 80 : 100, angosto ? 100 : 130);
+        }
+    }
+
+    private byte[] ticket(DatosImpresion d) throws DocumentException, IOException {
+        Ticket m = Ticket.de(d.anchoTicketMm());
         PdfPTable t = new PdfPTable(1);
-        t.setTotalWidth(ANCHO_TICKET - 2 * MARGEN_TICKET);
+        t.setTotalWidth(m.ancho() - 2 * m.margen());
         t.setLockedWidth(true);
 
+        // Tienda
         DatosImpresion.Emisor e = d.emisor();
-        Image logoTicket = logo(e, 120, 60, Element.ALIGN_CENTER);
+        Image logoTicket = logo(e, m.logoAncho(), 60, Element.ALIGN_CENTER);
         if (logoTicket != null) {
             PdfPCell celdaLogo = new PdfPCell(logoTicket, false);
             celdaLogo.setBorder(Rectangle.NO_BORDER);
@@ -84,89 +96,108 @@ public class ComprobantePdf {
             celdaLogo.setPaddingBottom(4);
             t.addCell(celdaLogo);
         }
-        centrado(t, e.nombreVisible(), fuente(10, Font.BOLD));
+        centrado(t, e.nombreVisible(), m.tienda());
         if (e.nombreComercial() != null) {
-            centrado(t, e.razonSocial(), normal);
+            centrado(t, e.razonSocial(), m.normal());
         }
-        centrado(t, "RUC " + e.ruc(), negrita);
-        centrado(t, e.direccionFiscal(), chica);
+        centrado(t, "RUC " + e.ruc(), m.negrita());
+        centrado(t, e.direccionFiscal(), m.chica());
         if (d.direccionEstablecimiento() != null && !d.direccionEstablecimiento().equals(e.direccionFiscal())) {
-            centrado(t, d.establecimiento() + ": " + d.direccionEstablecimiento(), chica);
+            centrado(t, d.establecimiento() + ": " + d.direccionEstablecimiento(), m.chica());
         }
-        contacto(e).ifPresent(c -> centrado(t, c, chica));
-        separador(t);
-        centrado(t, d.titulo(), titulo);
-        centrado(t, d.numero(), titulo);
-        separador(t);
+        contacto(e).ifPresent(c -> centrado(t, c, m.chica()));
+        separador(t, true);
 
-        dosColumnas(t, "Fecha:", FECHA_HORA.format(d.fechaEmision()), normal, normal);
-        dosColumnas(t, d.esProforma() ? "Atendido por:" : "Cajero:", d.cajero(), normal, normal);
+        // Documento
+        centrado(t, d.titulo(), m.titulo());
+        centrado(t, d.numero(), m.titulo());
+        separador(t, true);
+
+        dosColumnas(t, "Fecha:", FECHA_HORA.format(d.fechaEmision()), m.normal(), m.normal());
+        dosColumnas(t, d.esProforma() ? "Atendido por:" : "Cajero:", d.cajero(), m.normal(), m.normal());
         if (d.esProforma()) {
-            dosColumnas(t, "Válida hasta:", FECHA.format(d.vigenteHasta()), normal, negrita);
+            dosColumnas(t, "Válida hasta:", FECHA.format(d.vigenteHasta()), m.normal(), m.negrita());
         }
         if (d.porMayor()) {
-            dosColumnas(t, "Precio:", "Por mayor", normal, negrita);
+            dosColumnas(t, "Precio:", "Por mayor", m.normal(), m.negrita());
         }
         DatosImpresion.Cliente c = d.cliente();
         if (c.tipoDocumento() != null) {
-            dosColumnas(t, c.tipoDocumento() + ":", c.numeroDocumento(), normal, normal);
+            dosColumnas(t, c.tipoDocumento() + ":", c.numeroDocumento(), m.normal(), m.normal());
         }
-        dosColumnas(t, "Cliente:", c.nombre(), normal, normal);
+        texto(t, "Cliente: " + c.nombre(), m.normal());
         if (c.direccion() != null) {
-            dosColumnas(t, "Dirección:", c.direccion(), normal, normal);
+            texto(t, "Dirección: " + c.direccion(), m.chica());
         }
         if (d.referencia() != null) {
-            dosColumnas(t, "Modifica:", d.referencia().documento(), normal, negrita);
-            dosColumnas(t, "Motivo:", d.referencia().motivo(), normal, normal);
-            dosColumnas(t, "Sustento:", d.referencia().sustento(), normal, normal);
+            dosColumnas(t, "Modifica:", d.referencia().documento(), m.normal(), m.negrita());
+            texto(t, "Motivo: " + d.referencia().motivo(), m.normal());
+            texto(t, "Sustento: " + d.referencia().sustento(), m.chica());
         }
-        separador(t);
+        separador(t, false);
 
+        // Prendas: descripción completa, código, y "cantidad x precio" con el importe a la derecha.
+        dosColumnas(t, "CANT. x P.UNIT.", "IMPORTE", m.chica(), m.chica());
+        int prendas = 0;
         for (DatosImpresion.Linea l : d.lineas()) {
-            texto(t, l.descripcion(), normal);
-            dosColumnas(t, "  " + l.cantidad() + " x " + dinero(l.precioUnitario()), dinero(l.importe()), chica, normal);
+            texto(t, l.descripcion(), m.negrita());
+            if (l.codigo() != null) {
+                texto(t, "Cód. " + l.codigo(), m.chica());
+            }
+            dosColumnas(t, l.cantidad() + " x " + dinero(l.precioUnitario()), dinero(l.importe()), m.normal(), m.normal());
             if (l.descuento().signum() > 0) {
-                dosColumnas(t, "  Descuento", "-" + dinero(l.descuento()), chica, chica);
+                dosColumnas(t, "Descuento", "-" + dinero(l.descuento()), m.chica(), m.chica());
+            }
+            prendas += l.cantidad();
+        }
+        separador(t, false);
+        dosColumnas(t, "Total de prendas:", String.valueOf(prendas), m.normal(), m.negrita());
+
+        // Totales
+        totales(d).forEach(fila -> dosColumnas(t, fila[0], fila[1], m.normal(), m.normal()));
+        dosColumnas(t, "TOTAL S/", dinero(d.total()), m.total(), m.total());
+        texto(t, "SON: " + d.montoEnLetras(), m.chica());
+        separador(t, true);
+
+        // Pagos y vuelto
+        if (!d.pagos().isEmpty()) {
+            String prefijoPago = d.esDevolucion() ? "Devolución - " : "";
+            for (DatosImpresion.Pago p : d.pagos()) {
+                dosColumnas(t, prefijoPago + p.metodo() + (p.referencia() != null ? " (" + p.referencia() + ")" : ""),
+                        dinero(p.monto()), m.normal(), m.normal());
+            }
+            if (d.vuelto().signum() > 0) {
+                dosColumnas(t, "VUELTO", dinero(d.vuelto()), m.negrita(), m.negrita());
             }
         }
-        separador(t);
-
-        totales(d).forEach(fila -> dosColumnas(t, fila[0], fila[1], normal, normal));
-        dosColumnas(t, "TOTAL S/", dinero(d.total()), fuente(9, Font.BOLD), fuente(9, Font.BOLD));
-        texto(t, "SON: " + d.montoEnLetras(), chica);
-        separador(t);
-
-        String prefijoPago = d.esDevolucion() ? "Devolución - " : "";
-        for (DatosImpresion.Pago p : d.pagos()) {
-            dosColumnas(t, prefijoPago + p.metodo() + (p.referencia() != null ? " (" + p.referencia() + ")" : ""),
-                    dinero(p.monto()), normal, normal);
-        }
-        if (d.vuelto().signum() > 0) {
-            dosColumnas(t, "Vuelto", dinero(d.vuelto()), normal, normal);
-        }
         if (d.observacion() != null) {
-            texto(t, "Obs.: " + d.observacion(), chica);
+            texto(t, "Obs.: " + d.observacion(), m.chica());
         }
 
+        // Validez: QR y hash de SUNAT, leyenda
         if (d.codigoQr() != null) {
-            PdfPCell qr = new PdfPCell(qr(d.codigoQr(), 95));
+            PdfPCell qr = new PdfPCell(qr(d.codigoQr(), m.qr()));
             qr.setBorder(Rectangle.NO_BORDER);
             qr.setHorizontalAlignment(Element.ALIGN_CENTER);
             qr.setPaddingTop(6);
             t.addCell(qr);
         }
         if (d.hash() != null) {
-            centrado(t, "Hash: " + d.hash(), chica);
+            centrado(t, "Hash: " + d.hash(), m.chica());
         }
-        centrado(t, d.leyenda(), chica);
+        centrado(t, d.leyenda(), m.chica());
         if (d.esProforma()) {
-            centrado(t, "Precios válidos hasta el " + FECHA.format(d.vigenteHasta()), negrita);
+            centrado(t, "Precios válidos hasta el " + FECHA.format(d.vigenteHasta()), m.negrita());
         } else if (d.referencia() == null) {
-            centrado(t, "¡Gracias por su compra!", negrita);
+            centrado(t, "¡Gracias por su compra!", m.negrita());
+        }
+        if (d.mensajePie() != null) {
+            separador(t, false);
+            centrado(t, d.mensajePie(), m.normal());
         }
 
-        float alto = t.getTotalHeight() + 2 * MARGEN_TICKET + 4;
-        Document doc = new Document(new Rectangle(ANCHO_TICKET, alto), MARGEN_TICKET, MARGEN_TICKET, MARGEN_TICKET, MARGEN_TICKET);
+        float alto = t.getTotalHeight() + 2 * m.margen() + 4;
+        Document doc = new Document(new Rectangle(m.ancho(), alto), m.margen(), m.margen(), m.margen(), m.margen());
         return escribir(doc, d.marcaDeAgua(), 16, () -> doc.add(t));
     }
 
@@ -423,11 +454,12 @@ public class ComprobantePdf {
         t.addCell(contenedor);
     }
 
-    private static void separador(PdfPTable t) {
+    /** Línea negra de lado a lado; {@code fuerte} separa las secciones principales. */
+    private static void separador(PdfPTable t, boolean fuerte) {
         PdfPCell linea = new PdfPCell(new Phrase(" ", fuente(3, Font.NORMAL)));
         linea.setBorder(Rectangle.BOTTOM);
-        linea.setBorderColor(GRIS);
-        linea.setBorderWidth(0.5f);
+        linea.setBorderColor(Color.BLACK);
+        linea.setBorderWidth(fuerte ? 1f : 0.5f);
         linea.setPaddingBottom(2);
         t.addCell(linea);
         PdfPCell aire = new PdfPCell(new Phrase(" ", fuente(3, Font.NORMAL)));

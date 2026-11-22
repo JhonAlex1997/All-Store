@@ -59,7 +59,7 @@ class ReemisionIntegrationTest extends TiendaDePrueba {
     void registrarEmpresa() throws Exception {
         if (empresaService.buscarEntidad().isEmpty()) {
             empresaService.guardar(new EmpresaRequest("20000000001", "EMPRESA PRUEBA SAC", null,
-                    "Jr. Prueba 1", "150115", null, null, null));
+                    "Jr. Prueba 1", "150115", null, null, null, null, null));
         }
         when(servicioEnvio.enviar(anyString(), any())).thenReturn(RECHAZADA);
     }

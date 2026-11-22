@@ -1,5 +1,6 @@
 package com.allstore.api.empresa.dto;
 
+import com.allstore.api.common.validacion.TextoSeguro;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
@@ -35,6 +36,12 @@ public record EmpresaRequest(
         String email,
         @Min(value = 1, message = "El mínimo de prendas por mayor debe ser al menos 1")
         @Max(value = 1000, message = "El mínimo de prendas por mayor no puede superar 1000")
-        Integer minimoPrendasPorMayor
+        Integer minimoPrendasPorMayor,
+        /** 80 o 58 (mm); vacío = no cambiar. */
+        Integer anchoTicket,
+        /** Texto al pie del ticket; vacío = sin mensaje; null = no cambiar. */
+        @Size(max = 300, message = "El mensaje del ticket no puede superar 300 caracteres")
+        @TextoSeguro
+        String mensajeTicket
 ) {
 }

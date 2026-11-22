@@ -59,3 +59,12 @@
   .disposicion { grid-template-columns: minmax(0, 1fr); }
   .vista-previa { position: static; max-width: 360px; }
 }
+
+// Ticket de 58 mm: la vista previa se angosta en la misma proporción (58/80).
+.papel { transition: max-width .2s; }
+.papel.angosto { max-width: 72.5%; margin-inline: auto; font-size: 92%; }
+.prenda { font-weight: 700; text-align: left; }
+.codigo { font-size: 85%; text-align: left; }
+.filas.total { font-weight: 700; font-size: 115%; }
+.pie { text-align: center; white-space: pre-line; }
+.ancho-completo { grid-column: 1 / -1; }

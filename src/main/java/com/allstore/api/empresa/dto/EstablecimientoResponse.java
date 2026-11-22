@@ -10,9 +10,10 @@ public record EstablecimientoResponse(
         TipoEstablecimiento tipo,
         String direccion,
         String ubigeo,
-        boolean activo
-,
-        /** Para editar: mandarla en If-Match al guardar. */ long version) {
+        boolean activo,
+        /** Para editar: mandarla en If-Match al guardar. */
+        long version
+) {
     public static EstablecimientoResponse from(Establecimiento e) {
         return new EstablecimientoResponse(e.getId(), e.getCodigo(), e.getNombre(), e.getTipo(),
                 e.getDireccion(), e.getUbigeo(), e.isActivo(), e.getVersion());

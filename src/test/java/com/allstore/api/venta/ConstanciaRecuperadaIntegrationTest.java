@@ -54,7 +54,7 @@ class ConstanciaRecuperadaIntegrationTest extends TiendaDePrueba {
     void boletaEmitida() throws Exception {
         if (empresaService.buscarEntidad().isEmpty()) {
             empresaService.guardar(new EmpresaRequest("20000000001", "EMPRESA PRUEBA SAC", null,
-                    "Jr. Prueba 1", "150115", null, null, null));
+                    "Jr. Prueba 1", "150115", null, null, null, null, null));
         }
         boleta = vender(TipoComprobante.BOLETA, serieBoleta, null, List.of(item(jeanA, 1, null)), List.of(efectivo("89.90", null)));
         constancia = constancia("B991-1", boleta.cliente().numeroDocumento());

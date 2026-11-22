@@ -7,6 +7,8 @@ import { ButtonModule } from 'primeng/button';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { InputTextModule } from 'primeng/inputtext';
 import { MessageModule } from 'primeng/message';
+import { SelectButtonModule } from 'primeng/selectbutton';
+import { TextareaModule } from 'primeng/textarea';
 
 import { EmpresaControllerService } from '../../core/api/services/empresa-controller.service';
 import { SIN_AVISO } from '../../core/http/errores.interceptor';
@@ -17,7 +19,8 @@ import { ifMatch } from '../../core/http/version';
 /** Datos del emisor: deben coincidir con la ficha RUC de SUNAT (salvo el nombre comercial, que es libre). */
 @Component({
   selector: 'as-datos-empresa',
-  imports: [ReactiveFormsModule, ButtonModule, InputNumberModule, InputTextModule, MessageModule],
+  imports: [ReactiveFormsModule, ButtonModule, InputNumberModule, InputTextModule, MessageModule, SelectButtonModule,
+    TextareaModule],
   templateUrl: './datos-empresa.html',
   styleUrls: ['./formulario.scss', './datos-empresa.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -36,7 +39,15 @@ export class DatosEmpresa implements OnInit {
     telefono: ['', [Validators.maxLength(20), Validators.pattern(/^[0-9+ ()-]*$/)]],
     email: ['', [Validators.email, Validators.maxLength(120)]],
     minimoPrendasPorMayor: [3, [Validators.required, Validators.min(1), Validators.max(1000)]],
+    anchoTicket: [80],
+    mensajeTicket: ['', Validators.maxLength(300)],
   });
+
+  /** Ancho del papel de la ticketera. */
+  protected readonly anchos = [
+    { valor: 80, etiqueta: '80 mm (común)' },
+    { valor: 58, etiqueta: '58 mm (angosta)' },
+  ];
 
   /** Valores del formulario para la vista previa del comprobante. */
   protected readonly valores = toSignal(this.form.valueChanges, { initialValue: this.form.getRawValue() });
@@ -58,6 +69,7 @@ export class DatosEmpresa implements OnInit {
         ruc: e.ruc ?? '', razonSocial: e.razonSocial ?? '', nombreComercial: e.nombreComercial ?? '',
         direccionFiscal: e.direccionFiscal ?? '', ubigeo: e.ubigeo ?? '', telefono: e.telefono ?? '',
         email: e.email ?? '', minimoPrendasPorMayor: e.minimoPrendasPorMayor ?? 3,
+        anchoTicket: e.anchoTicket ?? 80, mensajeTicket: e.mensajeTicket ?? '',
       });
     } catch {
       this.nueva.set(true);
@@ -87,6 +99,8 @@ export class DatosEmpresa implements OnInit {
           nombreComercial: v.nombreComercial.trim() || undefined,
           telefono: v.telefono.trim() || undefined,
           email: v.email.trim() || undefined,
+          // Vacío borra el mensaje (el backend distingue "" de no enviarlo).
+          mensajeTicket: v.mensajeTicket.trim(),
         },
       });
       this.version = guardada.version;

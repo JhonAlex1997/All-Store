@@ -72,6 +72,6 @@ class DomicilioFiscalIntegrationTest {
 
     private static EmpresaRequest empresa(String direccion, String ubigeo) {
         return new EmpresaRequest("20610224602", "CONSORCIO TEXTIL C&J S.A.C.", "KISSME JEANS", direccion, ubigeo,
-                null, null, null);
+                null, null, null, null, null);
     }
 }

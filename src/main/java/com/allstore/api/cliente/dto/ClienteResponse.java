@@ -19,9 +19,10 @@ public record ClienteResponse(
         String email,
         boolean generico,
         boolean puedeRecibirFactura,
-        boolean activo
-,
-        /** Para editar: mandarla en If-Match al guardar. */ long version) {
+        boolean activo,
+        /** Para editar: mandarla en If-Match al guardar. */
+        long version
+) {
     public static ClienteResponse from(Cliente c) {
         return new ClienteResponse(
                 c.getId(),

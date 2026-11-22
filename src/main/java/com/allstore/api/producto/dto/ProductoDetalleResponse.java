@@ -18,9 +18,10 @@ public record ProductoDetalleResponse(
         String tipoAfectacionIgv,
         boolean activo,
         Integer stockMinimo,
-        List<VarianteResponse> variantes
-,
-        /** Para editar: mandarla en If-Match al guardar. */ long version) {
+        List<VarianteResponse> variantes,
+        /** Para editar: mandarla en If-Match al guardar. */
+        long version
+) {
     public static ProductoDetalleResponse from(Producto p) {
         return new ProductoDetalleResponse(
                 p.getId(),

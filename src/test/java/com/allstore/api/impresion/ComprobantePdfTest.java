@@ -88,7 +88,7 @@ class ComprobantePdfTest {
                 b.establecimiento(), b.direccionEstablecimiento(), b.fechaEmision(), "cajero", b.cliente(), null,
                 b.lineas(), b.opGravadas(), b.opExoneradas(), b.opInafectas(), b.totalDescuento(), b.totalIgv(), b.total(),
                 b.montoEnLetras(), java.util.List.of(), BigDecimal.ZERO, null, null,
-                "Documento informativo: no es un comprobante de pago.", null, false, java.time.LocalDate.of(2026, 10, 17));
+                "Documento informativo: no es un comprobante de pago.", null, false, java.time.LocalDate.of(2026, 10, 17), 80, null);
 
         for (FormatoImpresion formato : FormatoImpresion.values()) {
             String texto = texto(generador.generar(proforma, formato));
@@ -96,6 +96,24 @@ class ComprobantePdfTest {
                     "169.80", "no es un comprobante de pago");
             assertThat(texto).as(formato.name()).doesNotContain("Forma de pago", "Hash:", "Gracias por su compra");
         }
+    }
+
+    @Test
+    void ticketDe58mmConMensajeAlPieYElDetalleDeCadaPrenda() throws Exception {
+        DatosImpresion b = boleta(null);
+        DatosImpresion angosto = new DatosImpresion(b.titulo(), b.numero(), null, b.emisor(), b.establecimiento(),
+                b.direccionEstablecimiento(), b.fechaEmision(), b.cajero(), b.cliente(), null, b.lineas(), b.opGravadas(),
+                b.opExoneradas(), b.opInafectas(), b.totalDescuento(), b.totalIgv(), b.total(), b.montoEnLetras(), b.pagos(),
+                b.vuelto(), b.codigoQr(), b.hash(), b.leyenda(), null, false, null, 58,
+                "Cambios dentro de 7 días con este ticket");
+
+        byte[] pdf = generador.generar(angosto, FormatoImpresion.TICKET);
+        String texto = texto(pdf);
+
+        // 58 mm = 164.4 puntos de ancho.
+        assertThat(new PdfReader(pdf).getPageSize(1).getWidth()).isCloseTo(164.4f, org.assertj.core.data.Offset.offset(0.1f));
+        assertThat(texto).contains("Cambios dentro de 7 días con este ticket", "Cód. MOM01-AZU-28", "2 x 89.90",
+                "Total de prendas:", "VUELTO", "30.20");
     }
 
     private static DatosImpresion boleta(String marcaDeAgua) {
@@ -119,7 +137,7 @@ class ComprobantePdfTest {
                 List.of(new DatosImpresion.Pago("Efectivo", new BigDecimal("169.80"), null)),
                 new BigDecimal("30.20"), QR, "abc123=",
                 "Representación impresa de la Boleta de Venta Electrónica. Consulte su validez en www.sunat.gob.pe.",
-                null, false, null);
+                null, false, null, 80, null);
     }
 
     private static String texto(byte[] pdf) throws Exception {

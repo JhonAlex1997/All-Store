@@ -98,7 +98,9 @@ public class ImpresionService {
                 "Documento informativo: no es un comprobante de pago. Precios sujetos a disponibilidad de stock.",
                 p.observacion(),
                 p.porMayor(),
-                p.vigenteHasta());
+                p.vigenteHasta(),
+                empresa.getAnchoTicket(),
+                empresa.getMensajeTicket());
         byte[] pdf = comprobantePdf.generar(datos, formato);
         return new Pdf(p.numero() + (formato == FormatoImpresion.TICKET ? "-ticket" : "") + ".pdf", pdf);
     }
@@ -205,7 +207,9 @@ public class ImpresionService {
                 leyenda(v, titulo, electronico),
                 v.observacion(),
                 v.porMayor(),
-                null
+                null,
+                empresa.getAnchoTicket(),
+                empresa.getMensajeTicket()
         );
     }
 

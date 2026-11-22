@@ -63,6 +63,15 @@ public class EmpresaService {
         if (request.minimoPrendasPorMayor() != null) {
             empresa.setMinimoPrendasPorMayor(request.minimoPrendasPorMayor());
         }
+        if (request.anchoTicket() != null) {
+            if (request.anchoTicket() != Empresa.ANCHO_TICKET_COMUN && request.anchoTicket() != Empresa.ANCHO_TICKET_ANGOSTO) {
+                throw new BusinessException("El ticket es de 80 mm o de 58 mm");
+            }
+            empresa.setAnchoTicket(request.anchoTicket());
+        }
+        if (request.mensajeTicket() != null) {
+            empresa.setMensajeTicket(limpiar(request.mensajeTicket()));
+        }
         Empresa guardada = empresaRepository.save(empresa);
         // El local 0000 es el domicilio fiscal: su dirección es la de la empresa. Si quedara otra, el
         // comprobante la imprimiría como dirección del local, distinta de la fiscal.

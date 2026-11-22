@@ -131,7 +131,7 @@ public class DatosDemoLoader implements ApplicationRunner {
     private void cargar() {
         empresaService.guardar(new EmpresaRequest(RUC_DEMO, "EMPRESA DEMO S.A.C.", "AllStore Jeans (demo)",
                 "Jr. Gamarra 100, La Victoria", "150115", "014567890", "ventas@demo.allstore.pe",
-                Empresa.MINIMO_PRENDAS_POR_MAYOR));
+                Empresa.MINIMO_PRENDAS_POR_MAYOR, null, null));
 
         Long tienda = establecimiento("0000", "Tienda principal", TipoEstablecimiento.TIENDA,
                 "Jr. Gamarra 100, La Victoria", "150115");

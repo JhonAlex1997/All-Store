@@ -160,7 +160,7 @@ class ProformaIntegrationTest extends TiendaDePrueba {
     @Test
     void seImprimeEnA4YTicketYSeComparteConElEnlaceDeWhatsapp() {
         empresaService.guardar(new EmpresaRequest("20000000001", "EMPRESA PRUEBA SAC", "Tienda Prueba",
-                "Jr. Prueba 1", "150115", null, null, null));
+                "Jr. Prueba 1", "150115", null, null, null, null, null));
         ProformaResponse p = cotizar(clienteDni, item(jeanA, 1, null));
 
         assertThat(proformaService.pdf(p.id(), FormatoImpresion.A4).contenido()).startsWith("%PDF".getBytes());
@@ -191,6 +191,40 @@ class ProformaIntegrationTest extends TiendaDePrueba {
                 .containsExactly(b.id());
         assertThat(ids(proformaService.listar(tienda, null, "VIGENTE", null, PageRequest.of(0, 10)).content()))
                 .containsExactly(a.id());
+    }
+
+    @Test
+    void cadaCajeroManejaSoloSusProformasYElAdministradorVeTodas() {
+        como("cajero_a");
+        cajaService.abrir(new com.allstore.api.caja.dto.AbrirCajaRequest(tienda, new BigDecimal("50.00")));
+        ProformaResponse deA = cotizar(clienteDni, item(jeanA, 1, null));
+
+        como("cajero_b");
+        cajaService.abrir(new com.allstore.api.caja.dto.AbrirCajaRequest(tienda, new BigDecimal("50.00")));
+        ProformaResponse deB = cotizar(null, item(jeanB, 1, null));
+        assertThat(ids(proformaService.listar(null, null, null, null, PageRequest.of(0, 50)).content()))
+                .as("aunque sean del mismo local, solo ve las suyas").containsExactly(deB.id());
+        assertThatThrownBy(() -> proformaService.obtener(deA.id()))
+                .isInstanceOf(com.allstore.api.common.exception.AccesoDenegadoException.class).hasMessageContaining("cajero_a");
+        assertThatThrownBy(() -> proformaService.vender(deA.id(), venta(TipoComprobante.BOLETA, serieBoleta, clienteDni,
+                "89.90", item(jeanA, 1, null)), UUID.randomUUID().toString()))
+                .isInstanceOf(com.allstore.api.common.exception.AccesoDenegadoException.class);
+        assertThatThrownBy(() -> proformaService.anular(deA.id(), null))
+                .isInstanceOf(com.allstore.api.common.exception.AccesoDenegadoException.class);
+
+        org.springframework.security.core.context.SecurityContextHolder.clearContext();
+        assertThat(ids(proformaService.listar(tienda, null, null, null, PageRequest.of(0, 50)).content()))
+                .as("el administrador ve las de todos").contains(deA.id(), deB.id());
+    }
+
+    @org.junit.jupiter.api.AfterEach
+    void sinUsuario() {
+        org.springframework.security.core.context.SecurityContextHolder.clearContext();
+    }
+
+    private static void como(String cajero) {
+        org.springframework.security.core.context.SecurityContextHolder.getContext().setAuthentication(
+                new org.springframework.security.authentication.TestingAuthenticationToken(cajero, null, "ROLE_CAJERO"));
     }
 
     private ProformaResponse cotizar(Long clienteId, VentaItemRequest... items) {

@@ -28,6 +28,9 @@ import java.time.OffsetDateTime;
 @EntityListeners(AuditingEntityListener.class)
 public class Empresa {
 
+    public static final int ANCHO_TICKET_COMUN = 80;
+    public static final int ANCHO_TICKET_ANGOSTO = 58;
+
     public static final Long ID_UNICO = 1L;
     /** Desde cuántas prendas una venta va a precio por mayor, si no se configuró otro valor. */
     public static final int MINIMO_PRENDAS_POR_MAYOR = 3;
@@ -63,6 +66,14 @@ public class Empresa {
     /** Bloqueo optimista del formulario de la empresa (ver EntidadVersionada). Null hasta registrarla. */
     @Version
     private Long version;
+
+    /** Ancho del papel de la ticketera en mm: 80 (el común) o 58. */
+    @Column(name = "ancho_ticket", nullable = false)
+    private int anchoTicket = ANCHO_TICKET_COMUN;
+
+    /** Texto al pie del ticket (política de cambios, redes sociales); null = ninguno. */
+    @Column(name = "mensaje_ticket", length = 300)
+    private String mensajeTicket;
 
     @CreatedDate
     @Column(name = "created_at", nullable = false, updatable = false)

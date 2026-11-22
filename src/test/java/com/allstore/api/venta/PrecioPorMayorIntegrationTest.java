@@ -87,7 +87,7 @@ class PrecioPorMayorIntegrationTest extends TiendaDePrueba {
     @Test
     void elMinimoDePrendasSeConfiguraEnLaEmpresa() {
         empresaService.guardar(new EmpresaRequest("20000000001", "EMPRESA PRUEBA SAC", null,
-                "Jr. Prueba 1", "150115", null, null, 6));
+                "Jr. Prueba 1", "150115", null, null, 6, null, null));
 
         VentaResponse tres = vender(List.of(item(shortA, 3, null)), "179.70", null);
         assertThat(tres.porMayor()).isFalse();

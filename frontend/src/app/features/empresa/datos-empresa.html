@@ -67,6 +67,23 @@
       </div>
     </div>
 
+    <h2>Ticket</h2>
+    <div class="rejilla">
+      <div class="campo">
+        <label for="ancho">Ancho del papel de la ticketera</label>
+        <p-selectbutton inputId="ancho" formControlName="anchoTicket" [options]="anchos" optionLabel="etiqueta"
+                        optionValue="valor" [allowEmpty]="false" />
+        <small class="ayuda">Mira el rollo de papel: la mayoría de ticketeras de tienda usan 80 mm.</small>
+      </div>
+      <div class="campo ancho-completo">
+        <label for="mensaje">Mensaje al pie del ticket (opcional)</label>
+        <textarea pTextarea id="mensaje" formControlName="mensajeTicket" rows="2" maxlength="300"
+                  placeholder="Ej. Cambios dentro de 7 días con este ticket. Síguenos en Instagram @kissmejeans"></textarea>
+        @if (invalido('mensajeTicket')) { <small class="error">Máximo 300 caracteres.</small> }
+        @else { <small class="ayuda">Sale al final de boletas, facturas, notas y proformas en ticket.</small> }
+      </div>
+    </div>
+
     <div class="acciones">
       <p-button type="submit" label="Guardar datos" icon="pi pi-check" [loading]="guardando()" />
     </div>
@@ -74,9 +91,9 @@
 
   <aside class="vista-previa" aria-label="Vista previa del comprobante">
     <div class="titulo-vista">Así sale en tu boleta</div>
-    <div class="papel">
+    @let v = valores();
+    <div class="papel" [class.angosto]="v.anchoTicket === 58">
       @if (marca.logoUrl(); as logo) { <img class="logo" [src]="logo" alt="" /> }
-      @let v = valores();
       <div class="nombre">{{ v.nombreComercial || v.razonSocial || 'Nombre de tu tienda' }}</div>
       @if (v.nombreComercial) { <div class="razon">{{ v.razonSocial }}</div> }
       <div class="ruc">RUC {{ v.ruc || '—' }}</div>
@@ -90,8 +107,18 @@
       <div class="corte"></div>
       <div class="filas"><span>Fecha:</span><span>{{ hoy }}</span></div>
       <div class="filas"><span>Cliente:</span><span>Clientes varios</span></div>
+      <div class="corte"></div>
+      <div class="prenda">Jean Mom Fit Clásico - Azul talla 28</div>
+      <div class="codigo">Cód. MOM01-AZU-28</div>
+      <div class="filas"><span>2 x 89.90</span><span>179.80</span></div>
+      <div class="corte"></div>
+      <div class="filas total"><span>TOTAL S/</span><span>179.80</span></div>
+      @if (v.mensajeTicket?.trim()) {
+        <div class="corte"></div>
+        <div class="pie">{{ v.mensajeTicket }}</div>
+      }
     </div>
-    <p class="nota-vista">Vista aproximada del ticket de 80 mm. Se actualiza mientras escribes.</p>
+    <p class="nota-vista">Vista aproximada del ticket de {{ v.anchoTicket }} mm. Se actualiza mientras escribes.</p>
   </aside>
   </div>
 }

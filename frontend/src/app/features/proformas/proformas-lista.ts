@@ -33,7 +33,8 @@ const POR_PAGINA = 25;
       <div>
         <h1>Proformas</h1>
         <div class="as-sub">Cotizaciones para tus clientes, con precios válidos 7 días. No son comprobantes ni descuentan
-          stock; al cobrarlas en la caja se respetan los precios cotizados.</div>
+          stock; al cobrarlas en la caja se respetan los precios cotizados. Cada cajero maneja las suyas; el
+          administrador ve las de todos.</div>
       </div>
       <span style="flex:1"></span>
       <p-button label="Nueva proforma" icon="pi pi-plus" routerLink="/caja"

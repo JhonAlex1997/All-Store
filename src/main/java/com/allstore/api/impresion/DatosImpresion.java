@@ -15,6 +15,8 @@ import java.util.List;
  * @param leyenda     pie obligatorio, ej. "Representación impresa de la Boleta de Venta Electrónica..."
  * @param porMayor    se cobró a precio por mayor (se indica para que el cliente vea por qué)
  * @param vigenteHasta solo proformas: último día en que se respetan los precios (sin pagos ni QR)
+ * @param anchoTicketMm ancho del papel del ticket: 80 o 58
+ * @param mensajePie   texto de la tienda al pie del ticket (política de cambios...); null = ninguno
  */
 public record DatosImpresion(
         String titulo,
@@ -42,7 +44,9 @@ public record DatosImpresion(
         String leyenda,
         String observacion,
         boolean porMayor,
-        LocalDate vigenteHasta
+        LocalDate vigenteHasta,
+        int anchoTicketMm,
+        String mensajePie
 ) {
     /** @param logo PNG del logo de la tienda, o null si no tiene */
     public record Emisor(String ruc, String razonSocial, String nombreComercial, String direccionFiscal,

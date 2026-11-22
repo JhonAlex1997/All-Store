@@ -8425,6 +8425,15 @@
             "format": "int32",
             "maximum": 1000,
             "minimum": 1
+          },
+          "anchoTicket": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "mensajeTicket": {
+            "type": "string",
+            "maxLength": 300,
+            "minLength": 0
           }
         },
         "required": [
@@ -8461,6 +8470,13 @@
           "minimoPrendasPorMayor": {
             "type": "integer",
             "format": "int32"
+          },
+          "anchoTicket": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "mensajeTicket": {
+            "type": "string"
           },
           "version": {
             "type": "integer",

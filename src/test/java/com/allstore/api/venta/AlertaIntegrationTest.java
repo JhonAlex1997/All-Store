@@ -79,7 +79,7 @@ class AlertaIntegrationTest extends TiendaDePrueba {
     void empresaConCorreo() {
         if (empresaService.buscarEntidad().isEmpty()) {
             empresaService.guardar(new EmpresaRequest("20000000001", "EMPRESA PRUEBA SAC", "Jeans Prueba",
-                    "Jr. Prueba 1", "150115", null, "dueno@prueba.pe", null));
+                    "Jr. Prueba 1", "150115", null, "dueno@prueba.pe", null, null, null));
         }
     }
 

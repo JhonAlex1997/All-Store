@@ -202,16 +202,8 @@ public class ProformaService {
             case "VENCIDA" -> true;
             default -> throw new BusinessException("La vigencia es VIGENTE o VENCIDA");
         };
-        String creadoPor = null;
-        if (!usuarioEnSesion.veTodo()) {
-            // El cajero ve las proformas del local donde tiene la caja abierta, o si no, las suyas.
-            Long local = cajaService.establecimientoDeMiCaja().orElse(null);
-            if (local != null) {
-                establecimientoId = local;
-            } else {
-                creadoPor = usuarioEnSesion.nombre();
-            }
-        }
+        // Cada cajero maneja sus propias proformas; el administrador ve las de todos.
+        String creadoPor = usuarioEnSesion.veTodo() ? null : usuarioEnSesion.nombre();
         String texto = StringUtils.hasText(busqueda) ? busqueda.trim() : null;
         String patron = texto == null ? null : "%" + texto.toUpperCase(Locale.ROOT) + "%";
         Long numero = texto == null ? null : numeroDe(texto);
@@ -334,16 +326,16 @@ public class ProformaService {
         return proforma;
     }
 
-    /** Como los comprobantes: el administrador ve todas; el cajero, las suyas y las de su local con caja abierta. */
+    /**
+     * Cada cajero ve, edita, envía y cobra solo las proformas que hizo él (las cotiza y las cierra con su
+     * cliente); el administrador, todas.
+     */
     private void exigirVisible(Proforma proforma) {
         if (usuarioEnSesion.veTodo() || usuarioEnSesion.nombre().equalsIgnoreCase(proforma.getCreatedBy())) {
             return;
         }
-        boolean mismoLocal = cajaService.establecimientoDeMiCaja()
-                .map(local -> local.equals(proforma.getEstablecimiento().getId())).orElse(false);
-        if (!mismoLocal) {
-            throw new AccesoDenegadoException("Solo puedes ver tus proformas o las del local donde tienes la caja abierta");
-        }
+        throw new AccesoDenegadoException("La proforma " + proforma.getNumeroImpreso() + " es de "
+                + proforma.getCreatedBy() + "; cada cajero maneja sus propias proformas");
     }
 
     /** El cajero cotiza en el local de su caja abierta; el administrador, en cualquiera. */

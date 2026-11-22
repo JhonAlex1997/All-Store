@@ -39,7 +39,7 @@ class RegistroComprasIntegrationTest extends TiendaDePrueba {
     void compras() {
         if (empresaService.buscarEntidad().isEmpty()) {
             empresaService.guardar(new EmpresaRequest("20000000001", "EMPRESA PRUEBA SAC", "Jeans Prueba",
-                    "Jr. Prueba 1", "150115", null, "ventas@prueba.pe", null));
+                    "Jr. Prueba 1", "150115", null, "ventas@prueba.pe", null, null, null));
         }
         // Un periodo pasado y propio de esta prueba: así no se mezcla con compras de otras pruebas.
         periodo = YearMonth.of(2025, 3);
