@@ -13,7 +13,6 @@ import java.util.List;
  * @param marcaDeAgua texto en diagonal (ej. "ANULADO" o "SIN VALIDEZ TRIBUTARIA"); null = ninguna
  * @param codigoQr    texto del QR de SUNAT; null si no aplica (nota de venta) o aún no se firmó
  * @param leyenda     pie obligatorio, ej. "Representación impresa de la Boleta de Venta Electrónica..."
- * @param porMayor    se cobró a precio por mayor (se indica para que el cliente vea por qué)
  * @param vigenteHasta solo proformas: último día en que se respetan los precios (sin pagos ni QR)
  * @param anchoTicketMm ancho del papel del ticket: 80 o 58
  * @param mensajePie   texto de la tienda al pie del ticket (política de cambios...); null = ninguno
@@ -38,12 +37,10 @@ public record DatosImpresion(
         BigDecimal total,
         String montoEnLetras,
         List<Pago> pagos,
-        BigDecimal vuelto,
         String codigoQr,
         String hash,
         String leyenda,
         String observacion,
-        boolean porMayor,
         LocalDate vigenteHasta,
         int anchoTicketMm,
         String mensajePie
@@ -84,6 +81,15 @@ public record DatosImpresion(
                         BigDecimal descuento, BigDecimal importe) {
     }
 
-    public record Pago(String metodo, BigDecimal monto, String referencia) {
+    /**
+     * @param referencia número de operación (tarjeta, Yape, Plin, transferencia); null en efectivo
+     * @param recibido   solo efectivo: lo que entregó el cliente; null si no se anotó
+     * @param vuelto     solo efectivo: lo que se le devolvió (cero si pagó exacto)
+     */
+    public record Pago(String metodo, BigDecimal monto, String referencia, BigDecimal recibido, BigDecimal vuelto) {
+
+        public boolean conVuelto() {
+            return recibido != null && recibido.signum() > 0;
+        }
     }
 }

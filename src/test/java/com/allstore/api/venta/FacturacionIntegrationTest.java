@@ -108,7 +108,7 @@ class FacturacionIntegrationTest extends TiendaDePrueba {
     void imprimeLaBoletaYMarcaComoAnuladaLaNotaDeVentaAnulada() throws Exception {
         VentaResponse boleta = boleta();
         byte[] ticket = impresionService.generar(boleta.id(), FormatoImpresion.TICKET).contenido();
-        assertThat(textoPdf(ticket)).contains(boleta.numero(), "Hash: " + boleta.sunat().hash(), "PRUEBA - SIN VALIDEZ");
+        assertThat(textoPdf(ticket)).contains(boleta.numero(), "Hash:", boleta.sunat().hash(), "PRUEBA - SIN VALIDEZ");
 
         VentaResponse nota = vender(TipoComprobante.NOTA_VENTA, serieNotaVenta, null,
                 List.of(item(jeanA, 1, null)), List.of(efectivo("89.90", null)));

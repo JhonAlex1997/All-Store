@@ -59,6 +59,25 @@ class VentaSimultaneaIntegrationTest {
     @Autowired private EstablecimientoService establecimientoService;
     @Autowired private SerieService serieService;
     @Autowired private AnulacionService anulacionService;
+    @Autowired private com.allstore.api.empresa.repository.EstablecimientoRepository establecimientoRepository;
+    @Autowired private com.allstore.api.empresa.repository.SerieRepository serieRepository;
+    @Autowired private com.allstore.api.producto.repository.ProductoRepository productoRepository;
+
+    /**
+     * Sufijo de 3 dígitos que aún no usa ningún local, serie ni modelo: estas pruebas confirman sus datos
+     * (no se revierten) y con un sufijo al azar repetían códigos de corridas anteriores.
+     */
+    private String sufijoLibre(String local, String serie, String modelo) {
+        for (int intento = 0; intento < 200; intento++) {
+            String sufijo = String.valueOf(ThreadLocalRandom.current().nextInt(100, 1000));
+            if (!establecimientoRepository.existsByCodigo(local + sufijo)
+                    && !serieRepository.existsByTipoComprobanteAndCodigo(TipoComprobante.NOTA_VENTA, serie + sufijo)
+                    && !productoRepository.existsByCodigoIgnoreCase(modelo + sufijo)) {
+                return sufijo;
+            }
+        }
+        throw new IllegalStateException("No quedan sufijos libres para " + local + "/" + serie + "/" + modelo);
+    }
 
     @AfterEach
     void sinSesion() {
@@ -67,7 +86,7 @@ class VentaSimultaneaIntegrationTest {
 
     @Test
     void dosCajasVendenLaUltimaUnidadALaVezYSoloPasaUna() throws Exception {
-        String sufijo = String.valueOf(ThreadLocalRandom.current().nextInt(100, 1000));
+        String sufijo = sufijoLibre("8", "S", "SIM-");
         como("t_sim_admin");
         Long local = establecimientoService.crear(new EstablecimientoRequest("8" + sufijo, "Local simultaneo " + sufijo,
                 TipoEstablecimiento.TIENDA, "Jr. Prueba 1", "150115", true)).id();
@@ -141,7 +160,7 @@ class VentaSimultaneaIntegrationTest {
      */
     @Test
     void elDobleClicSimultaneoConLaMismaClaveRegistraUnaSolaVenta() throws Exception {
-        String sufijo = String.valueOf(ThreadLocalRandom.current().nextInt(100, 1000));
+        String sufijo = sufijoLibre("7", "D", "DBL-");
         como("t_sim_admin");
         Long local = establecimientoService.crear(new EstablecimientoRequest("7" + sufijo, "Local doble clic " + sufijo,
                 TipoEstablecimiento.TIENDA, "Jr. Prueba 1", "150115", true)).id();
@@ -194,7 +213,7 @@ class VentaSimultaneaIntegrationTest {
      */
     @Test
     void variasCajasALaVezTomanNumerosDistintosYSeguidos() throws Exception {
-        String sufijo = String.valueOf(ThreadLocalRandom.current().nextInt(100, 1000));
+        String sufijo = sufijoLibre("6", "N", "NUM-");
         como("t_num_admin");
         Long local = establecimientoService.crear(new EstablecimientoRequest("6" + sufijo, "Local numeracion " + sufijo,
                 TipoEstablecimiento.TIENDA, "Jr. Prueba 1", "150115", true)).id();

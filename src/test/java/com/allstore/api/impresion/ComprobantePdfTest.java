@@ -33,7 +33,7 @@ class ComprobantePdfTest {
         assertThat(new String(pdf, 0, 5)).isEqualTo("%PDF-");
         assertThat(texto).contains("BOLETA DE VENTA ELECTRÓNICA", "B001-00000015", "RUC 20000000001",
                 "Juan Pérez Rojas", "169.80", "SON: CIENTO SESENTA Y NUEVE CON 80/100 SOLES",
-                "Hash: abc123=", "Representación impresa");
+                "Hash:", "abc123=", "Representación impresa");
         // Una sola página de 80 mm de ancho: la impresora térmica corta donde termina.
         PdfReader lector = new PdfReader(pdf);
         assertThat(lector.getNumberOfPages()).isEqualTo(1);
@@ -87,8 +87,8 @@ class ComprobantePdfTest {
         DatosImpresion proforma = new DatosImpresion("PROFORMA / COTIZACIÓN", "PR01-00000012", null, b.emisor(),
                 b.establecimiento(), b.direccionEstablecimiento(), b.fechaEmision(), "cajero", b.cliente(), null,
                 b.lineas(), b.opGravadas(), b.opExoneradas(), b.opInafectas(), b.totalDescuento(), b.totalIgv(), b.total(),
-                b.montoEnLetras(), java.util.List.of(), BigDecimal.ZERO, null, null,
-                "Documento informativo: no es un comprobante de pago.", null, false, java.time.LocalDate.of(2026, 10, 17), 80, null);
+                b.montoEnLetras(), java.util.List.of(), null, null,
+                "Documento informativo: no es un comprobante de pago.", null, java.time.LocalDate.of(2026, 10, 17), 80, null);
 
         for (FormatoImpresion formato : FormatoImpresion.values()) {
             String texto = texto(generador.generar(proforma, formato));
@@ -103,8 +103,7 @@ class ComprobantePdfTest {
         DatosImpresion b = boleta(null);
         DatosImpresion angosto = new DatosImpresion(b.titulo(), b.numero(), null, b.emisor(), b.establecimiento(),
                 b.direccionEstablecimiento(), b.fechaEmision(), b.cajero(), b.cliente(), null, b.lineas(), b.opGravadas(),
-                b.opExoneradas(), b.opInafectas(), b.totalDescuento(), b.totalIgv(), b.total(), b.montoEnLetras(), b.pagos(),
-                b.vuelto(), b.codigoQr(), b.hash(), b.leyenda(), null, false, null, 58,
+                b.opExoneradas(), b.opInafectas(), b.totalDescuento(), b.totalIgv(), b.total(), b.montoEnLetras(), b.pagos(), b.codigoQr(), b.hash(), b.leyenda(), null, null, 58,
                 "Cambios dentro de 7 días con este ticket");
 
         byte[] pdf = generador.generar(angosto, FormatoImpresion.TICKET);
@@ -113,7 +112,29 @@ class ComprobantePdfTest {
         // 58 mm = 164.4 puntos de ancho.
         assertThat(new PdfReader(pdf).getPageSize(1).getWidth()).isCloseTo(164.4f, org.assertj.core.data.Offset.offset(0.1f));
         assertThat(texto).contains("Cambios dentro de 7 días con este ticket", "Cód. MOM01-AZU-28", "2 x 89.90",
-                "Total de prendas:", "VUELTO", "30.20");
+                "Total de prendas:", "FORMA DE PAGO", "Recibido", "200.00", "Vuelto", "30.20");
+    }
+
+    @Test
+    void cadaPagoMuestraSuMetodoYEnEfectivoLoRecibidoYElVuelto() throws Exception {
+        DatosImpresion b = boleta(null);
+        DatosImpresion mixto = new DatosImpresion(b.titulo(), b.numero(), null, b.emisor(), b.establecimiento(),
+                b.direccionEstablecimiento(), b.fechaEmision(), b.cajero(), b.cliente(), null, b.lineas(), b.opGravadas(),
+                b.opExoneradas(), b.opInafectas(), b.totalDescuento(), b.totalIgv(), b.total(), b.montoEnLetras(),
+                List.of(new DatosImpresion.Pago("Efectivo", new BigDecimal("100.00"), null, new BigDecimal("150.00"),
+                                new BigDecimal("50.00")),
+                        new DatosImpresion.Pago("Yape", new BigDecimal("69.80"), "884512", null, BigDecimal.ZERO)),
+                b.codigoQr(), b.hash(), b.leyenda(), null, null, 80, null);
+
+        String ticket = texto(generador.generar(mixto, FormatoImpresion.TICKET));
+        assertThat(ticket).contains("FORMA DE PAGO", "Efectivo", "100.00", "Recibido", "150.00", "Vuelto", "50.00",
+                "Yape", "69.80", "N° de operación: 884512");
+        assertThat(ticket).doesNotContain("Por mayor");
+
+        String a4 = texto(generador.generar(mixto, FormatoImpresion.A4));
+        assertThat(a4).contains("Forma de pago: Contado", "Efectivo: S/ 100.00", "Recibido S/ 150.00", "Vuelto S/ 50.00",
+                "Yape: S/ 69.80", "N° de operación 884512");
+        assertThat(a4).doesNotContain("Por mayor");
     }
 
     private static DatosImpresion boleta(String marcaDeAgua) {
@@ -134,10 +155,9 @@ class ComprobantePdfTest {
                 new BigDecimal("143.90"), BigDecimal.ZERO, BigDecimal.ZERO, new BigDecimal("10.00"),
                 new BigDecimal("25.90"), new BigDecimal("169.80"),
                 "CIENTO SESENTA Y NUEVE CON 80/100 SOLES",
-                List.of(new DatosImpresion.Pago("Efectivo", new BigDecimal("169.80"), null)),
-                new BigDecimal("30.20"), QR, "abc123=",
+                List.of(new DatosImpresion.Pago("Efectivo", new BigDecimal("169.80"), null, new BigDecimal("200.00"), new BigDecimal("30.20"))), QR, "abc123=",
                 "Representación impresa de la Boleta de Venta Electrónica. Consulte su validez en www.sunat.gob.pe.",
-                null, false, null, 80, null);
+                null, null, 80, null);
     }
 
     private static String texto(byte[] pdf) throws Exception {

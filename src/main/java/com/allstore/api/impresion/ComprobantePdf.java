@@ -68,7 +68,7 @@ public class ComprobantePdf {
      * los grises en un punteado tenue que en 58 mm casi no se lee.
      */
     private record Ticket(float ancho, float margen, Font normal, Font negrita, Font chica, Font titulo, Font tienda,
-                          Font total, float qr, float logoAncho) {
+                          Font total, Font hash, float qr, float logoAncho) {
 
         static Ticket de(int anchoMm) {
             boolean angosto = anchoMm == 58;
@@ -76,7 +76,7 @@ public class ComprobantePdf {
             return new Ticket((angosto ? 58 : 80) * 72 / 25.4f, angosto ? 5 : 8,
                     fuente(8.6f * escala, Font.NORMAL), fuente(8.6f * escala, Font.BOLD), fuente(7.4f * escala, Font.NORMAL),
                     fuente(10.5f * escala, Font.BOLD), fuente(12f * escala, Font.BOLD), fuente(13f * escala, Font.BOLD),
-                    angosto ? 80 : 100, angosto ? 100 : 130);
+                    fuente(angosto ? 5.6f : 6.6f, Font.NORMAL), angosto ? 80 : 100, angosto ? 100 : 130);
         }
     }
 
@@ -118,9 +118,6 @@ public class ComprobantePdf {
         if (d.esProforma()) {
             dosColumnas(t, "Válida hasta:", FECHA.format(d.vigenteHasta()), m.normal(), m.negrita());
         }
-        if (d.porMayor()) {
-            dosColumnas(t, "Precio:", "Por mayor", m.normal(), m.negrita());
-        }
         DatosImpresion.Cliente c = d.cliente();
         if (c.tipoDocumento() != null) {
             dosColumnas(t, c.tipoDocumento() + ":", c.numeroDocumento(), m.normal(), m.normal());
@@ -161,13 +158,16 @@ public class ComprobantePdf {
 
         // Pagos y vuelto
         if (!d.pagos().isEmpty()) {
-            String prefijoPago = d.esDevolucion() ? "Devolución - " : "";
+            texto(t, d.esDevolucion() ? "DEVOLUCIÓN AL CLIENTE" : "FORMA DE PAGO", m.chica());
             for (DatosImpresion.Pago p : d.pagos()) {
-                dosColumnas(t, prefijoPago + p.metodo() + (p.referencia() != null ? " (" + p.referencia() + ")" : ""),
-                        dinero(p.monto()), m.normal(), m.normal());
-            }
-            if (d.vuelto().signum() > 0) {
-                dosColumnas(t, "VUELTO", dinero(d.vuelto()), m.negrita(), m.negrita());
+                dosColumnas(t, p.metodo(), dinero(p.monto()), m.negrita(), m.negrita());
+                if (p.referencia() != null) {
+                    texto(t, "  N° de operación: " + p.referencia(), m.chica());
+                }
+                if (p.conVuelto()) {
+                    dosColumnas(t, "  Recibido", dinero(p.recibido()), m.normal(), m.normal());
+                    dosColumnas(t, "  Vuelto", dinero(p.vuelto()), m.negrita(), m.negrita());
+                }
             }
         }
         if (d.observacion() != null) {
@@ -183,7 +183,9 @@ public class ComprobantePdf {
             t.addCell(qr);
         }
         if (d.hash() != null) {
-            centrado(t, "Hash: " + d.hash(), m.chica());
+            // El hash (44 caracteres) en su propia línea y con letra menor: así no se parte en dos.
+            centrado(t, "Hash:", m.chica());
+            centrado(t, d.hash(), m.hash());
         }
         centrado(t, d.leyenda(), m.chica());
         if (d.esProforma()) {
@@ -259,10 +261,6 @@ public class ComprobantePdf {
                 etiquetaValor(datos, "", "", negrita, normal);
                 etiquetaValor(datos, "Válida hasta:", FECHA.format(d.vigenteHasta()), negrita, negrita);
             }
-            if (d.porMayor()) {
-                etiquetaValor(datos, "Precio:", "Por mayor", negrita, normal);
-                etiquetaValor(datos, "", "", negrita, normal);
-            }
             if (d.referencia() != null) {
                 etiquetaValor(datos, "Modifica a:", d.referencia().documento(), negrita, normal);
                 etiquetaValor(datos, "Motivo:", d.referencia().motivo(), negrita, normal);
@@ -305,9 +303,18 @@ public class ComprobantePdf {
                 izquierda.addElement(new Paragraph("Precios válidos hasta el " + FECHA.format(d.vigenteHasta())
                         + ". Pago al contado al momento de la compra.", negrita));
             } else {
-                StringBuilder pagos = new StringBuilder(d.esDevolucion() ? "Devolución al cliente: " : "Forma de pago: Contado - ");
-                d.pagos().forEach(p -> pagos.append(p.metodo()).append(" ").append(dinero(p.monto())).append("  "));
-                izquierda.addElement(new Paragraph(pagos.toString().trim(), normal));
+                izquierda.addElement(new Paragraph(d.esDevolucion() ? "Devolución al cliente:" : "Forma de pago: Contado", negrita));
+                for (DatosImpresion.Pago p : d.pagos()) {
+                    StringBuilder linea = new StringBuilder(p.metodo()).append(": S/ ").append(dinero(p.monto()));
+                    if (p.referencia() != null) {
+                        linea.append("  ·  N° de operación ").append(p.referencia());
+                    }
+                    if (p.conVuelto()) {
+                        linea.append("  ·  Recibido S/ ").append(dinero(p.recibido()))
+                                .append("  ·  Vuelto S/ ").append(dinero(p.vuelto()));
+                    }
+                    izquierda.addElement(new Paragraph(linea.toString(), normal));
+                }
             }
             if (d.observacion() != null) {
                 izquierda.addElement(new Paragraph("Observación: " + d.observacion(), normal));
