@@ -135,7 +135,6 @@ public class ComprobantePdf {
 
         // Prendas: descripción completa, código, y "cantidad x precio" con el importe a la derecha.
         dosColumnas(t, "CANT. x P.UNIT.", "IMPORTE", m.chica(), m.chica());
-        int prendas = 0;
         for (DatosImpresion.Linea l : d.lineas()) {
             texto(t, l.descripcion(), m.negrita());
             if (l.codigo() != null) {
@@ -145,10 +144,8 @@ public class ComprobantePdf {
             if (l.descuento().signum() > 0) {
                 dosColumnas(t, "Descuento", "-" + dinero(l.descuento()), m.chica(), m.chica());
             }
-            prendas += l.cantidad();
         }
         separador(t, false);
-        dosColumnas(t, "Total de prendas:", String.valueOf(prendas), m.normal(), m.negrita());
 
         // Totales
         totales(d).forEach(fila -> dosColumnas(t, fila[0], fila[1], m.normal(), m.normal()));

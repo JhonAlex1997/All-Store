@@ -112,7 +112,7 @@ class ComprobantePdfTest {
         // 58 mm = 164.4 puntos de ancho.
         assertThat(new PdfReader(pdf).getPageSize(1).getWidth()).isCloseTo(164.4f, org.assertj.core.data.Offset.offset(0.1f));
         assertThat(texto).contains("Cambios dentro de 7 días con este ticket", "Cód. MOM01-AZU-28", "2 x 89.90",
-                "Total de prendas:", "FORMA DE PAGO", "Recibido", "200.00", "Vuelto", "30.20");
+                "FORMA DE PAGO", "Recibido", "200.00", "Vuelto", "30.20");
     }
 
     @Test
@@ -129,7 +129,7 @@ class ComprobantePdfTest {
         String ticket = texto(generador.generar(mixto, FormatoImpresion.TICKET));
         assertThat(ticket).contains("FORMA DE PAGO", "Efectivo", "100.00", "Recibido", "150.00", "Vuelto", "50.00",
                 "Yape", "69.80", "N° de operación: 884512");
-        assertThat(ticket).doesNotContain("Por mayor");
+        assertThat(ticket).doesNotContain("Por mayor", "Total de prendas");
 
         String a4 = texto(generador.generar(mixto, FormatoImpresion.A4));
         assertThat(a4).contains("Forma de pago: Contado", "Efectivo: S/ 100.00", "Recibido S/ 150.00", "Vuelto S/ 50.00",
